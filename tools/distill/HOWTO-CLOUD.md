@@ -32,13 +32,14 @@ Both use the same `train.py`. Pick one.
 
 ```bash
 # RunPod gives you an SSH command in the dashboard. Use it.
-ssh root@<pod-ip> -p <port> -i ~/.ssh/runpod_key
+ssh root@<pod-ip> -p <port> -i ~/.ssh/hammersteinkey
 
-# Once connected, in the pod:
-git clone https://github.com/lerugray/hammerstein-model.git
-cd hammerstein-model
-pip install unsloth trl peft transformers datasets
+# Once connected, run the one-line setup:
+bash <(curl -s https://raw.githubusercontent.com/lerugray/hammerstein-model/master/tools/distill/setup_pod.sh)
 ```
+
+The setup script clones the repo, installs deps, and verifies CUDA.
+~3-5 min for the pip install on first run.
 
 ### 4. Copy the synthetic data over (1 min)
 

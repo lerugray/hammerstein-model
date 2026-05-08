@@ -1,0 +1,19 @@
+# Ollama Modelfile for hammerstein-7b
+# Once the LoRA adapter is converted to GGUF, register the model with:
+#
+#   ollama create hammerstein -f Modelfile.template
+#
+# Then run:  ollama run hammerstein "Audit this plan: ..."
+
+FROM ./hammerstein-7b.gguf
+
+# No system prompt — the framework is baked into the weights via fine-tuning.
+# Behavior cloning means the model learned to produce framework outputs from
+# user queries alone. If you find yourself wanting to add a system prompt
+# back, the distillation underperformed and you should ship the wrapper
+# (hp.py) as the production path instead.
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

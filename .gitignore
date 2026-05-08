@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Editor scratch
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local secrets
+.env
+.env.local
+
+# Local logs
+logs/
+*.log
+
+# Future: model artifacts / RAG indices / vector store data
+# Uncomment when these directories appear:
+# data/
+# indices/
+# rag-cache/

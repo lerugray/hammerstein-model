@@ -85,7 +85,7 @@ context, not background execution.
 | Phase 4 | Failure-pattern preflight | Deferred — gated on Phase 3 sustained pass |
 | Phase 5 | Wargame solitaire opponent | Stretch — see WARGAME-EXTENSION.md |
 | Phase 6 | Local web UI | Stretch — see WEB-UI-EXTENSION.md |
-| **Distillation experiment** | Hammerstein-7B GGUF artifact | In flight — see MODEL-EXPERIMENT.md |
+| **Distillation experiment** | Hammerstein-7B QLoRA adapter | ✅ trained + validated 2026-05-08, all framework markers present in spot-check; see [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). Total cost $2.81. |
 
 ## Honest framing
 

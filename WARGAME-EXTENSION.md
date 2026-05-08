@@ -1,14 +1,37 @@
 # Wargame Solitaire Opponent — Stretch Extension
 
-**Status:** ✅ v0 shipped 2026-05-08. `--state-dir` flag wired into
-`hp.py`; self-authored example scenario at
-[`wargame-example/`](wargame-example/) (Bridge Crossing — Steinbach,
-3 turns dogfooded). The working query pattern is documented in
-[`wargame-example/MISSION.md`](wargame-example/MISSION.md) under
-"Calling the wrapper — working recipe."
+**Status:** ✅ v0 shipped 2026-05-08, with a v1 design pivot the same
+day. `--state-dir` flag wired into `hp.py`; self-authored example at
+[`wargame-example/`](wargame-example/) (Bridge Crossing — Steinbach).
 
-The original spec (below) is preserved as design context. v0
-implements the minimum viable shape from the spec.
+**v1 design (Auftragstaktik / kriegspiel-style):** Per Ray's
+direction 2026-05-08, the AI issues **mission-type orders** to
+formations ("2nd Bn forces the bridge crossing"), not
+coordinate-level moves ("2nd Bn moves D5 → D4"). This matches the
+1930s German command tradition the framework's namesake actually
+practiced (Reichswehr Chef Hammerstein-Equord, 1930-1934), is more
+natural for the model (no hex hallucinations), and is closer to
+how solo wargamers actually operate (verbal status reports +
+mission orders, not structured-data state-tracking).
+
+**Output structure** (kriegspiel-shaped):
+
+- `## Situation` — what the commander reads from the report
+- `## Intent` — operational goal (the WHY, for adjudication
+  flexibility)
+- `## Main Effort` — formation + mission verb
+- `## Supporting Effort` — other formations + secondary missions
+- `## Reserves & Fallback` — commitment trigger + withdrawal
+  trigger
+
+The working query recipe + future multimodal direction (photo
+input from the physical board, OOB from countersheets) are
+documented in
+[`wargame-example/MISSION.md`](wargame-example/MISSION.md).
+
+The original spec (below) is preserved as design context. The v1
+shape is closer in spirit to the spec's intent than my v0 unit-
+level draft was.
 
 **Audience:** Wargamers playing solitaire. Ray's domain; portfolio-
 relevant; possibly distributable / monetizable.

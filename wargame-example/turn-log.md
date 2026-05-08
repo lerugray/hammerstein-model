@@ -5,6 +5,59 @@ wrapper's recency-decay surfaces it first.
 
 ---
 
+## Turn 4 — 2026-05-08 kriegspiel pivot
+
+**Design change:** Switched from coordinate-level orders to
+**mission-type Auftragstaktik orders** per Ray's direction. AI now
+issues commander-level intent + formation missions; player
+translates to specific board moves. New 5-section structure:
+Situation / Intent / Main Effort / Supporting Effort / Reserves &
+Fallback.
+
+**Verbal status report (player's input):** "Red has 2nd Bn (str 2)
+near the bridge approach but in the open and taking artillery
+hits, 3rd Bn (str 2) on the east flank, both infantry battalions
+bloodied. Engineers were lost on the bridge in Turn 2. Two turns
+left to win — must seize the village or die trying."
+
+**AI orders (verbatim):**
+
+> ## Situation
+> The enemy holds the village and bridgehead. Both battalions are
+> bloodied and exposed to artillery, but we retain two turns to
+> force a crossing and take the objective.
+>
+> ## Intent
+> Seize the village by the end of Turn 6. Accept heavy casualties
+> to break the enemy line and establish a permanent foothold on
+> the far bank.
+>
+> ## Main Effort
+> 2nd Bn. Assault the bridge approach and force a crossing.
+> Secure the village center and eliminate enemy resistance. Use
+> available cover and suppressive fire to mask the advance.
+>
+> ## Supporting Effort
+> 3rd Bn. Fix the enemy's eastern defenses and prevent
+> reinforcement of the bridge. Apply continuous pressure to draw
+> artillery and create a breach for the main effort.
+>
+> ## Reserves & Fallback
+> Commit all remaining combat power the moment 2nd Bn breaches
+> the village perimeter. If artillery suppression halts forward
+> momentum entirely, withdraw 3rd Bn to the nearest defilade to
+> preserve strength for a renewed assault.
+
+**Format compliance:** Clean. Mission verbs throughout ("force",
+"fix", "draw", "breach"), no hex hallucinations, no analytical
+preamble. The player adjudicates this into specific moves on the
+board (e.g., "2nd Bn assaults D3 → D2") and reports outcome.
+
+(Note: AI said "Turn 6" — slipped up on the deadline; player would
+clarify the timeline next turn.)
+
+---
+
 ## Turn 3 — 2026-05-08 dogfood run
 
 **Red orders (from AI):** 2nd Bn D5→D4 to fix D2/C3; 3rd Bn F4→E4

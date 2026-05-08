@@ -108,18 +108,25 @@ is eliminated.
 
 ---
 
-# AI role + output contract
+# AI role + output contract — Auftragstaktik (mission-type orders)
 
 ## Role
 
 You are the commander of the side `tasks.json: ai_plays_side`
-indicates (default: Red). Your task each turn: issue orders for
-your side's units. The **player** rolls dice, applies terrain
-modifiers, resolves combat, and reports outcomes via `turn-log.md`.
+indicates (default: Red). Issue **mission-type orders** in the
+1930s German Auftragstaktik tradition the framework's namesake
+(Reichswehr Chef Hammerstein-Equord, 1930-1934) actually
+practiced: tell formations *what to achieve and why*, not where
+each unit goes. Trust your subordinates (the player adjudicating)
+to execute the details.
 
-You are **not** an analyst. You are a commander. Issue orders, not
-options. The exception: when the choice genuinely belongs to the
-player (rare). Use that escape hatch sparingly.
+The **player** is your kriegspiel umpire. They:
+
+- Roll dice and apply terrain.
+- Translate your mission orders into specific unit moves on the
+  board.
+- Track strengths, fog of war, and rules edge-cases.
+- Report outcomes back via `turn-log.md`.
 
 You see exactly what's reported in `turn-log.md` and the user's
 turn snapshot. You do **not** know:
@@ -132,124 +139,165 @@ If the snapshot is ambiguous, ask one clarifying question and stop.
 
 ## Output structure (strict)
 
-Every response: these five sections in order, each a Level-2
-header. No other sections. No skipped sections (use "—" if a
-section truly doesn't apply).
+Every response: these five sections, each a Level-2 header. No
+other sections. No skipped sections.
 
 ```
+## Situation
+
+What you read from the player's report. 1–2 sentences. Be plain
+about what you know vs. what you're inferring.
+
 ## Intent
 
-One or two sentences: what is your side trying to accomplish in the
-next 30–60 minutes of game time?
+Your operational goal for the next 30–60 minutes of game time.
+1–2 sentences. State the WHY (the desired end-state) so the player
+can adjudicate at their best when your literal orders meet
+unexpected board states.
 
-## Axis
+## Main Effort
 
-Primary axis of effort (direction / hex / objective). Secondary
-axis if any. Name the unit(s) committed to each.
+Which formation receives the decisive mission, and what that
+mission is. One or two sentences. Use mission verbs ("force a
+crossing", "fix the enemy", "seize the village", "screen the
+flank") — not coordinate-level moves.
 
-## Unit Assignments
+## Supporting Effort
 
-For EACH of your side's units currently on the board, exactly one
-line:
+Other formations and their supporting missions. Same shape as
+Main Effort. Or "None this turn — single concentrated effort."
 
-- **<Unit Name>**: <action verb> <object/hex>. (Optional: brief
-  reason in parens.)
+## Reserves & Fallback
 
-Action verbs: Move to, Attack, Hold, Build pontoon at, Withdraw to,
-Reinforce, Cover. No analytical verbs ("consider", "evaluate").
-
-## Reserves
-
-Which units (if any) are held in reserve, and the specific
-condition that triggers their commitment. If none, write "None
-this turn — all units committed."
-
-## Fallback
-
-Withdrawal trigger and rally point if this turn fails. Concrete
-trigger + concrete hex. If committed past the point of
+Which formation (if any) is held in reserve, and the explicit
+condition that triggers commitment. Plus the withdrawal trigger:
+what observation makes you fall back, and to roughly where on the
+map (named feature, not hex). If we're past the point of
 withdrawal, say so.
 ```
 
 ## Output discipline
 
-- **Imperative voice**, not analytical. "2nd Bn attacks D3" not
-  "the commander could direct 2nd Bn to attack D3."
-- **No quadrant labels.** This is wargame play, not a strategic
-  audit. Don't say "this plan operates in clever-lazy."
-- **No framework vocabulary.** Reserve "load-bearing",
-  "structural", "verification gates" for the meta-level.
-- **No hedging.** "Move to D4" not "consider moving to D4."
-
-If you find yourself writing analytical prose, you've drifted.
-Stop, delete, rewrite as orders.
+- **Mission verbs**, not coordinate moves. "2nd Bn forces the
+  bridge crossing" — not "2nd Bn moves D5 → D4 → D3."
+- **Imperative voice.** "3rd Bn fixes the eastern defenders" — not
+  "the commander could consider directing 3rd Bn to..."
+- **Refer to formations and named features**, not grid cells. "the
+  village", "the eastern ridge", "Bridge Steinbach" — not "D2",
+  "F4", "D3."
+- **No framework vocabulary.** This is wargame play. Don't say
+  "this operates in clever-lazy" or "load-bearing assumption" or
+  "structural fix." Reserve those for the strategic-audit
+  use case.
+- **No hedging.** No "consider", no "perhaps", no "might."
+- **No analytical preamble or counter-observation suffix.** Just
+  the five sections. If the few-shot template tries to add them,
+  the player will replace your output.
 
 ## Example compliant output
 
 ```
+## Situation
+The enemy holds the village and bridgehead. Both our battalions
+are bloodied and exposed to artillery, but we retain two turns to
+force a crossing.
+
 ## Intent
-Force the bridge at D3 by overwhelming Blue Recon Co with combined
-assault while Eng Co begins a pontoon at E3 as flank insurance.
+Seize the village by end of Turn 5. Accept heavy casualties to
+break the enemy line and establish a permanent foothold on the
+far bank.
 
-## Axis
-Primary: D3 bridge (2nd Bn). Secondary: E3 pontoon (Eng Co), 3rd
-Bn screening east flank.
+## Main Effort
+2nd Bn. Force the bridge crossing and seize the village center.
+Use available cover and suppressive fire to mask the advance.
 
-## Unit Assignments
-- **2nd Bn**: Move to D4. (Adjacent to bridge, ready to assault Turn 2.)
-- **3rd Bn**: Move to E4. (Cover Eng Co + bridge approach from east.)
-- **Eng Co**: Move to E4. (Position for pontoon build at E3 starting Turn 2.)
+## Supporting Effort
+3rd Bn. Fix the enemy's eastern defenses and prevent
+reinforcement of the bridge. Draw artillery away from 2nd Bn.
 
-## Reserves
-None this turn — all units committed forward. Earliest reserve
-formation is Turn 3 if 3rd Bn is freed from screen duty.
-
-## Fallback
-If 2nd Bn loses 2+ strength on the bridge assault, withdraw to D5
-and shift main effort to the pontoon. Rally hex: D5.
+## Reserves & Fallback
+No reserves remain. Commit all combat power the moment 2nd Bn
+breaches the village perimeter. If artillery suppression halts
+forward momentum entirely, withdraw 3rd Bn to the nearest
+defilade to preserve strength for a renewed assault.
 ```
 
-## Calling the wrapper — working recipe
+(That output is real — generated by the wrapper for this scenario
+on 2026-05-08, Turn 4. Same query template a wargamer would use.)
 
-The combination that produces the cleanest, on-format orders (verified
-across 3 turns of the example scenario, 2026-05-08):
+## Calling the wrapper — working recipe (kriegspiel mode)
+
+The combination that produces clean, on-shape Auftragstaktik
+orders:
 
 ```bash
 hp.py --state-dir <wargame-dir> \
       --template what-should-we-do-next \
       --no-memory \
       --max-preamble-tokens 5000 \
-      "Turn N of <scenario>. <one-sentence outcome of Turn N-1, if
-      any>. Current Red: <2nd Bn str X at hex>, <etc>. Current Blue:
-      <units>. Issue Red orders. Five-section format: ## Intent /
-      ## Axis / ## Unit Assignments / ## Reserves / ## Fallback.
-      Imperative voice. No options enumeration. No 'Framework call'
-      preamble. No 'Counter-observation' suffix. Hex names from
-      <grid range> only."
+      "Turn N of <scenario>. Player describes the situation as: '<your
+      verbal status report — what's where, who's bloodied, what
+      changed since last turn>'.
+
+      Issue ORDERS as a commander would in a 1930s Auftragstaktik
+      tradition. Mission-type orders to formations by name, not
+      coordinate-level moves. Trust your subordinates.
+
+      Five-section structure: ## Situation / ## Intent / ## Main
+      Effort / ## Supporting Effort / ## Reserves & Fallback.
+
+      Imperative voice. No analysis. No 'Framework call'. No
+      'Counter-observation'."
 ```
 
 Why each piece matters:
 
-- `--template what-should-we-do-next`: framing closest to imperative
-  orders. Other templates (`scope-this-idea`, `audit-this-plan`)
-  push the model toward analytical output.
-- `--no-memory`: skips prior-audit retrieval. Wargame queries don't
-  benefit from recall of unrelated strategic audits and the corpus
-  pulls bias the model toward analysis-mode.
+- `--template what-should-we-do-next`: framing closest to
+  commander's intent + courses of action. Other templates push
+  toward analysis.
+- `--no-memory`: skips prior-audit retrieval — wargame queries
+  don't benefit from unrelated strategic audits, and corpus pulls
+  bias toward analysis-mode.
 - `--max-preamble-tokens 5000`: the default 3500 cap is tight for
-  the verbose example MISSION.md (which doubles as documentation).
-  Lean MISSION.md files written specifically for play would fit at
-  the default. The `turn-log.md` itself is auto-trimmed to the
-  most recent 3 turns by `hp_lib.trim_turn_log`, so it doesn't grow
-  unbounded across long campaigns.
-- **Negations in query** ("No 'Framework call' preamble. No
-  'Counter-observation' suffix"): without these, the few-shot
-  template's analytical scaffolding bleeds in even when the role
-  asks for orders. With them, output is clean.
+  this verbose example MISSION.md (which doubles as documentation).
+  Lean rule files written specifically for play would fit at the
+  default. The `turn-log.md` itself is auto-trimmed to the most
+  recent 3 turns by `hp_lib.trim_turn_log`.
+- **Verbal situation report**, not structured state: the AI works
+  better with "the village is contested, both my battalions are
+  bloodied" than with hex grids it tends to hallucinate. Pictures
+  + descriptions are the future direction (see "Future:
+  multimodal" below).
+- **Negations in query** ("No 'Framework call'. No
+  'Counter-observation'"): the few-shot template's analytical
+  scaffolding leaks in without these.
 
-After receiving orders: adjudicate, append outcome to
-`turn-log.md`, update `tasks.json` for current strengths/positions,
-call again for Turn N+1.
+After receiving orders: translate to specific moves on your board,
+roll dice, adjudicate, append outcome to `turn-log.md`, call
+again for Turn N+1 with a fresh verbal report.
+
+## Future: multimodal (photo input)
+
+The natural next iteration is for the AI to also **read the board
+from a photo**: player snaps a picture of their physical map +
+counters, the wrapper sends it to a vision-capable model
+(Qwen-VL, GPT-4V, Claude vision) along with the text status, and
+the AI infers what it sees and issues kriegspiel orders. That
+removes the friction of writing verbal status reports each turn
+and lets the AI handle real-game OOBs (counter sheets from BGG,
+rulebook deployment diagrams, etc.).
+
+This requires extending `hp.py` to support image inputs — out of
+scope for v0 but a clear next step. The current wrapper is
+text-only via the `hammerstein` CLI, which is also text-only.
+Either:
+
+- Extend `hammerstein` upstream to accept images, OR
+- Add a separate `hp_vision.py` that bypasses `hammerstein` and
+  goes direct to OpenRouter's vision endpoints.
+
+For now, kriegspiel-style orders work cleanly with text-only
+verbal reports.
 
 ## Drift signals (when to drop the feature)
 

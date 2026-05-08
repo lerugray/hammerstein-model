@@ -263,11 +263,23 @@ def load_eval_set(path: Path, limit: int | None,
     return rows
 
 
+def _flush_results(results: dict[str, dict], eval_rows: list[dict],
+                   out_jsonl: Path) -> None:
+    """Write current results dict to JSONL (overwriting). Called after
+    every prompt during local phases so a crash doesn't lose progress."""
+    with out_jsonl.open("w") as f:
+        for i in range(len(eval_rows)):
+            row = results.get(str(i), {})
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
 def run_local_phase(eval_rows: list[dict], existing_results: dict[str, dict],
                     model_or_adapter: str, conditions: list[str],
-                    sysprompt: str | None, max_new_tokens: int) -> dict[str, dict]:
+                    sysprompt: str | None, max_new_tokens: int,
+                    out_jsonl: Path) -> dict[str, dict]:
     """Load model, run requested local conditions on every prompt,
-    return enriched results (keyed by prompt index)."""
+    return enriched results (keyed by prompt index). Flushes to disk
+    after each prompt for crash-safety."""
     model, tokenizer = load_unsloth_model(model_or_adapter)
     baseline_vram = vram_used_mb()
     print(f"  Baseline VRAM: {baseline_vram:.0f} MB" if baseline_vram else "  (no CUDA)",
@@ -292,6 +304,9 @@ def run_local_phase(eval_rows: list[dict], existing_results: dict[str, dict],
                 label=label,
             )
             row[cond] = r
+
+        # Flush after each prompt — crash-safety for long pod runs
+        _flush_results(existing_results, eval_rows, out_jsonl)
 
         # VRAM creep check after this prompt's local conditions
         cur = vram_used_mb()
@@ -433,6 +448,7 @@ def run_eval(args) -> int:
             results = run_local_phase(
                 eval_rows, results, args.base_model,
                 local_conds_phase1, sysprompt, args.max_new_tokens,
+                out_jsonl=out_jsonl,
             )
 
         # Phase 2: base + adapter — student
@@ -441,13 +457,13 @@ def run_eval(args) -> int:
             results = run_local_phase(
                 eval_rows, results, args.adapter_path,
                 ["student"], None, args.max_new_tokens,
+                out_jsonl=out_jsonl,
             )
 
     # ---- write outputs ----
-    with out_jsonl.open("w") as f:
-        for i in range(len(eval_rows)):
-            row = results.get(str(i), {})
-            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+    # Always do a final flush — covers the gold-only case (which doesn't
+    # call run_local_phase) and reaffirms the latest state otherwise.
+    _flush_results(results, eval_rows, out_jsonl)
     print(f"\nWrote per-prompt rows: {out_jsonl}", flush=True)
 
     write_summary(results, eval_rows, out_md)

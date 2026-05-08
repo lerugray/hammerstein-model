@@ -138,6 +138,33 @@ def resolve_state_dir(explicit: str | None, project_override: str | None) -> Pat
     return auto_detect_project_state(project_override)
 
 
+TURN_LOG_KEEP_RECENT_TURNS = 3  # how many "## Turn" sections to inject
+
+
+def trim_turn_log(text: str, keep: int = TURN_LOG_KEEP_RECENT_TURNS) -> str:
+    """Keep only the most recent `keep` ## Turn sections plus everything
+    up to the first ## Turn. The wargame convention is newest-on-top
+    (per WARGAME-EXTENSION.md), so we keep the leading pre-turn blurb
+    + the first `keep` ## Turn sections.
+
+    If the file has < `keep` turn sections, returns it unchanged.
+    """
+    # Find all ## Turn section start positions
+    pattern = re.compile(r"^## Turn ", re.MULTILINE)
+    matches = list(pattern.finditer(text))
+    if len(matches) <= keep:
+        return text
+    # Trim everything from the (keep+1)-th turn onward
+    cutoff = matches[keep].start()
+    head = text[:cutoff].rstrip()
+    return (
+        head
+        + "\n\n---\n\n"
+        + f"_({len(matches) - keep} earlier turn(s) omitted from "
+        f"preamble; full history in turn-log.md)_\n"
+    )
+
+
 def read_project_state(state_dir: Path) -> str:
     parts = []
     mission = state_dir / "MISSION.md"
@@ -152,7 +179,9 @@ def read_project_state(state_dir: Path) -> str:
             pass
     turn_log = state_dir / "turn-log.md"  # load-bearing for wargame extension
     if turn_log.is_file():
-        parts.append(f"### turn-log.md\n\n{turn_log.read_text()}\n")
+        # Trim to last N turns so the preamble doesn't grow unbounded
+        # as a long campaign accumulates.
+        parts.append(f"### turn-log.md\n\n{trim_turn_log(turn_log.read_text())}\n")
     return "\n".join(parts)
 
 

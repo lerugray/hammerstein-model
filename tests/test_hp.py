@@ -16,7 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from hp_filter import filter_by_relevance, relevance_score, tokenize  # noqa: E402
 from hp_lib import (  # noqa: E402
     DEFAULT_MAX_PREAMBLE_TOKENS, append_jsonl, build_preamble, count_tokens,
-    entry_ids, format_entry, read_jsonl, select_for_preamble, validate_response,
+    entry_ids, format_entry, read_jsonl, select_for_preamble, trim_turn_log,
+    validate_response,
 )
 
 
@@ -178,6 +179,47 @@ def test_default_max_preamble_tokens_under_qwen_4k_ceiling():
     """Tokenizer drift guard: cl100k proxy at 3500 leaves margin for the
     actual Qwen tokenizer, which DESIGN.md notes is ~10-15% off."""
     assert DEFAULT_MAX_PREAMBLE_TOKENS <= 3500
+
+
+def test_trim_turn_log_passes_short_logs_through():
+    """If turn-log has fewer turns than `keep`, return unchanged."""
+    text = "# header\n\n## Turn 1 — foo\nbody\n\n## Turn 2 — bar\nbody\n"
+    assert trim_turn_log(text, keep=3) == text
+    assert trim_turn_log("", keep=3) == ""
+
+
+def test_trim_turn_log_keeps_first_n_when_over():
+    """Spec: newest-on-top in turn-log.md, so 'first N' = N most recent."""
+    text = (
+        "# header\n\n"
+        "## Turn 5\nfive\n\n"
+        "## Turn 4\nfour\n\n"
+        "## Turn 3\nthree\n\n"
+        "## Turn 2\ntwo\n\n"
+        "## Turn 1\none\n"
+    )
+    out = trim_turn_log(text, keep=2)
+    assert "## Turn 5" in out
+    assert "## Turn 4" in out
+    assert "## Turn 3" not in out
+    assert "## Turn 2" not in out
+    assert "## Turn 1" not in out
+    assert "earlier turn(s) omitted" in out
+
+
+def test_trim_turn_log_preserves_pre_turn_blurb():
+    """The leading prose (## Setup, etc.) before the first ## Turn
+    section stays in the preamble — it's not a turn snapshot."""
+    text = (
+        "# Turn log\n\nIntro prose.\n\n"
+        "## Turn 3\nthree\n\n"
+        "## Turn 2\ntwo\n\n"
+        "## Turn 1\none\n"
+    )
+    out = trim_turn_log(text, keep=1)
+    assert "Intro prose." in out
+    assert "## Turn 3" in out
+    assert "## Turn 2" not in out
 
 
 @pytest.mark.live

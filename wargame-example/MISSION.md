@@ -236,9 +236,12 @@ Why each piece matters:
 - `--no-memory`: skips prior-audit retrieval. Wargame queries don't
   benefit from recall of unrelated strategic audits and the corpus
   pulls bias the model toward analysis-mode.
-- `--max-preamble-tokens 5000`: the default 3500 cap is too tight
-  once `turn-log.md` has 2+ turns. Bump as the log grows. (TODO:
-  smarter trim that keeps only the last N turns.)
+- `--max-preamble-tokens 5000`: the default 3500 cap is tight for
+  the verbose example MISSION.md (which doubles as documentation).
+  Lean MISSION.md files written specifically for play would fit at
+  the default. The `turn-log.md` itself is auto-trimmed to the
+  most recent 3 turns by `hp_lib.trim_turn_log`, so it doesn't grow
+  unbounded across long campaigns.
 - **Negations in query** ("No 'Framework call' preamble. No
   'Counter-observation' suffix"): without these, the few-shot
   template's analytical scaffolding bleeds in even when the role

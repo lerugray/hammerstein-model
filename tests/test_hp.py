@@ -70,6 +70,26 @@ def test_build_preamble_with_no_state_dir():
     assert "Active project context" not in p
 
 
+def test_read_project_state_is_noop_without_turn_log(tmp_path: Path):
+    """The turn-log.md hook is a no-op cost when the file isn't present.
+    Wargame extension preserves general-purpose behavior."""
+    from hp_lib import read_project_state
+    (tmp_path / "MISSION.md").write_text("# Test mission\n")
+    out = read_project_state(tmp_path)
+    assert "MISSION.md" in out
+    assert "turn-log.md" not in out
+
+
+def test_read_project_state_includes_turn_log_when_present(tmp_path: Path):
+    """Wargame extension: turn-log.md auto-injects when present."""
+    from hp_lib import read_project_state
+    (tmp_path / "MISSION.md").write_text("# Rules\n")
+    (tmp_path / "turn-log.md").write_text("## Turn 1\n- Red advances\n")
+    out = read_project_state(tmp_path)
+    assert "Red advances" in out
+    assert "turn-log.md" in out
+
+
 def test_validate_response_rejects_empty_stdout():
     ok, parsed = validate_response("", "[backend=x model=y template=z corpus=4 latency_ms=1 cost_usd=$0.01]")
     assert not ok

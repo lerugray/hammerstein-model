@@ -28,12 +28,11 @@ HEADER_RE = re.compile(
 
 
 def count_tokens(text: str) -> int:
-    """tiktoken cl100k_base proxy. Char-count fallback if missing."""
     try:
         import tiktoken
         return len(tiktoken.get_encoding("cl100k_base").encode(text))
     except ImportError:
-        return len(text) // 4
+        return len(text) // 4  # char-count fallback
 
 
 def fetch_corpus_ids(query: str, template: str, timeout: int = 30) -> list[int]:
@@ -138,6 +137,9 @@ def read_project_state(state_dir: Path) -> str:
             parts.append(f"### tasks.json\n\n```json\n{json.dumps(data, indent=2)}\n```\n")
         except json.JSONDecodeError:
             pass
+    turn_log = state_dir / "turn-log.md"  # load-bearing for wargame extension
+    if turn_log.is_file():
+        parts.append(f"### turn-log.md\n\n{turn_log.read_text()}\n")
     return "\n".join(parts)
 
 

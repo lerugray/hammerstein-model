@@ -85,7 +85,7 @@ context, not background execution.
 | Phase 4 | Failure-pattern preflight | Deferred — gated on Phase 3 sustained pass |
 | Phase 5 | Wargame solitaire opponent | Stretch — see WARGAME-EXTENSION.md |
 | Phase 6 | Local web UI | Stretch — see WEB-UI-EXTENSION.md |
-| **Distillation experiment** | Hammerstein-7B QLoRA adapter | ✅ trained + 4-condition eval passed 2026-05-08. ADAPTER WINS the prompt ablation by Δ=+0.206; student/gold ratio 1.01. Pushed to [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora). See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). Total cost ~$3.65 end-to-end. |
+| **Distillation experiment** | Hammerstein-7B QLoRA adapter + Q4_K_M GGUF | ✅ trained + 4-condition eval passed + GGUF/Ollama-ready 2026-05-08. ADAPTER WINS the prompt ablation by Δ=+0.206; student/gold ratio 1.01. Public at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora) — run on any 8 GB+ Mac via `ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`. See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). Total cost ~$3.97 end-to-end. |
 
 ## Honest framing
 
@@ -139,7 +139,8 @@ Requires `OPENROUTER_API_KEY` in env and the
 | Distillation: training (RunPod RTX 4090, ~50 min) | ~$0.50 |
 | Distillation: gold eval (40 OpenRouter calls) | $0.315 |
 | Distillation: pod eval (RunPod RTX 4090, ~1 hr) | ~$0.50 |
-| **Total wrapper + distilled adapter, end-to-end** | **~$3.75** |
+| Distillation: GGUF conversion (RunPod A5000, ~6 min + dud-pod retry) | ~$0.22 |
+| **Total wrapper + distilled adapter + GGUF, end-to-end** | **~$3.97** |
 | | |
 | Anthropic quota burned by hammerstein | $0 |
 

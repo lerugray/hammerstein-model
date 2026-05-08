@@ -2,8 +2,9 @@
 
 **Status:** Trained 2026-05-08, **4-condition eval passed** the same day.
 ADAPTER WINS the prompt ablation by Δ=+0.206 — the framework lives in
-the weights, not just in the system prompt. Pushed to HuggingFace at
-[`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora).
+the weights, not just in the system prompt. Pushed public to HuggingFace
+at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora),
+including a Q4_K_M GGUF for `ollama run` on any Mac (8 GB+).
 
 ## What this is
 
@@ -171,18 +172,34 @@ python tools/distill/infer.py \
     "Audit this plan: <your query>"
 ```
 
-### Option 3: GGUF + Ollama (deferred)
+### Option 3: GGUF + Ollama (Mac / CPU / no-GPU users)
 
-For local inference on Ray's Mac (8 GB unified memory) or any non-CUDA
-device, the adapter needs to be:
-1. Merged into the base model
-2. Converted to GGUF via llama.cpp's `convert_hf_to_gguf.py`
-3. Quantized to Q4_K_M for size
-4. Registered with Ollama via [Modelfile.template](tools/distill/Modelfile.template)
+The Q4_K_M-quantized GGUF (~4.7 GB) is on the same HF repo. Anyone
+with **8 GB+ RAM** can run it locally via Ollama:
 
-This is a follow-up step. The merge + convert needs ~16 GB system
-RAM; not viable on the 8 GB Mac without swap. Spin up a RunPod pod
-for ~30 min ($0.20) to do the conversion.
+```bash
+# One-time setup (Mac: brew install ollama if not present):
+huggingface-cli download lerugray/hammerstein-7b-lora \
+    --include "*.gguf" "Modelfile" \
+    --local-dir ~/hammerstein
+cd ~/hammerstein
+ollama create hammerstein -f Modelfile
+
+# Run:
+ollama run hammerstein "Audit this plan: ship MVP Friday"
+```
+
+Or, on Ollama 0.5.5+, pull directly from HF without the manual step:
+
+```bash
+ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M \
+    "Audit this plan: ship MVP Friday"
+```
+
+The conversion pipeline (`tools/distill/convert_gguf.py` +
+`run_gguf.sh`) ran on a RunPod RTX A5000 pod in ~6 min once the deps
+were sorted. Total cost across the GGUF effort (including a dud
+community-cloud pod and a numpy-version retry): ~$0.22.
 
 ## Sharing / portfolio distribution
 
@@ -220,13 +237,14 @@ To flip public: `python tools/distill/hf_push.py --public`.
 
 ## Next steps (Ray's call)
 
-- [ ] Flip HuggingFace repo public (one CLI command, reversible)
-- [ ] Update top-level [README.md](README.md) status table
-- [ ] (Optional) Convert to GGUF + register with Ollama for local
-      Mac inference
+- [x] ~~Flip HuggingFace repo public~~ (done 2026-05-08)
+- [x] ~~Update top-level [README.md](README.md) status table~~ (done)
+- [x] ~~Convert to GGUF + Ollama-ready~~ (done; Q4_K_M GGUF live on HF)
 - [ ] (Optional) Re-train with mixed-mode data to fix out-of-domain
       leakage — would push the forgetting-check score to ~0.05 if
-      done right. Cost: ~$1, ~1 hr
+      done right. Cost: ~$1, ~1 hr. Marginal per the GS-Claude take.
+- [ ] (Optional) Loud-launch post when the time's right — the artifact
+      can survive scrutiny; the launch is a separate decision.
 
 ## Per-prompt details
 

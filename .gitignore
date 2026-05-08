@@ -20,3 +20,15 @@ logs/
 # data/
 # indices/
 # rag-cache/
+
+# Wrapper preamble scratch files (see DESIGN.md)
+.hp-preamble.md
+quarantine/
+
+# Local venv
+.venv/
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/

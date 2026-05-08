@@ -31,8 +31,11 @@ attempting a clever-lazy DIY build before banking. Constraints:
 
 ## Status
 
-**Folder/repo prep landed 2026-05-08.** Awaiting dedicated Opus
-research session. Pre-flight questions in `RESEARCH-QUESTIONS.md`.
+**Dedicated Opus research session landed 2026-05-08.** Q1-Q4 walked
+with hammerstein advising. Q4 verdict flipped from "bank" (the
+2026-05-07 unconstrained-agent audit) to **proceed with
+modifications**. Locked-in scope and v1 implementation plan in
+`DESIGN.md`. Next: build Phase 1 MVP wrapper (~150 LOC, ~3 hours).
 
 ## Repo
 

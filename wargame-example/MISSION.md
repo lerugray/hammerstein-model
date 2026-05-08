@@ -276,28 +276,86 @@ After receiving orders: translate to specific moves on your board,
 roll dice, adjudicate, append outcome to `turn-log.md`, call
 again for Turn N+1 with a fresh verbal report.
 
-## Future: multimodal (photo input)
+## Multimodal: `hp_vision.py` (v2, shipped 2026-05-08)
 
-The natural next iteration is for the AI to also **read the board
-from a photo**: player snaps a picture of their physical map +
-counters, the wrapper sends it to a vision-capable model
-(Qwen-VL, GPT-4V, Claude vision) along with the text status, and
-the AI infers what it sees and issues kriegspiel orders. That
-removes the friction of writing verbal status reports each turn
-and lets the AI handle real-game OOBs (counter sheets from BGG,
-rulebook deployment diagrams, etc.).
+The vision-enabled sibling to `hp.py`. Default backend:
+`anthropic/claude-sonnet-4.6` via OpenRouter. Designed so a solo
+wargamer can:
 
-This requires extending `hp.py` to support image inputs — out of
-scope for v0 but a clear next step. The current wrapper is
-text-only via the `hammerstein` CLI, which is also text-only.
-Either:
+- Snap a photo of the physical board + counters
+- Scan or photograph the OOB (counter sheet, rulebook deployment
+  diagram, BGG materials)
+- Optionally provide an Excel sheet with the current OOB / status
+- Type a conversational status report ("Just played turn 3.
+  Russians took the bridge but lost a regiment to my artillery.
+  I'm thinking of consolidating my left flank.")
 
-- Extend `hammerstein` upstream to accept images, OR
-- Add a separate `hp_vision.py` that bypasses `hammerstein` and
-  goes direct to OpenRouter's vision endpoints.
+…and get kriegspiel-style mission orders back in the same
+five-section format as the text-only version.
 
-For now, kriegspiel-style orders work cleanly with text-only
-verbal reports.
+```bash
+hp_vision.py --state-dir my-wargame/ \
+             --image my-wargame/photos/board.jpg \
+             --image my-wargame/photos/counter-sheet.jpg \
+             --xlsx my-wargame/data/oob.xlsx \
+             "Just played Turn 3. Russians took the bridge but
+              lost a regiment. I'm thinking of consolidating my
+              left flank. What do you order?"
+```
+
+`hp_vision.py` reuses the same MISSION.md / tasks.json /
+turn-log.md state convention as `hp.py`, plus auto-trims long
+turn-logs via `hp_lib.trim_turn_log`. The framework system prompt
++ wargame role suffix is loaded from
+[`tools/distill/data/hammerstein-system-prompt.txt`](../tools/distill/data/hammerstein-system-prompt.txt).
+
+### Validated 2026-05-08
+
+A live-fire dry run with the Bridge Crossing state + the sample
+`data/oob.xlsx` (no actual image) produced:
+
+- Correct OOB reading from Excel ("Both Red battalions are at
+  strength 2")
+- Refusal to rubber-stamp a bad plan ("There is no flanking ford
+  — the engineer is gone, the river is impassable")
+- Brutal fallback assessment when warranted ("No reserves. No
+  fallback. We are past the withdrawal point.")
+
+That output is the verbatim Turn 4 entry in `turn-log.md` (with
+the source query). Cost ~$0.04, latency 10.5 sec.
+
+### File support
+
+- **Images**: JPG/JPEG/PNG/WebP/GIF, ≤20 MB each. Encoded as
+  data: URLs, sent inline.
+- **Excel**: `.xlsx` files. Each sheet rendered as a markdown
+  table in the user message. `data_only=True` so formulas show
+  computed values, not formula text.
+- **Future**: PDF support (rulebook pages) is the obvious next
+  add — would need `pdftoppm` or `pypdf2` to convert to images.
+  Defer until a real wargamer hits the friction.
+
+### Copyright considerations
+
+- Photos of YOUR physical board / counters / rulebook stay on
+  YOUR machine + ephemeral on OpenRouter. Don't commit them to
+  any public repo.
+- Specifically don't commit BGG counter-sheet images or
+  copyrighted publisher materials. Personal use of those for
+  AI-assisted solo play is fair use; redistributing them is not.
+
+### Switching models
+
+Override the default via `--model`:
+
+```bash
+hp_vision.py --model openai/gpt-4o ...           # GPT-4o vision
+hp_vision.py --model anthropic/claude-opus-4.7 ... # heavier Claude
+hp_vision.py --model qwen/qwen3-vl-72b-instruct ... # Qwen, cheaper
+```
+
+Run `curl -s -H "Authorization: Bearer $OPENROUTER_API_KEY"
+https://openrouter.ai/api/v1/models` for the full current list.
 
 ## Drift signals (when to drop the feature)
 

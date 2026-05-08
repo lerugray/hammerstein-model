@@ -83,7 +83,7 @@ context, not background execution.
 | Phase 2 | Pytest validation | ✅ done — 19/19 passing |
 | Phase 3 | Dogfood + auto-enforced gate | ✅ CONTINUE verdict (cost ratio 1.23×, 3/5 last calls had conclusion_changed=true) |
 | Phase 4 | Failure-pattern preflight | Deferred — gated on Phase 3 sustained pass |
-| Phase 5 | Wargame solitaire opponent | ✅ v0 shipped 2026-05-08 — `--state-dir` flag + Bridge Crossing example wargame at [`wargame-example/`](wargame-example/), dogfooded 3 turns. See [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md). |
+| Phase 5 | Wargame solitaire opponent | ✅ v0 + v1 (kriegspiel pivot) + v2 (multimodal `hp_vision.py`) shipped 2026-05-08. Photo + Excel OOB + conversational input → Auftragstaktik mission orders via Sonnet 4.6. See [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md). |
 | Phase 6 | Local web UI | Stretch — see WEB-UI-EXTENSION.md |
 | **Distillation experiment** | Hammerstein-7B QLoRA adapter + Q4_K_M GGUF | ✅ trained + 4-condition eval passed + GGUF/Ollama-ready 2026-05-08. ADAPTER WINS the prompt ablation by Δ=+0.206; student/gold ratio 1.01. Public at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora) — run on any 8 GB+ Mac via `ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`. See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). Total cost ~$3.97 end-to-end. |
 

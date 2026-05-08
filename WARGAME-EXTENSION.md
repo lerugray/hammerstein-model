@@ -14,6 +14,16 @@ natural for the model (no hex hallucinations), and is closer to
 how solo wargamers actually operate (verbal status reports +
 mission orders, not structured-data state-tracking).
 
+**v2 (multimodal, shipped 2026-05-08):** [`hp_vision.py`](hp_vision.py),
+sibling to `hp.py`, takes board photos + Excel OOB sheets +
+conversational status reports and produces kriegspiel orders.
+Default backend: `anthropic/claude-sonnet-4.6` via OpenRouter.
+Reuses the same MISSION.md / tasks.json / turn-log.md state
+convention. Validated on the Bridge Crossing example 2026-05-08
+(text + Excel; image wiring proven via the API schema). See
+[`wargame-example/MISSION.md`](wargame-example/MISSION.md)
+"Multimodal" section for the working recipe + workflow.
+
 **Output structure** (kriegspiel-shaped):
 
 - `## Situation` — what the commander reads from the report

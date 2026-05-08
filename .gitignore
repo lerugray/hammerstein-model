@@ -32,3 +32,6 @@ quarantine/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Distillation experiment artifacts (large, regeneratable)
+tools/distill/data/

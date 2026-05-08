@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -152,24 +153,103 @@ def main() -> int:
     # Real execution path — only entered with --execute
     print(f"\n[EXECUTE] training {args.model_key} via {args.backend}…")
 
-    if args.backend == "unsloth":
-        # Unsloth + TRL pipeline. The standard pattern:
-        # from unsloth import FastLanguageModel
-        # from trl import SFTTrainer
-        # model, tok = FastLanguageModel.from_pretrained(config['base_model'], ...)
-        # model = FastLanguageModel.get_peft_model(model, r=config['lora_rank'], ...)
-        # trainer = SFTTrainer(model=model, train_dataset=..., args=...)
-        # trainer.train()
-        # model.save_pretrained(out_dir)
-        sys.exit("unsloth training not yet wired; install + implement after data is generated")
+    if args.backend in ("unsloth", "kaggle"):
+        return train_unsloth(rows, config, out_dir)
     elif args.backend == "mlx":
-        # mlx_lm.lora --model {base} --train --data {data_path} --adapter-path {out_dir}
-        sys.exit("mlx training not yet wired; install + implement after data is generated")
-    elif args.backend == "kaggle":
-        # Same as unsloth but with /kaggle/working/ paths
-        sys.exit("kaggle path not yet wired; configure when running on Kaggle")
+        return train_mlx(data_path, config, out_dir)
+    sys.exit(f"unknown backend: {args.backend}")
 
+
+def train_unsloth(rows: list[dict], config: dict, out_dir: Path) -> int:
+    """Real Unsloth + TRL QLoRA training. Requires:
+        pip install unsloth trl peft transformers datasets
+    Run on RunPod RTX 4090 or Kaggle T4/P100. Local 6GB VRAM not viable
+    for 7B; use llama-3b or run cloud."""
+    try:
+        from unsloth import FastLanguageModel, is_bfloat16_supported
+        from trl import SFTTrainer
+        from transformers import TrainingArguments
+        from datasets import Dataset
+    except ImportError as e:
+        sys.exit(f"missing dependency: {e}\n"
+                 f"Install: pip install unsloth trl peft transformers datasets")
+
+    print(f"  loading {config['base_model']}…")
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_name=config["base_model"],
+        max_seq_length=config["max_seq_length"],
+        load_in_4bit=True,
+    )
+    print(f"  applying LoRA (rank={config['lora_rank']})…")
+    model = FastLanguageModel.get_peft_model(
+        model,
+        r=config["lora_rank"],
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
+                        "gate_proj", "up_proj", "down_proj"],
+        lora_alpha=config["lora_alpha"],
+        lora_dropout=0,
+        bias="none",
+    )
+
+    print(f"  formatting {len(rows)} training rows…")
+    formatted = []
+    for r in rows:
+        msgs = [{"role": "user", "content": r["query"]},
+                {"role": "assistant", "content": r["response"]}]
+        text = tokenizer.apply_chat_template(msgs, tokenize=False)
+        formatted.append({"text": text})
+    dataset = Dataset.from_list(formatted)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    print(f"  starting training → {out_dir}")
+    trainer = SFTTrainer(
+        model=model,
+        tokenizer=tokenizer,
+        train_dataset=dataset,
+        dataset_text_field="text",
+        max_seq_length=config["max_seq_length"],
+        args=TrainingArguments(
+            output_dir=str(out_dir),
+            per_device_train_batch_size=config["batch_size"],
+            gradient_accumulation_steps=config["grad_accum"],
+            num_train_epochs=config["epochs"],
+            learning_rate=config["learning_rate"],
+            bf16=is_bfloat16_supported(),
+            fp16=not is_bfloat16_supported(),
+            logging_steps=10,
+            save_strategy="epoch",
+            optim="adamw_8bit",
+            warmup_ratio=0.03,
+            lr_scheduler_type="linear",
+            seed=42,
+        ),
+    )
+    trainer.train()
+    print(f"  saving adapter → {out_dir}/lora-adapter")
+    model.save_pretrained(str(out_dir / "lora-adapter"))
+    tokenizer.save_pretrained(str(out_dir / "lora-adapter"))
+    print(f"\nTraining complete. Next: convert to GGUF for Ollama.")
+    print(f"  python -m unsloth.export --model {out_dir}/lora-adapter "
+          f"--save_method q4_k_m --output {out_dir}/hammerstein.gguf")
     return 0
+
+
+def train_mlx(data_path: Path, config: dict, out_dir: Path) -> int:
+    """MLX-LM training scaffold for Apple Silicon. 8GB Macs only handle
+    1-3B models; 7B will OOM. Use --model-key llama-3b for Mac path."""
+    try:
+        import mlx_lm  # noqa: F401
+    except ImportError:
+        sys.exit("missing dependency: mlx-lm\nInstall: pip install mlx-lm")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cmd = ["python", "-m", "mlx_lm.lora",
+           "--model", config["base_model"].replace("unsloth/", "").replace("-bnb-4bit", ""),
+           "--train", "--data", str(data_path.parent),
+           "--adapter-path", str(out_dir / "lora-adapter"),
+           "--iters", "1000", "--batch-size", str(config["batch_size"])]
+    print(f"  running: {' '.join(cmd)}")
+    r = subprocess.run(cmd, check=False)
+    return r.returncode
 
 
 if __name__ == "__main__":

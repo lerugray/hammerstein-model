@@ -14,10 +14,10 @@ from hp_filter import filter_by_relevance
 from hp_lib import (
     DEFAULT_MAX_PREAMBLE_TOKENS, DEFAULT_TEMPLATE, DEFAULT_TIMEOUT_S,
     HP_LOG, HP_METRICS, MAIN_LOG, PREAMBLE_FILE,
-    append_jsonl, auto_detect_project_state, build_preamble, count_tokens,
+    append_jsonl, build_preamble, count_tokens,
     entry_ids, fetch_corpus_ids, quarantine_output,
-    read_jsonl, read_project_state, run_hammerstein, select_for_preamble,
-    validate_cli_contract, validate_response,
+    read_jsonl, read_project_state, resolve_state_dir, run_hammerstein,
+    select_for_preamble, validate_cli_contract, validate_response,
 )
 
 
@@ -29,6 +29,10 @@ def main() -> int:
     p.add_argument("--max-preamble-tokens", type=int, default=DEFAULT_MAX_PREAMBLE_TOKENS)
     p.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT_S)
     p.add_argument("--project", default=None, help="GS state dir name override.")
+    p.add_argument("--state-dir", default=None,
+                   help="Explicit project-state directory (any path on disk). "
+                        "Overrides --project / GS auto-detect. Used by the wargame "
+                        "extension so a wargame folder can ship outside GS.")
     p.add_argument("--no-memory", action="store_true",
                    help="Skip prior-audit retrieval (project state still injected). For ablation.")
     p.add_argument("--no-context", action="store_true",
@@ -45,7 +49,7 @@ def main() -> int:
     t0 = dt.datetime.now(dt.timezone.utc)
     new_ids = set(fetch_corpus_ids(args.query, args.template))
 
-    state_dir = None if args.no_context else auto_detect_project_state(args.project)
+    state_dir = None if args.no_context else resolve_state_dir(args.state_dir, args.project)
     state_overhead = count_tokens(read_project_state(state_dir)) if state_dir else 0
     audit_budget = max(0, args.max_preamble_tokens - state_overhead)
 

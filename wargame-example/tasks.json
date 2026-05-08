@@ -1,0 +1,18 @@
+{
+  "scenario": "Bridge Crossing — Steinbach",
+  "current_turn": 4,
+  "ai_plays_side": "Red",
+  "blue": [
+    {"name": "1st Bn",   "type": "infantry",  "strength": 4, "hex": "D2", "status": "in_village",    "notes": "Defender; village +1 def. Untouched through Turn 3."},
+    {"name": "Recon Co", "type": "infantry",  "strength": 2, "hex": "C3", "status": "overwatch",     "notes": "Scored hit Turn 3 on 2nd Bn at D4."},
+    {"name": "Bty A",    "type": "artillery", "strength": 2, "hex": "E2", "status": "deployed",      "notes": "Range 3. Scored hit Turn 3 on 3rd Bn at E4."}
+  ],
+  "red": [
+    {"name": "2nd Bn", "type": "infantry", "strength": 2, "hex": "D4", "status": "engaged", "notes": "Adjacent to bridge D3. Took hits in Turn 1 and Turn 3 (-2 total)."},
+    {"name": "3rd Bn", "type": "infantry", "strength": 2, "hex": "E4", "status": "engaged", "notes": "Took hits Turn 2 and Turn 3 (-2 total). Adjacent to forest F4."}
+  ],
+  "red_eliminated": [
+    {"name": "Eng Co", "lost_turn": 2, "lost_hex": "D3 (bridge)", "cause": "Blue Recon Co overwatch fire"}
+  ],
+  "two_turns_remaining": "Red must put a unit on D2 (village) or row 1 by end of Turn 5 to win. Currently at D4/E4 with str 2/2 each. Bridge D3 is contested and Recon Co overwatch is intact. The kill criterion (per WARGAME-EXTENSION.md) is 'I'm spending more time cleaning up the AI's orders than I would have spent planning my own' — track if applies."
+}

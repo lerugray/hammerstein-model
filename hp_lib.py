@@ -120,6 +120,24 @@ def auto_detect_project_state(override: str | None) -> Path | None:
     return p if p.is_dir() else None
 
 
+def resolve_state_dir(explicit: str | None, project_override: str | None) -> Path | None:
+    """Resolve where to read project state from.
+
+    Priority: --state-dir (explicit path, anywhere on disk)
+           > --project (named dir under GS_STATE_ROOT)
+           > auto-detect by cwd name under GS_STATE_ROOT.
+
+    The --state-dir form is what makes the wargame extension portable
+    beyond Ray's GS layout — a wargame ships as a directory with
+    rules.md / units.json / turn-log.md / wargame-context.md, and the
+    operator passes that path explicitly.
+    """
+    if explicit:
+        p = Path(explicit).expanduser().resolve()
+        return p if p.is_dir() else None
+    return auto_detect_project_state(project_override)
+
+
 def read_project_state(state_dir: Path) -> str:
     parts = []
     mission = state_dir / "MISSION.md"

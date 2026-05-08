@@ -1,0 +1,38 @@
+Bridge Crossing — Steinbach
+============================
+
+Map (7×5 grid; rows 1–5 top-to-bottom, columns A–G left-to-right):
+
+         A      B      C      D      E      F      G
+       +------+------+------+------+------+------+------+
+   1   | open | open | open | open | open | open | open |   ← Blue rear
+       +------+------+------+------+------+------+------+
+   2   | open |Forest| open |Villag|Bty A |Forest| open |   ← Blue forward
+       |      |      |      | 1stBn|      |      |      |
+       +------+------+------+------+------+------+------+
+   3   | RIVR | RIVR |RECON | BRDG | RIVR | RIVR | RIVR |   ← River line
+       |      |      | (Co) |      |      |      |      |
+       +------+------+------+------+------+------+------+
+   4   | open |Forest| open | open | open |Forest| open |   ← No-mans-land
+       +------+------+------+------+------+------+------+
+   5   | open | open | 2ndBn| EngCo| 3rdBn| open | open |   ← Red start
+       +------+------+------+------+------+------+------+
+
+Legend:
+  Villag = Steinbach village (defender +1, attacker -1 to hit)
+  Forest = forest hex (defender +1)
+  RIVR   = Argent River (impassable, except via bridge or pontoon)
+  BRDG   = bridge at D3 (the only crossing initially)
+  RECON  = Blue Recon Co overwatching the bridge (currently at C3)
+
+Distances: each step orthogonal = 1 hex.
+Adjacency: up / down / left / right. (No diagonals; treat as square
+grid for simplicity. For true hex play, use standard 6-neighbor
+hex adjacency.)
+
+Sample distances:
+  Red 2ndBn (C5) → Bridge (D3) = 3 hexes
+  Red 3rdBn (E5) → Bridge (D3) = 3 hexes
+  Red EngCo (D5) → any river hex (e.g., C3, E3) = 2 hexes
+  Blue 1stBn (D2) → Bridge (D3) = 1 hex
+  Blue Bty A (E2) — artillery, ranged 3 hexes — covers most of map

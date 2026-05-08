@@ -1,7 +1,14 @@
 # Wargame Solitaire Opponent — Stretch Extension
 
-**Status:** Phase 5 stretch. Gated on Phase 3 dogfood passing AND
-Phase 4 (failure-pattern preflight) decision. Do not pre-build.
+**Status:** ✅ v0 shipped 2026-05-08. `--state-dir` flag wired into
+`hp.py`; self-authored example scenario at
+[`wargame-example/`](wargame-example/) (Bridge Crossing — Steinbach,
+3 turns dogfooded). The working query pattern is documented in
+[`wargame-example/MISSION.md`](wargame-example/MISSION.md) under
+"Calling the wrapper — working recipe."
+
+The original spec (below) is preserved as design context. v0
+implements the minimum viable shape from the spec.
 
 **Audience:** Wargamers playing solitaire. Ray's domain; portfolio-
 relevant; possibly distributable / monetizable.

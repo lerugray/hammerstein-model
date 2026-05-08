@@ -13,10 +13,10 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from hp_filter import filter_by_relevance, relevance_score, tokenize  # noqa: E402
 from hp_lib import (  # noqa: E402
     DEFAULT_MAX_PREAMBLE_TOKENS, append_jsonl, build_preamble, count_tokens,
-    entry_ids, filter_similar, format_entry, read_jsonl, select_for_preamble,
-    validate_response,
+    entry_ids, format_entry, read_jsonl, select_for_preamble, validate_response,
 )
 
 
@@ -31,22 +31,59 @@ def test_entry_ids_handles_missing_and_malformed():
     assert entry_ids({"retrieved_corpus_ids": ["01", "x", None, 7]}) == {1, 7}
 
 
-def test_filter_similar_with_min_match_2():
+def test_tokenize_strips_stop_words_and_short_tokens():
+    out = tokenize("Audit this plan for the TWAR PC dispatcher rebuild")
+    # 'audit', 'plan', 'this', 'for', 'the' are stop words; 'PC' is < 3 chars
+    assert "twar" in out
+    assert "dispatcher" in out
+    assert "rebuild" in out
+    assert "audit" not in out
+    assert "plan" not in out
+    assert "the" not in out
+
+
+def test_relevance_score_zero_for_no_overlap():
+    import datetime as dt
+    now = dt.datetime(2026, 5, 8, tzinfo=dt.timezone.utc)
+    e = {"query": "completely unrelated content", "timestamp": "2026-05-08T00:00:00Z"}
+    assert relevance_score(tokenize("TWAR dispatcher rebuild"), e, now) == 0.0
+
+
+def test_relevance_score_decays_with_age():
+    import datetime as dt
+    now = dt.datetime(2026, 5, 8, tzinfo=dt.timezone.utc)
+    fresh = {"query": "TWAR dispatcher rebuild plan", "timestamp": "2026-05-08T00:00:00Z"}
+    old = {"query": "TWAR dispatcher rebuild plan", "timestamp": "2026-04-15T00:00:00Z"}
+    qt = tokenize("TWAR dispatcher rebuild plan")
+    assert relevance_score(qt, fresh, now) > relevance_score(qt, old, now)
+
+
+def test_filter_by_relevance_returns_score_sorted():
+    """Tiny corpora trigger the rare-token threshold pathology; force
+    rare_threshold=1.01 to count every token as 'rare' for the test."""
+    import datetime as dt
+    now = dt.datetime(2026, 5, 8, tzinfo=dt.timezone.utc)
     entries = [
-        {"retrieved_corpus_ids": ["01", "02", "33"]},   # 2 matches
-        {"retrieved_corpus_ids": ["01", "99", "98"]},   # 1 match
-        {"retrieved_corpus_ids": ["50", "51", "52"]},   # 0 matches
+        {"query": "TWAR dispatcher noise irrelevant", "timestamp": "2026-05-08T00:00:00Z"},
+        {"query": "TWAR dispatcher rebuild plan exact", "timestamp": "2026-05-08T00:00:00Z"},
+        {"query": "completely unrelated thing", "timestamp": "2026-05-08T00:00:00Z"},
     ]
-    out = filter_similar(entries, {1, 2}, min_match=2)
-    assert len(out) == 1
-    assert entry_ids(out[0]) == {1, 2, 33}
+    out = filter_by_relevance(entries, "TWAR dispatcher rebuild plan",
+                              now=now, min_score=1.0, rare_threshold=1.01)
+    assert len(out) == 2  # third is dropped (no overlap)
+    assert "exact" in out[0]["query"]  # higher overlap ranks first
 
 
-def test_filter_similar_falls_back_to_min_match_1():
-    entries = [{"retrieved_corpus_ids": ["01"]}]
-    out = filter_similar(entries, {1, 99}, min_match=2)
-    # No ≥2 matches, falls back to ≥1
-    assert len(out) == 1
+def test_filter_by_relevance_respects_top_k():
+    import datetime as dt
+    now = dt.datetime(2026, 5, 8, tzinfo=dt.timezone.utc)
+    entries = [
+        {"query": f"TWAR dispatcher rebuild plan match{i}", "timestamp": "2026-05-08T00:00:00Z"}
+        for i in range(10)
+    ]
+    out = filter_by_relevance(entries, "TWAR dispatcher rebuild plan",
+                              now=now, min_score=1.0, top_k=3, rare_threshold=1.01)
+    assert len(out) == 3
 
 
 def test_select_for_preamble_respects_token_budget():

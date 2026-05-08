@@ -70,7 +70,9 @@ def read_jsonl(path: Path) -> list[dict]:
 
 
 def entry_ids(entry: dict) -> set[int]:
-    """Coerce retrieved_corpus_ids (zero-padded strings in the log) to ints."""
+    """Coerce retrieved_corpus_ids (zero-padded strings in the log) to ints.
+    Diagnostic only post-Phase-1.5 — the intersection-based filter was
+    replaced; see hp_filter.py."""
     out = set()
     for x in entry.get("retrieved_corpus_ids") or []:
         try:
@@ -78,14 +80,6 @@ def entry_ids(entry: dict) -> set[int]:
         except (TypeError, ValueError):
             pass
     return out
-
-
-def filter_similar(entries: list[dict], new_ids: set[int], min_match: int = 2) -> list[dict]:
-    """Corpus-id intersection. Falls back to ≥1 if no ≥min_match hits."""
-    matches = [e for e in entries if len(entry_ids(e) & new_ids) >= min_match]
-    if not matches and min_match > 1:
-        return filter_similar(entries, new_ids, min_match=1)
-    return matches
 
 
 def format_entry(entry: dict, new_ids: set[int]) -> str:
@@ -106,9 +100,10 @@ def format_entry(entry: dict, new_ids: set[int]) -> str:
 
 
 def select_for_preamble(matches: list[dict], new_ids: set[int], max_tokens: int) -> list[dict]:
-    matches_sorted = sorted(matches, key=lambda e: e.get("timestamp", ""), reverse=True)
+    """Greedy fill respecting a token budget. Input order preserved — callers
+    are responsible for ordering (relevance-sorted from filter_by_relevance)."""
     selected, running = [], 0
-    for e in matches_sorted:
+    for e in matches:
         cost = count_tokens(format_entry(e, new_ids))
         if running + cost > max_tokens:
             break

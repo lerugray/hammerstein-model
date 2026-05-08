@@ -10,11 +10,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+from hp_filter import filter_by_relevance
 from hp_lib import (
     DEFAULT_MAX_PREAMBLE_TOKENS, DEFAULT_TEMPLATE, DEFAULT_TIMEOUT_S,
     HP_LOG, HP_METRICS, MAIN_LOG, PREAMBLE_FILE,
     append_jsonl, auto_detect_project_state, build_preamble, count_tokens,
-    entry_ids, fetch_corpus_ids, filter_similar, quarantine_output,
+    entry_ids, fetch_corpus_ids, quarantine_output,
     read_jsonl, read_project_state, run_hammerstein, select_for_preamble,
     validate_cli_contract, validate_response,
 )
@@ -52,7 +53,7 @@ def main() -> int:
         selected, matched_ids = [], []
     else:
         all_entries = read_jsonl(MAIN_LOG) + read_jsonl(HP_LOG)
-        matches = filter_similar(all_entries, new_ids, min_match=2)
+        matches = filter_by_relevance(all_entries, args.query)
         selected = select_for_preamble(matches, new_ids, audit_budget)
         matched_ids = sorted({i for e in selected for i in (entry_ids(e) & new_ids)})
 

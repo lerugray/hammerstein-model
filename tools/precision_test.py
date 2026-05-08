@@ -22,9 +22,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from hp_filter import filter_by_relevance  # noqa: E402
 from hp_lib import (  # noqa: E402
     DEFAULT_MAX_PREAMBLE_TOKENS, MAIN_LOG, entry_ids, fetch_corpus_ids,
-    filter_similar, format_entry, read_jsonl, select_for_preamble,
+    format_entry, read_jsonl, select_for_preamble,
 )
 
 DEFAULT_N = 10
@@ -55,14 +56,15 @@ def generate_sheet(n: int, template: str, max_tokens: int) -> Path:
         f"# hp precision test — {dt.datetime.now().strftime('%Y-%m-%d')}",
         "",
         f"Picked {len(targets)} recent {template} queries. For each, the matches",
-        "the corpus-id intersection filter would inject are listed below.",
+        "the rare-token relevance filter (hp_filter.filter_by_relevance) would",
+        "inject are listed below.",
         "",
         "**Score:** for each match, change `[ ]` → `[x]` if structurally relevant",
         "(same failure pattern, not just topically similar). Leave `[ ]` if noise.",
         "",
         f"Then run: `python tools/precision_test.py --score {out.relative_to(Path.cwd())}`",
         "",
-        f"Gate: ≥{int(PRECISION_THRESHOLD*100)}% to commit to the intersection heuristic.",
+        f"Gate: ≥{int(PRECISION_THRESHOLD*100)}% precision to validate the heuristic.",
         "",
     ]
 
@@ -77,7 +79,8 @@ def generate_sheet(n: int, template: str, max_tokens: int) -> Path:
 
         # Exclude the target itself from the pool
         pool = [e for e in main_entries if e.get("timestamp") != target.get("timestamp")]
-        matches = filter_similar(pool, new_ids, min_match=2)
+        # Use the relevance filter (Phase 1.5 fallback after intersection failed at 15.2%)
+        matches = filter_by_relevance(pool, target_query)
         selected = select_for_preamble(matches, new_ids, max_tokens)
 
         lines.append(f"## Query {i} — {target.get('timestamp', '?')}")

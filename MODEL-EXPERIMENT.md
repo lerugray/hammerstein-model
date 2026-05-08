@@ -195,19 +195,12 @@ memory, Ollama.app installed.
 - **Inference of 7B GGUF after merge**: ✅ works in Ollama
   (4-bit quant fits easily)
 
-Ray's PC: NVIDIA, 8-12 GB VRAM (model unconfirmed — run
-`nvidia-smi --query-gpu=name,memory.total --format=csv` on the PC).
+Ray's PC: **RTX 3050 6GB VRAM** (confirmed via
+`generalstaff-private/docs/sessions/2026-05-06-homepc-evening.md`).
 
-The 8-12 GB range bifurcates the recommendation:
-
-- **12 GB+** (e.g., RTX 3060 12GB, 4070 Ti 12GB, 4080, 4090):
-  ✅ Qwen 2.5 7B QLoRA fits comfortably with Unsloth. Local training
-  is the right path. Total cost: just data ($20).
-- **8-10 GB** (e.g., RTX 3060 Ti, 3070, 4060, 4060 Ti 8GB):
-  ⚠️ Qwen 7B QLoRA is tight (Unsloth claims 8-10GB minimum but OOM
-  is a real risk under load). Two options:
-  - Train Llama 3.2 3B locally (safer, smaller artifact)
-  - Train Qwen 2.5 7B on rented cloud GPU ($1.50-3 one-shot)
+6 GB rules out 7B QLoRA training entirely (Unsloth's floor is 8-10
+GB for 7B; 6 GB OOMs immediately). Even Llama 3.2 3B is borderline
+on 6GB. **Cloud is the path for E3.**
 
 ## On cloud GPU subscriptions
 
@@ -224,15 +217,28 @@ beats subscription. The math:
 | **Lambda Labs A100** | $2.49/hr | More expensive than RunPod; same quality. |
 | **vast.ai marketplace** | $0.20-0.40/hr | Cheapest; less reliable hosts. |
 
-**Recommendation:** if your PC has 12GB+, train locally — total cost
-is the $20 of synthetic data. If 8-10GB, pick one:
-- Free + slightly friction-y: **Kaggle Notebooks**
-- Paid + clean: **RunPod RTX 4090** at $1.50-3 one-shot
+**Recommendation given 6GB VRAM constraint:**
 
-Either path keeps total under $25.
+Two viable paths:
 
-A monthly subscription only makes sense if you plan to do **multiple
-fine-tuning experiments**. For one Hammerstein-7B distillation, no.
+1. **Free + slightly friction-y: Kaggle Notebooks** (T4/P100 GPU,
+   16GB VRAM, 30 hours/week free). Upload data, run training script
+   in a notebook, download adapter. Slight UI overhead but $0.
+
+2. **Paid + clean: RunPod RTX 4090** at $0.34/hr. SSH in, run
+   training, download adapter. ~4 hours of training = ~$1.50.
+   Cleanest workflow, ~$3 budget upper bound.
+
+Both produce the same artifact. Recommendation: **RunPod for the
+cleaner workflow** — at $1.50-3 it's a rounding error against the
+~$8 already spent on data generation, and skipping Kaggle's UI
+friction matters when you're at work and want to leave training
+unattended.
+
+Total experiment cost lands at **~$10-12** even with cloud training.
+
+A monthly subscription only makes sense if you plan multiple
+fine-tuning runs. For one Hammerstein-7B distillation, no.
 
 ## What ships at the end
 

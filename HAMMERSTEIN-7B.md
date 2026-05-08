@@ -1,7 +1,9 @@
 # Hammerstein-7B — Distilled LoRA Adapter
 
-**Status:** Trained and validated 2026-05-08. The artifact passes the
-≥80% structural-score gate set in [MODEL-EXPERIMENT.md](MODEL-EXPERIMENT.md).
+**Status:** Trained 2026-05-08, 3-prompt spot-check passed, pushed to
+HuggingFace as private at `huggingface.co/lerugray/hammerstein-7b-lora`.
+Full 40-prompt eval + base+sysprompt ablation + dedicated forgetting
+check are pending — not yet a defensible portfolio claim.
 
 ## What this is
 
@@ -26,7 +28,7 @@ tools/distill/output/qwen-7b-hammerstein-lora/lora-adapter/
 ├── chat_template.jinja       # Qwen2.5 chat format
 ├── tokenizer.json
 ├── tokenizer_config.json
-└── README.md (HF auto-generated)
+└── README.md (v0 model card; mirrored to HF)
 ```
 
 This directory is gitignored locally (323 MB exceeds GitHub's
@@ -82,11 +84,17 @@ a stable production app."
   framework choice is rarely the bottleneck)
 - ✅ Concrete verdict + falsification test
 
-**Pass criteria** (per Hammerstein audit):
-- Structural shape: ≥80% of gold ✅ (all markers present in 3/3)
-- Hallucination rate: ≤15% ✅ (no fabricated facts; minor typos only)
-- No catastrophic forgetting on generic tasks ✅ (responses are
-  coherent across saas/infra/frontend domains)
+**Spot-check observations** (n=3, NOT yet a portfolio claim):
+- All required structural markers present in all 3 responses
+- No fabricated facts in domain reasoning (minor typos only)
+- Outputs coherent across saas/infra/frontend domains
+
+The Hammerstein-audit pass criteria (≥80% of gold structural score,
+≤15% hallucination rate, no catastrophic forgetting on out-of-domain
+tasks) require the full 40-prompt eval + base+sysprompt ablation +
+dedicated forgetting check. None of those have run yet. Until they
+do, treat the spot-check as internal validation only — not as
+gate-pass evidence.
 
 ## Using the adapter
 
@@ -137,19 +145,20 @@ RAM; not viable on the 8 GB Mac without swap. Two paths:
 
 ## Sharing / portfolio distribution
 
-The adapter is too large for git. Three viable distribution paths:
+Pushed to HuggingFace as **private** at
+[`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora)
+on 2026-05-08 via [`tools/distill/hf_push.py`](tools/distill/hf_push.py).
+Durability backup is now in place (drive failure no longer means a
+50-min retrain).
 
-1. **HuggingFace Hub** (recommended for portfolio): push to
-   `huggingface.co/lerugray/hammerstein-7b-lora` with a model card.
-   Free, public, idiomatic for ML artifacts. Required: HF account +
-   API token.
-2. **GitHub Release**: attach the .tar.gz as a release asset to a
-   git tag. Up to 2 GB per file. No LFS needed. Less idiomatic but
-   works.
-3. **Git LFS**: track the adapter in a `weights` branch. Adds setup
-   friction; not great for casual cloners.
+The flip from private → public is gated on:
+1. The full 40-prompt × 4-condition eval landing (gold / student /
+   base+sysprompt / base-no-prompt)
+2. A dedicated catastrophic-forgetting check (haiku, binary-tree
+   explanation, etc.)
+3. Updating this card with eval results + ablation finding
 
-Recommendation: HuggingFace, once Ray decides whether to ship.
+To flip public when ready: `python tools/distill/hf_push.py --public`.
 
 ## What this isn't
 

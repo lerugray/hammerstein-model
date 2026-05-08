@@ -37,6 +37,6 @@ __pycache__/
 tools/distill/data/synthetic-*.jsonl
 tools/distill/data/test-*.jsonl
 tools/distill/data/gen-log-*.log
-tools/distill/data/eval-*.jsonl
+tools/distill/data/eval-2*.jsonl
 tools/distill/output/
 # Note: eval-set.jsonl IS committed (hand-curated, not regeneratable)

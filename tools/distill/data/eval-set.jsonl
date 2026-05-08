@@ -1,0 +1,40 @@
+{"template": "audit-this-plan", "domain": "saas-startup", "query": "Audit this plan: ship an MVP of my SaaS to 5 beta users this Friday before adding payment integration."}
+{"template": "audit-this-plan", "domain": "infrastructure", "query": "Audit this plan: switch our 50K-row Postgres database to MongoDB to 'scale better' before our Series A."}
+{"template": "audit-this-plan", "domain": "frontend", "query": "Audit this plan: spend 2 weeks rewriting our React UI in Svelte to 'improve performance' on a stable production app."}
+{"template": "audit-this-plan", "domain": "open-source", "query": "Audit this plan: open-source our internal admin tool to 'build community' without dedicated maintainer time."}
+{"template": "audit-this-plan", "domain": "team-ops", "query": "Audit this plan: hire a junior dev for the first time when our senior devs are already overloaded with 60+ hour weeks."}
+{"template": "audit-this-plan", "domain": "creator-economy", "query": "Audit this plan: launch a Patreon for our YouTube channel that has 800 subscribers and uploads monthly."}
+{"template": "audit-this-plan", "domain": "open-source", "query": "Audit this plan: fork the upstream library to add the feature we need rather than submitting a PR."}
+{"template": "audit-this-plan", "domain": "team-ops", "query": "Audit this plan: migrate our entire team from Slack to Discord because Discord is 'free for now' and Slack costs $7/user/month."}
+{"template": "audit-this-plan", "domain": "growth", "query": "Audit this plan: ship the new pricing page experiment to 100% of users instead of running an A/B test first."}
+{"template": "audit-this-plan", "domain": "team-ops", "query": "Audit this plan: cut our marketing budget 50% to fund a new hire for the engineering team."}
+{"template": "scope-this-idea", "domain": "browser-extension", "query": "Scope this idea: a Chrome extension that auto-summarizes long Slack threads using a local LLM."}
+{"template": "scope-this-idea", "domain": "personal-tooling", "query": "Scope this idea: a static-site generator that compiles Notion docs into a portfolio website."}
+{"template": "scope-this-idea", "domain": "tabletop-games", "query": "Scope this idea: a Discord bot for tabletop RPG groups that tracks initiative and dice rolls."}
+{"template": "scope-this-idea", "domain": "personal-tooling", "query": "Scope this idea: a markdown-based bullet journal app that syncs via git to multiple devices."}
+{"template": "scope-this-idea", "domain": "cli-tooling", "query": "Scope this idea: a CLI tool that converts natural language into ffmpeg commands."}
+{"template": "scope-this-idea", "domain": "newsletter", "query": "Scope this idea: a niche newsletter for indie game developers covering market trends and post-mortems."}
+{"template": "scope-this-idea", "domain": "mobile-app", "query": "Scope this idea: an iOS app that helps remote workers track focus hours via Pomodoro and a daily log."}
+{"template": "scope-this-idea", "domain": "saas", "query": "Scope this idea: a hosted service that converts blog posts to podcast episodes via AI voice synthesis."}
+{"template": "scope-this-idea", "domain": "education", "query": "Scope this idea: a side-business teaching Cursor/Claude Code workflows to non-technical founders."}
+{"template": "scope-this-idea", "domain": "personal-tooling", "query": "Scope this idea: a self-hosted alternative to Linktree using a single GitHub Pages repo."}
+{"template": "is-this-worth-doing", "domain": "personal-ops", "query": "Is this worth doing: spending 4 hours setting up full CI/CD for a personal project I work on alone, with ~5 commits per week?"}
+{"template": "is-this-worth-doing", "domain": "career", "query": "Is this worth doing: writing a personal blog when my goal is software-job signaling, given I have zero audience and 6 months of runway?"}
+{"template": "is-this-worth-doing", "domain": "performance", "query": "Is this worth doing: porting my Python tool to Go to 'make it faster' when current latency is acceptable for current users?"}
+{"template": "is-this-worth-doing", "domain": "refactor", "query": "Is this worth doing: refactoring my codebase to TypeScript when I'm the only developer and JS works fine?"}
+{"template": "is-this-worth-doing", "domain": "career", "query": "Is this worth doing: applying for a tech conference talk when I have 6 weeks to prep and no slides drafted?"}
+{"template": "what-should-we-do-next", "domain": "saas-startup", "query": "What should we do next: ship the broken-but-functional v1, polish for two more weeks, or pivot the product?"}
+{"template": "what-should-we-do-next", "domain": "team-ops", "query": "We have 3 weeks until the investor demo: feature work on the headline flow, polish existing flows, or improve onboarding?"}
+{"template": "what-should-we-do-next", "domain": "growth", "query": "Our beta has 12 active users with 50% weekly retention. Push for more users or focus on retention first?"}
+{"template": "what-should-we-do-next", "domain": "shipping", "query": "The team is split on whether to ship a partial fix Friday or wait until Monday for a complete one. The bug is intermittent and affects ~3% of users."}
+{"template": "what-should-we-do-next", "domain": "career", "query": "Three open job offers: $X at a Series A startup, $Y at a FAANG IC role, $Z remote at a profitable midsize. Pick one with reasoning."}
+{"template": "what-should-we-do-next", "domain": "marketing", "query": "We have $5K marketing budget for Q2. Spend it on Google Ads, content creation, or developer-conference sponsorships?"}
+{"template": "what-should-we-do-next", "domain": "open-source", "query": "Our open-source project has 2K GitHub stars and 15 stale PRs. Triage the PRs, write docs, or build the missing feature users keep requesting?"}
+{"template": "what-should-we-do-next", "domain": "engineering", "query": "End of sprint: we have time for one more thing — fix the flaky test, write the missing doc, or refactor the duplicated module."}
+{"template": "review-from-different-angle", "domain": "api-design", "query": "Review from a different angle: we've decided to use REST instead of GraphQL for our public API. What's the strongest argument we missed?"}
+{"template": "review-from-different-angle", "domain": "community", "query": "Review from a different angle: we ruled out a Discord community because 'we don't have time to moderate.' What if that's wrong?"}
+{"template": "review-from-different-angle", "domain": "platform", "query": "Review from a different angle: the team agrees iOS-first is the right call for our app. A skeptical advisor would say what?"}
+{"template": "review-from-different-angle", "domain": "shipping", "query": "Review from a different angle: we plan to write the docs after launching. A senior reviewer would push back how?"}
+{"template": "review-from-different-angle", "domain": "performance", "query": "Review from a different angle: we treat slow page loads as a CDN problem. What if it's an architecture problem?"}
+{"template": "review-from-different-angle", "domain": "auth", "query": "Review from a different angle: we decided not to add SSO because 'MVP doesn't need it.' Is there a path where that's wrong?"}
+{"template": "review-from-different-angle", "domain": "debugging", "query": "Review from a different angle: we're convinced the bug is in our code. What if it's in the framework version we're pinned to?"}

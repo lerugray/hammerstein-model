@@ -89,7 +89,7 @@ def main() -> int:
     # If --public was passed and repo exists as private, flip it
     if args.public:
         print(f"Setting visibility to public…")
-        api.update_repo_visibility(repo_id=repo_id, private=False)
+        api.update_repo_settings(repo_id=repo_id, private=False)
 
     # Upload the folder
     commit_msg = args.commit_message or (

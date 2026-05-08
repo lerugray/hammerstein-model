@@ -1,0 +1,43 @@
+  expansion failed (audit-this-plan, seed=3, software engineering / dev tools): Remote end closed connection without response
+  expansion failed (what-should-we-do-next, seed=2, indie game development): [Errno 54] Connection reset by peer
+  expansion failed (review-from-different-angle, seed=4, software engineering / dev tools): [Errno 54] Connection reset by peer
+Plan:
+  Seeds: 30 across 5 templates
+  Domains: 8 (of 12 available)
+  Per-seed expansions: 3
+  Expansion calls: 240 × $0.002 = $0.48
+  Teacher calls: 720 × $0.010 = $7.20
+  Total cost: ~$7.68
+  Concurrent workers: 10
+  Estimated time: ~90 min
+  Output: /Users/rayweiss/Desktop/Dev Work/hammerstein-model/tools/distill/data/synthetic-2026-05-08.jsonl
+
+[EXECUTE] firing full pipeline…
+Expanding 240 (seed, domain) pairs into ~720 queries…
+  expansion progress: 20/240 pairs, 60 queries collected
+  expansion progress: 40/240 pairs, 120 queries collected
+  expansion progress: 60/240 pairs, 177 queries collected
+  expansion progress: 80/240 pairs, 237 queries collected
+  expansion progress: 100/240 pairs, 297 queries collected
+  expansion progress: 120/240 pairs, 357 queries collected
+  expansion progress: 140/240 pairs, 417 queries collected
+  expansion progress: 160/240 pairs, 477 queries collected
+  expansion progress: 180/240 pairs, 535 queries collected
+  expansion progress: 200/240 pairs, 595 queries collected
+  expansion progress: 220/240 pairs, 655 queries collected
+  expansion progress: 240/240 pairs, 709 queries collected
+Total expansions: 709
+
+Running teacher on 709 queries…
+  teacher progress: 25/709, 24 written, 1 skipped, $0.19 spent
+  teacher progress: 50/709, 49 written, 1 skipped, $0.40 spent
+  teacher progress: 75/709, 74 written, 1 skipped, $0.61 spent
+  teacher progress: 100/709, 99 written, 1 skipped, $0.81 spent
+  teacher progress: 125/709, 124 written, 1 skipped, $1.02 spent
+  teacher progress: 150/709, 149 written, 1 skipped, $1.22 spent
+  teacher progress: 175/709, 174 written, 1 skipped, $1.41 spent
+  teacher progress: 200/709, 199 written, 1 skipped, $1.59 spent
+  teacher progress: 225/709, 224 written, 1 skipped, $1.77 spent
+  teacher progress: 250/709, 249 written, 1 skipped, $1.94 spent
+  teacher progress: 275/709, 274 written, 1 skipped, $2.13 spent
+  teacher progress: 300/709, 299 written, 1 skipped, $2.31 spent

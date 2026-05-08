@@ -1,50 +1,71 @@
 #!/bin/bash
 # Single-paste eval run for the RunPod pod.
 #
-# Designed to be invoked via:
-#   curl -sL https://raw.githubusercontent.com/lerugray/hammerstein-model/master/tools/distill/run_eval.sh | bash
+# Bootstrap (the curl itself needs auth since the repo is private):
+#   export GH_TOKEN=github_pat_xxxxxxxx       # fine-grained PAT, read-only on this repo
+#   export HF_TOKEN=hf_xxxxxxxx               # to download the private adapter
+#   curl -sL -H "Authorization: token $GH_TOKEN" \
+#     https://raw.githubusercontent.com/lerugray/hammerstein-model/master/tools/distill/run_eval.sh | bash
 #
-# Or in JupyterLab's terminal:
-#   bash <(curl -sL <same-url>)
+# Or in JupyterLab's terminal: same thing, the `bash <(curl ...)` form works too.
 #
 # Prereqs (Ray):
-#   1. Repo is public (or accessible via the pod) — flip private→public
-#      in GitHub Settings before pasting; flip back when done.
-#   2. HF_TOKEN env var set with a Read-or-better token for
-#      lerugray/hammerstein-7b-lora (private). To set:
-#        export HF_TOKEN=hf_xxxxxxxx
+#   1. GH_TOKEN env var: fine-grained PAT, read-only on this repo
+#      Create at https://github.com/settings/personal-access-tokens/new
+#      Repository access: only hammerstein-model
+#      Repository permissions: Contents → Read-only (everything else "no access")
+#   2. HF_TOKEN env var: any token with read access to
+#      lerugray/hammerstein-7b-lora (the existing write token is fine)
 #
 # Idempotent — safe to re-run.
 
 set -e
 
 REPO_DIR=/workspace/hammerstein-model
-REPO_URL=https://github.com/lerugray/hammerstein-model.git
 
 echo "============================================="
 echo " Hammerstein-7B 4-condition eval run"
 echo "============================================="
 echo ""
 
-# 1. HF auth check
+# 1. Auth checks
 if [ -z "$HF_TOKEN" ]; then
-    echo "ERROR: HF_TOKEN not set. Required to download the private adapter."
+    echo "ERROR: HF_TOKEN not set (needed to download private adapter)."
     echo "  Run: export HF_TOKEN=hf_xxxxxxxx"
-    echo "  Then re-paste this command."
+    exit 1
+fi
+if [ -z "$GH_TOKEN" ]; then
+    echo "ERROR: GH_TOKEN not set (needed to clone the private repo)."
+    echo "  Create a fine-grained PAT at:"
+    echo "    https://github.com/settings/personal-access-tokens/new"
+    echo "  Scope: lerugray/hammerstein-model only, Contents: read-only."
+    echo "  Then: export GH_TOKEN=github_pat_xxxxxxxx"
     exit 1
 fi
 
+# Use the PAT for the clone. x-access-token is GitHub's documented username
+# for token auth via HTTPS. The token sits in the URL only briefly during
+# the clone; we drop the embed once the repo is cloned and rely on the
+# credential helper that git stores in the working tree's .git/config.
+REPO_URL_AUTH="https://x-access-token:${GH_TOKEN}@github.com/lerugray/hammerstein-model.git"
+
 # 2. Get the repo
 if [ ! -d "$REPO_DIR" ]; then
-    echo "[1/5] Cloning repo…"
+    echo "[1/5] Cloning repo (with PAT auth)…"
     cd /workspace
-    git clone "$REPO_URL"
+    git clone "$REPO_URL_AUTH" hammerstein-model
 fi
 cd "$REPO_DIR"
 echo "[1/5] Pulling latest…"
+# Re-write the remote URL each run so a previously-stored token doesn't
+# bind us to a stale value. Set + use, then unset to keep the token out
+# of any persistent config we might commit by accident.
+git remote set-url origin "$REPO_URL_AUTH"
 git fetch --all --quiet
 git checkout master --quiet
 git pull origin master --quiet
+# Scrub the embedded token from the persisted remote URL.
+git remote set-url origin "https://github.com/lerugray/hammerstein-model.git"
 
 # 3. Verify GPU
 echo ""

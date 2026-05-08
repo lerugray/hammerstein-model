@@ -31,12 +31,11 @@ python tools/distill/eval.py --skip-student --skip-vanilla
 python tools/distill/gen_data.py                 # dry-run plan
 python tools/distill/gen_data.py --execute       # ACTUALLY fire
 
-# E3 — train QLoRA (NOT IN THIS REPO YET)
-# Use Unsloth or MLX-LM. Inputs: data/synthetic-<DATE>.jsonl
-# Output: a LoRA adapter or merged GGUF.
-# Recommended cloud: RunPod RTX 4090 ($0.34/hr, ~4 hours = ~$1.50)
-# Recommended local: MLX-LM on Apple Silicon (Llama 3.2 3B) or
-#                    Unsloth on NVIDIA 12GB+ (Qwen 2.5 7B)
+# E3 — train QLoRA
+python tools/distill/train.py --model-key qwen-7b           # dry-run
+python tools/distill/train.py --model-key qwen-7b --execute # ACTUAL training
+# Or for Mac (Apple Silicon):
+python tools/distill/train.py --model-key llama-3b --backend mlx --execute
 
 # E4 — eval fine-tune (~$0.30 for fresh gold; free thereafter)
 python tools/distill/eval.py \

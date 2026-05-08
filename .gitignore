@@ -35,3 +35,4 @@ __pycache__/
 
 # Distillation experiment artifacts (large, regeneratable)
 tools/distill/data/
+tools/distill/output/

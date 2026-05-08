@@ -195,12 +195,44 @@ memory, Ollama.app installed.
 - **Inference of 7B GGUF after merge**: ✅ works in Ollama
   (4-bit quant fits easily)
 
-Ray's PC: unknown. Need to check GPU model + VRAM. If RTX 30/40-series
-with 12GB+, full 7B QLoRA training fits comfortably. Otherwise cloud.
+Ray's PC: NVIDIA, 8-12 GB VRAM (model unconfirmed — run
+`nvidia-smi --query-gpu=name,memory.total --format=csv` on the PC).
 
-**Pragmatic recommendation**: budget $5 for cloud GPU on the 7B
-training step. The cost is rounding error against the $20 data
-generation, and removes hardware uncertainty.
+The 8-12 GB range bifurcates the recommendation:
+
+- **12 GB+** (e.g., RTX 3060 12GB, 4070 Ti 12GB, 4080, 4090):
+  ✅ Qwen 2.5 7B QLoRA fits comfortably with Unsloth. Local training
+  is the right path. Total cost: just data ($20).
+- **8-10 GB** (e.g., RTX 3060 Ti, 3070, 4060, 4060 Ti 8GB):
+  ⚠️ Qwen 7B QLoRA is tight (Unsloth claims 8-10GB minimum but OOM
+  is a real risk under load). Two options:
+  - Train Llama 3.2 3B locally (safer, smaller artifact)
+  - Train Qwen 2.5 7B on rented cloud GPU ($1.50-3 one-shot)
+
+## On cloud GPU subscriptions
+
+Ray asked if a "subscription to virtual GPU services" makes sense.
+For a one-shot experiment (this is one-shot), pay-per-hour usually
+beats subscription. The math:
+
+| Service | Cost shape | Fit for this experiment |
+|---|---|---|
+| **Kaggle Notebooks** | Free, 30 hr/week T4/P100 | ✅ Best free option. Enough for 7B QLoRA. Slight friction (Kaggle UI). |
+| **Google Colab Pro** | $10/mo, T4/V100 limited | OK if planning multiple runs over a month. |
+| **Google Colab Pro+** | $50/mo, A100/V100 | Overkill for one-shot; only sensible if you'll do 5+ runs |
+| **RunPod RTX 4090** | $0.34/hr pay-per-use | ✅ Best paid option for one-shot. ~$1.50-3 total. |
+| **Lambda Labs A100** | $2.49/hr | More expensive than RunPod; same quality. |
+| **vast.ai marketplace** | $0.20-0.40/hr | Cheapest; less reliable hosts. |
+
+**Recommendation:** if your PC has 12GB+, train locally — total cost
+is the $20 of synthetic data. If 8-10GB, pick one:
+- Free + slightly friction-y: **Kaggle Notebooks**
+- Paid + clean: **RunPod RTX 4090** at $1.50-3 one-shot
+
+Either path keeps total under $25.
+
+A monthly subscription only makes sense if you plan to do **multiple
+fine-tuning experiments**. For one Hammerstein-7B distillation, no.
 
 ## What ships at the end
 

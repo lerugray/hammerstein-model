@@ -1,7 +1,30 @@
 # Web/UI Extension — Stretch Design
 
-**Status:** Phase 6 stretch. Gated on Phase 3 dogfood passing. The
-CLI is the source of truth; the UI is a convenience layer on top.
+**Status (2026-05-08):** Phase 6.0 **shipped.** FastAPI + React +
+Tailwind + shadcn-style components, ~1.2k LOC across `web/backend/`
+and `web/frontend/`. Bound to `127.0.0.1:8765`. Run with
+`./hp_web.sh`. The CLI remains the source of truth; the UI is a
+convenience layer on top.
+
+**Three load-bearing capabilities, all in:**
+
+1. **Phase-3 verdict card** pinned at the top — CONTINUE / EXTEND /
+   ABORT with each gate's current value vs threshold. Closes the
+   "buried in a separate command" gap.
+2. **Sortable, filterable table of recent calls** — handles both
+   `hp.py` (audit) and `hp_vision.py` (wargame) rows via a
+   normalized contract. Click a row → side-drawer with full
+   query / response / corpus IDs / attachments.
+3. **One-click `conclusion_changed` toggle** with atomic on-disk
+   rewrite of `hp-metrics.jsonl` (fcntl-flocked so concurrent hp
+   appends don't race). The verdict re-computes immediately.
+
+**Deferred (per the original scoping):** export/share, mobile,
+multi-tenant, anything that mutates beyond the toggle. Phase 6.2
+(transcript export → clipboard markdown) and 6.3 (mobile via
+tunnel) are queued but not built.
+
+## Original design doc (preserved below)
 
 **Audience for this doc:** Ray. You flagged UI/UX as the area where
 your input matters most, so this is options-oriented — pick a

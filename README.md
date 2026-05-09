@@ -85,7 +85,7 @@ context, not background execution.
 | Phase 4 | Failure-pattern preflight | Deferred — gated on Phase 3 sustained pass |
 | Phase 5 | Wargame solitaire opponent | ✅ v0 + v1 (kriegspiel pivot) + v2 (multimodal `hp_vision.py`) shipped 2026-05-08. Photo + Excel OOB + conversational input → Auftragstaktik mission orders via Sonnet 4.6. See [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md). |
 | Phase 5.1 | VASSAL integration | Design doc, [VASSAL-EXTENSION.md](VASSAL-EXTENSION.md). Recommended: start with manual screenshot → existing `hp_vision.py` (works today, zero new code), validate empirically on Ray's csl-repo games before investing in deeper integration. |
-| Phase 6 | Local web UI | Stretch — see WEB-UI-EXTENSION.md |
+| Phase 6 | Local web UI | ✅ v0 shipped 2026-05-08 — `hp_web.sh` runs a FastAPI + React/Tailwind dashboard on `127.0.0.1:8765` showing the Phase-3 verdict, sortable table of recent calls (audit + wargame), and one-click `conclusion_changed` toggle. See [WEB-UI-EXTENSION.md](WEB-UI-EXTENSION.md). |
 | **Distillation experiment** | Hammerstein-7B QLoRA adapter + Q4_K_M GGUF | ✅ trained + 4-condition eval passed + GGUF/Ollama-ready 2026-05-08. ADAPTER WINS the prompt ablation by Δ=+0.206; student/gold ratio 1.01. Public at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora) — run on any 8 GB+ Mac via `ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`. See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). Total cost ~$3.97 end-to-end. |
 
 ## Honest framing
@@ -122,6 +122,9 @@ hp.py --dry-run "<query>"
 
 # Check the Phase 3 gate verdict:
 .venv/bin/python hp_status.py
+
+# Or open the local dashboard (http://127.0.0.1:8765):
+./hp_web.sh
 ```
 
 Requires `OPENROUTER_API_KEY` in env and the

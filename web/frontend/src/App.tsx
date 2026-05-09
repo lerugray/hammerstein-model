@@ -4,10 +4,63 @@ import { Header } from "@/components/Header";
 import { VerdictCard } from "@/components/VerdictCard";
 import { CallsTable } from "@/components/CallsTable";
 import { CallDetailDrawer } from "@/components/CallDetailDrawer";
+import { WargamePage } from "@/wargame/WargamePage";
 import { api } from "@/api";
 import type { Call, Status } from "@/types";
 
+type Tab = "dashboard" | "wargame";
+
 function App() {
+  const [tab, setTab] = useState<Tab>(() => {
+    if (typeof window === "undefined") return "dashboard";
+    const stored = localStorage.getItem("hp-web-tab");
+    return stored === "wargame" ? "wargame" : "dashboard";
+  });
+  const [dark, setDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const saved = localStorage.getItem("hp-web-theme");
+    if (saved) return saved === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("hp-web-theme", dark ? "dark" : "light");
+  }, [dark]);
+
+  useEffect(() => {
+    localStorage.setItem("hp-web-tab", tab);
+  }, [tab]);
+
+  if (tab === "wargame") {
+    return (
+      <WargamePage
+        activeTab={tab}
+        onSwitchTab={setTab}
+        dark={dark}
+        onToggleDark={() => setDark((v) => !v)}
+      />
+    );
+  }
+
+  return (
+    <DashboardPage
+      activeTab={tab}
+      onSwitchTab={setTab}
+      dark={dark}
+      onToggleDark={() => setDark((v) => !v)}
+    />
+  );
+}
+
+interface PageProps {
+  activeTab: Tab;
+  onSwitchTab: (tab: Tab) => void;
+  dark: boolean;
+  onToggleDark: () => void;
+}
+
+function DashboardPage({ activeTab, onSwitchTab, dark, onToggleDark }: PageProps) {
   const [status, setStatus] = useState<Status | null>(null);
   const [calls, setCalls] = useState<Call[]>([]);
   const [selected, setSelected] = useState<Call | null>(null);
@@ -62,7 +115,14 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header onRefresh={refresh} refreshing={loading} />
+      <Header
+        onRefresh={refresh}
+        refreshing={loading}
+        dark={dark}
+        onToggleDark={onToggleDark}
+        activeTab={activeTab}
+        onSwitchTab={onSwitchTab}
+      />
       <main className="container mx-auto py-6 space-y-6 flex-1">
         {error ? (
           <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive flex items-start gap-2">

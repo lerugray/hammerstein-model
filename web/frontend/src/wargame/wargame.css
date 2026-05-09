@@ -1,0 +1,727 @@
+/* ──────────────────────────────────────────────────────────────
+   Hammerstein Persistent — wargame surface
+   shadcn-flavored HSL token system.
+   Palette: navy ink, cream paper, rust accent, gold secondary.
+
+   All tokens scoped under .wargame-page so they don't override
+   the existing audit-dashboard tokens (which use the Tailwind
+   shadcn palette in src/index.css).
+   ────────────────────────────────────────────────────────────── */
+
+.wargame-page {
+  --background:       45 35% 95%;        /* warm cream paper */
+  --foreground:       222 40% 12%;       /* navy ink */
+  --card:             45 50% 99%;
+  --card-foreground:  222 40% 12%;
+  --popover:          45 50% 99%;
+  --popover-foreground: 222 40% 12%;
+  --primary:          14 70% 44%;        /* rust */
+  --primary-foreground: 45 35% 98%;
+  --secondary:        222 30% 22%;       /* navy block */
+  --secondary-foreground: 45 35% 96%;
+  --accent:           38 78% 48%;        /* gold */
+  --accent-foreground: 222 40% 12%;
+  --muted:            45 18% 88%;
+  --muted-foreground: 222 15% 38%;
+  --border:           222 15% 80%;
+  --border-strong:    222 18% 68%;
+  --input:            222 15% 80%;
+  --ring:             14 70% 44%;
+  --destructive:      0 70% 48%;
+  --destructive-foreground: 45 35% 98%;
+
+  --paper-grain:      45 30% 92%;
+  --rule:             222 18% 75%;
+
+  --wg-radius: 6px;
+
+  --dens-pad-card: 16px;
+  --dens-pad-row: 10px;
+  --dens-gap: 12px;
+  --dens-fs: 13px;
+  --dens-h: 13.5px;
+
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font: var(--dens-fs)/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100vh;
+}
+
+.dark .wargame-page {
+  --background:       222 30% 9%;
+  --foreground:       45 30% 90%;
+  --card:             222 28% 12%;
+  --card-foreground:  45 30% 90%;
+  --popover:          222 28% 12%;
+  --popover-foreground: 45 30% 90%;
+  --primary:          14 70% 56%;
+  --primary-foreground: 222 40% 8%;
+  --secondary:        45 30% 88%;
+  --secondary-foreground: 222 30% 9%;
+  --accent:           38 78% 58%;
+  --accent-foreground: 222 30% 9%;
+  --muted:            222 22% 16%;
+  --muted-foreground: 45 12% 62%;
+  --border:           222 18% 22%;
+  --border-strong:    222 18% 32%;
+  --input:            222 18% 22%;
+  --ring:             14 70% 56%;
+  --destructive:      0 70% 56%;
+  --destructive-foreground: 45 30% 96%;
+
+  --paper-grain:      222 25% 11%;
+  --rule:             222 18% 26%;
+}
+
+.wargame-page.density-tight { --dens-pad-card: 12px; --dens-pad-row: 7px;  --dens-gap: 8px;  --dens-fs: 12.5px; --dens-h: 13px; }
+.wargame-page.density-loose { --dens-pad-card: 22px; --dens-pad-row: 14px; --dens-gap: 18px; --dens-fs: 14px; --dens-h: 14.5px; }
+
+.wargame-page * { box-sizing: border-box; }
+
+.wargame-page .wg-serif {
+  font-family: "Hoefler Text", "Iowan Old Style", "Charter", "Sitka Text", Georgia, serif;
+}
+.wargame-page .wg-mono {
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+/* ── primitives ───────────────────────────────────────── */
+
+.wargame-page .wg-card {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--wg-radius);
+}
+.wargame-page .wg-card-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px var(--dens-pad-card) 9px;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+  color: hsl(var(--muted-foreground)); font-weight: 600;
+}
+.wargame-page .wg-card-hd .hd-r { display: flex; align-items: center; gap: 6px; text-transform: none; letter-spacing: 0; }
+.wargame-page .wg-card-bd { padding: var(--dens-pad-card); }
+
+.wargame-page .wg-btn {
+  appearance: none; border: 1px solid hsl(var(--border-strong));
+  background: hsl(var(--card)); color: hsl(var(--foreground));
+  font: inherit; font-size: var(--dens-h); font-weight: 500;
+  padding: 7px 11px; border-radius: var(--wg-radius); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background .12s, border-color .12s;
+}
+.wargame-page .wg-btn:hover:not(:disabled) { background: hsl(var(--muted)); }
+.wargame-page .wg-btn:disabled { opacity: .5; cursor: not-allowed; }
+.wargame-page .wg-btn-primary {
+  background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+.wargame-page .wg-btn-primary:hover:not(:disabled) { background: hsl(var(--primary) / .9); }
+.wargame-page .wg-btn-ghost { border-color: transparent; background: transparent; }
+.wargame-page .wg-btn-ghost:hover { background: hsl(var(--muted)); }
+.wargame-page .wg-btn-sm { padding: 4px 8px; font-size: 12px; }
+
+.wargame-page .wg-input,
+.wargame-page .wg-select,
+.wargame-page .wg-textarea {
+  width: 100%; appearance: none; border: 1px solid hsl(var(--input));
+  background: hsl(var(--card)); color: hsl(var(--foreground));
+  font: inherit; padding: 7px 10px; border-radius: var(--wg-radius);
+  outline: none;
+}
+.wargame-page .wg-input:focus,
+.wargame-page .wg-select:focus,
+.wargame-page .wg-textarea:focus { border-color: hsl(var(--ring)); box-shadow: 0 0 0 3px hsl(var(--ring) / .15); }
+.wargame-page .wg-textarea { resize: vertical; min-height: 110px; line-height: 1.55; }
+
+.wargame-page .wg-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 7px; font-size: 11px; font-weight: 500;
+  border: 1px solid hsl(var(--border-strong)); border-radius: 999px;
+  color: hsl(var(--muted-foreground)); background: transparent;
+  font-variant-numeric: tabular-nums;
+}
+.wargame-page .wg-badge.b-primary { color: hsl(var(--primary)); border-color: hsl(var(--primary) / .45); background: hsl(var(--primary) / .08); }
+.wargame-page .wg-badge.b-accent  { color: hsl(var(--accent));  border-color: hsl(var(--accent) / .55);  background: hsl(var(--accent) / .12); }
+.wargame-page .wg-badge.b-mono    { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 10.5px; padding: 1px 6px; }
+
+.wargame-page hr.wg-rule { border: 0; border-top: 1px solid hsl(var(--rule)); margin: 0; }
+
+/* icons */
+.wargame-page .wg-icon { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor;
+  fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.wargame-page .wg-icon-sm { width: 14px; height: 14px; }
+.wargame-page .wg-icon-lg { width: 22px; height: 22px; }
+
+/* ── app shell ────────────────────────────────────────── */
+.wargame-page .wg-app {
+  display: flex; flex-direction: column;
+}
+.wargame-page .wg-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 24px;
+  border-bottom: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  position: sticky; top: 0; z-index: 10;
+}
+.wargame-page .wg-topbar-l, .wargame-page .wg-topbar-r { display: flex; align-items: center; gap: 12px; }
+
+.wargame-page .wg-brand {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-weight: 600; letter-spacing: -.005em;
+}
+.wargame-page .wg-brand-mark {
+  width: 26px; height: 26px; border-radius: 4px;
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: 11px;
+  letter-spacing: .03em;
+  border: 1px solid hsl(var(--secondary) / .8);
+  position: relative;
+}
+.wargame-page .wg-brand-mark::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(135deg, transparent 48%, hsl(var(--accent) / .55) 49%, hsl(var(--accent) / .55) 51%, transparent 52%);
+  border-radius: 3px;
+}
+.wargame-page .wg-brand-name { font-size: 14px; }
+.wargame-page .wg-brand-sub { color: hsl(var(--muted-foreground)); font-weight: 400; font-size: 13px; margin-left: 2px; }
+
+.wargame-page .wg-nav-tabs { display: flex; align-items: center; gap: 2px; margin-left: 18px; }
+.wargame-page .wg-nav-tab {
+  padding: 6px 10px; font-size: 12.5px; font-weight: 500;
+  color: hsl(var(--muted-foreground)); border-radius: 4px; cursor: pointer;
+  border: 0; background: transparent;
+}
+.wargame-page .wg-nav-tab.active { color: hsl(var(--foreground)); background: hsl(var(--muted)); }
+.wargame-page .wg-nav-tab:hover:not(.active) { color: hsl(var(--foreground)); }
+
+.wargame-page .wg-cost-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 4px 4px 10px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px; font-size: 12px;
+  color: hsl(var(--muted-foreground)); font-variant-numeric: tabular-nums;
+}
+.wargame-page .wg-cost-pill .cp-amt { color: hsl(var(--foreground)); font-weight: 600; }
+.wargame-page .wg-cost-pill .cp-spark { display: inline-flex; align-items: end; gap: 1.5px; height: 14px; padding: 0 4px; border-left: 1px solid hsl(var(--border)); }
+.wargame-page .wg-cost-pill .cp-spark i { display: block; width: 3px; background: hsl(var(--primary) / .55); border-radius: 1px; }
+
+.wargame-page .wg-icon-btn {
+  appearance: none; border: 1px solid transparent; background: transparent;
+  width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px; cursor: pointer; color: hsl(var(--muted-foreground));
+}
+.wargame-page .wg-icon-btn:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+
+/* ── workspace ────────────────────────────────────────── */
+.wargame-page .wg-workspace {
+  max-width: 1232px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 18px 24px 32px;
+  display: flex; flex-direction: column; gap: var(--dens-gap);
+}
+
+.wargame-page .wg-campaign-bar { display: flex; align-items: stretch; gap: 8px; }
+.wargame-page .wg-campaign-picker {
+  flex: 1; display: flex; align-items: center;
+  border: 1px solid hsl(var(--border)); border-radius: var(--wg-radius);
+  background: hsl(var(--card)); padding: 0 4px 0 12px; gap: 10px;
+  min-height: 38px;
+  position: relative;
+}
+.wargame-page .wg-campaign-picker .cp-label {
+  font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+  color: hsl(var(--muted-foreground)); font-weight: 600;
+  border-right: 1px solid hsl(var(--border));
+  padding: 8px 12px 8px 0; margin-right: 2px;
+}
+.wargame-page .wg-campaign-picker .cp-name { font-weight: 600; padding: 8px 0; }
+.wargame-page .wg-campaign-picker .cp-meta {
+  margin-left: auto; display: flex; align-items: center; gap: 10px;
+  color: hsl(var(--muted-foreground)); font-size: 12px;
+  padding-right: 10px;
+}
+.wargame-page .wg-campaign-picker .cp-meta b { color: hsl(var(--foreground)); font-weight: 600; }
+.wargame-page .wg-campaign-picker .cp-chev {
+  padding: 4px 8px; border-radius: 4px; cursor: pointer;
+  color: hsl(var(--muted-foreground)); background: transparent; border: 0;
+}
+.wargame-page .wg-campaign-picker .cp-chev:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+
+.wargame-page .wg-dropdown {
+  position: absolute; top: calc(100% + 4px); left: -1px; right: -1px;
+  background: hsl(var(--popover)); border: 1px solid hsl(var(--border));
+  border-radius: var(--wg-radius); box-shadow: 0 12px 32px hsl(222 40% 8% / .15);
+  padding: 4px; z-index: 30;
+}
+.wargame-page .wg-dd-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 9px; border-radius: 4px; cursor: pointer;
+  font-size: 13px;
+}
+.wargame-page .wg-dd-item:hover { background: hsl(var(--muted)); }
+.wargame-page .wg-dd-item .dd-name { flex: 1; }
+.wargame-page .wg-dd-item .dd-meta { color: hsl(var(--muted-foreground)); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.wargame-page .wg-dd-sep { height: 1px; background: hsl(var(--border)); margin: 4px -4px; }
+.wargame-page .wg-dd-new { color: hsl(var(--primary)); font-weight: 500; }
+
+/* ── two-column main ──────────────────────────────────── */
+.wargame-page .wg-cols {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--dens-gap);
+  align-items: start;
+}
+.wargame-page .wg-cols > * { min-width: 0; }
+
+/* dropzone */
+.wargame-page .wg-dropzone {
+  border: 1.5px dashed hsl(var(--border-strong));
+  border-radius: var(--wg-radius);
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  background:
+    repeating-linear-gradient(135deg,
+      hsl(var(--paper-grain)) 0 6px,
+      hsl(var(--card)) 6px 12px);
+  transition: border-color .15s, background .15s;
+}
+.wargame-page .wg-dropzone.compact { padding: 11px 14px; flex-direction: row; align-items: center; gap: 14px; }
+.wargame-page .wg-dropzone:hover { border-color: hsl(var(--primary) / .6); }
+.wargame-page .wg-dropzone.active { border-color: hsl(var(--primary)); background: hsl(var(--primary) / .06); }
+
+.wargame-page .wg-dz-prompt { display: flex; align-items: center; gap: 10px; color: hsl(var(--muted-foreground)); }
+.wargame-page .wg-dz-prompt b { color: hsl(var(--foreground)); font-weight: 600; }
+.wargame-page .wg-dz-icon {
+  width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px; background: hsl(var(--muted)); color: hsl(var(--foreground));
+}
+.wargame-page .wg-dz-thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.wargame-page .wg-thumb {
+  position: relative;
+  width: 84px; height: 84px;
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border-radius: 4px; overflow: hidden;
+  border: 1px solid hsl(var(--border-strong));
+  box-shadow: 0 1px 2px hsl(222 40% 8% / .12);
+}
+.wargame-page .wg-thumb-art {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(120deg, hsl(38 30% 78% / .7) 0%, hsl(45 25% 86% / .9) 100%),
+    repeating-linear-gradient(60deg, transparent 0 9px, hsl(222 30% 22% / .14) 9px 10px),
+    repeating-linear-gradient(-60deg, transparent 0 9px, hsl(222 30% 22% / .14) 9px 10px),
+    repeating-linear-gradient(0deg, transparent 0 9px, hsl(222 30% 22% / .14) 9px 10px);
+  background-blend-mode: multiply, normal, normal, normal;
+}
+.wargame-page .wg-thumb-art.t2 { filter: hue-rotate(15deg) saturate(.9); }
+.wargame-page .wg-thumb-meta {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  font-size: 10px; padding: 3px 5px;
+  background: linear-gradient(transparent, hsl(222 40% 6% / .65));
+  color: hsl(45 35% 96%);
+  display: flex; align-items: center; justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+.wargame-page .wg-thumb-x {
+  position: absolute; top: 4px; right: 4px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: hsl(222 40% 8% / .7); color: hsl(45 35% 96%);
+  border: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px;
+}
+.wargame-page .wg-thumb-add {
+  width: 84px; height: 84px; border: 1.5px dashed hsl(var(--border-strong));
+  border-radius: 4px; background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: hsl(var(--muted-foreground)); cursor: pointer;
+  flex-direction: column; gap: 2px; font-size: 11px;
+}
+.wargame-page .wg-thumb-add:hover { color: hsl(var(--foreground)); border-color: hsl(var(--primary) / .6); }
+
+.wargame-page .wg-dz-meta {
+  font-size: 11.5px; color: hsl(var(--muted-foreground));
+  display: flex; align-items: center; gap: 10px;
+  margin-left: auto;
+}
+.wargame-page .wg-dz-warn {
+  color: hsl(38 90% 36%); display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11.5px;
+}
+.dark .wargame-page .wg-dz-warn { color: hsl(38 90% 65%); }
+
+/* OOB sheet preview */
+.wargame-page .wg-sheet-preview {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 11px; border: 1px solid hsl(var(--border));
+  border-radius: 4px; background: hsl(var(--muted) / .4);
+  font-size: 12px;
+}
+.wargame-page .wg-sheet-preview .sp-icon {
+  width: 28px; height: 36px; border-radius: 2px;
+  background: hsl(var(--accent) / .15);
+  color: hsl(var(--accent));
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid hsl(var(--accent) / .35);
+  flex-shrink: 0;
+}
+.wargame-page .wg-sheet-preview .sp-name { font-weight: 600; }
+.wargame-page .wg-sheet-preview .sp-cols { color: hsl(var(--muted-foreground)); font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+
+/* status textarea */
+.wargame-page .wg-status-wrap { position: relative; }
+.wargame-page .wg-status-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 6px;
+  font-size: 11.5px; color: hsl(var(--muted-foreground));
+  font-variant-numeric: tabular-nums;
+}
+.wargame-page .wg-status-meta .voice-hint { display: inline-flex; align-items: center; gap: 5px; }
+
+/* issue button row */
+.wargame-page .wg-issue-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid hsl(var(--border));
+}
+.wargame-page .wg-issue-cost {
+  display: flex; flex-direction: column;
+  font-size: 11px; color: hsl(var(--muted-foreground));
+}
+.wargame-page .wg-issue-cost .ic-amt { font-size: 14px; color: hsl(var(--foreground)); font-weight: 600; font-variant-numeric: tabular-nums; }
+.wargame-page .wg-issue-cost .ic-bd { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; }
+.wargame-page .wg-issue-cost .ic-bd code { font-size: 11px; color: hsl(var(--muted-foreground)); font-family: ui-monospace, Menlo, monospace; }
+
+.wargame-page .wg-issue-btn {
+  margin-left: auto;
+  padding: 9px 16px; font-size: 13.5px; font-weight: 600;
+}
+.wargame-page .wg-issue-btn .wg-icon { width: 15px; height: 15px; stroke-width: 1.8; }
+
+/* form row label */
+.wargame-page .wg-form-label {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11.5px; color: hsl(var(--muted-foreground));
+  margin-bottom: 6px;
+  letter-spacing: .01em;
+}
+.wargame-page .wg-form-label b { color: hsl(var(--foreground)); font-weight: 600; }
+
+/* ── turn-log sidebar ─────────────────────────────────── */
+.wargame-page .wg-turnlog {
+  display: flex; flex-direction: column;
+  position: sticky; top: 60px;
+  max-height: calc(100vh - 76px);
+  overflow: hidden;
+}
+.wargame-page .wg-turnlog-bd {
+  overflow-y: auto;
+  padding: 8px var(--dens-pad-card) var(--dens-pad-card);
+  display: flex; flex-direction: column; gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border-strong)) transparent;
+}
+.wargame-page .wg-turnlog-bd::-webkit-scrollbar { width: 8px; }
+.wargame-page .wg-turnlog-bd::-webkit-scrollbar-thumb { background: hsl(var(--border-strong)); border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
+
+.wargame-page .wg-turncard {
+  border: 1px solid hsl(var(--border));
+  border-radius: 5px;
+  background: hsl(var(--card));
+  font-size: 12.5px;
+  overflow: hidden;
+}
+.wargame-page .wg-turncard.current { border-color: hsl(var(--primary) / .6); box-shadow: 0 0 0 3px hsl(var(--primary) / .08); }
+
+.wargame-page .wg-tc-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px;
+  background: hsl(var(--muted) / .55);
+  border-bottom: 1px solid hsl(var(--border));
+  cursor: pointer;
+  user-select: none;
+}
+.wargame-page .wg-tc-hd-l { display: flex; align-items: center; gap: 8px; }
+.wargame-page .wg-tc-num {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11px; font-weight: 700;
+  background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));
+  border-radius: 3px; padding: 2px 5px;
+  letter-spacing: .04em;
+}
+.wargame-page .wg-tc-num.current-num { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
+.wargame-page .wg-tc-time { color: hsl(var(--muted-foreground)); font-size: 11px; font-variant-numeric: tabular-nums; }
+.wargame-page .wg-tc-bd { padding: 8px 10px; }
+.wargame-page .wg-tc-bd.expanded { background: hsl(var(--card)); }
+.wargame-page .wg-tc-status {
+  font-size: 12px; color: hsl(var(--foreground));
+  margin-bottom: 6px; line-height: 1.5;
+}
+.wargame-page .wg-tc-status::before { content: "› "; color: hsl(var(--muted-foreground)); }
+.wargame-page .wg-tc-intent {
+  display: flex; gap: 6px; align-items: baseline;
+  font-size: 12px; color: hsl(var(--muted-foreground)); line-height: 1.5;
+}
+.wargame-page .wg-tc-intent .tag {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .07em;
+  color: hsl(var(--accent));
+  border: 1px solid hsl(var(--accent) / .55);
+  background: hsl(var(--accent) / .08);
+  padding: 1px 4px; border-radius: 2px;
+  flex-shrink: 0;
+}
+.wargame-page .wg-tc-model {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 10.5px; color: hsl(var(--muted-foreground));
+  margin-top: 6px; padding-top: 6px;
+  border-top: 1px dashed hsl(var(--border));
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── orders panel ─────────────────────────────────────── */
+.wargame-page .wg-orders {
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--wg-radius);
+  background: hsl(var(--card));
+  overflow: hidden;
+}
+.wargame-page .wg-orders-hd {
+  padding: 12px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(hsl(var(--secondary)) 0%, hsl(var(--secondary)) 100%);
+  color: hsl(var(--secondary-foreground));
+  border-bottom: 3px solid hsl(var(--accent));
+  position: relative;
+}
+.wargame-page .wg-orders-hd::before {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 3px;
+  background: repeating-linear-gradient(90deg,
+    hsl(var(--accent)) 0 14px, hsl(var(--secondary)) 14px 16px);
+}
+.wargame-page .wg-orders-hd-l { display: flex; align-items: center; gap: 14px; }
+.wargame-page .wg-orders-hd-l .stamp {
+  font-family: ui-monospace, Menlo, monospace;
+  font-weight: 700; letter-spacing: .14em;
+  font-size: 10.5px;
+  border: 1px solid hsl(var(--accent) / .65);
+  color: hsl(var(--accent));
+  padding: 3px 7px; border-radius: 2px;
+  text-transform: uppercase;
+}
+.wargame-page .wg-orders-hd-l .ohd-title { font-weight: 700; font-size: 14.5px; letter-spacing: -.005em; }
+.wargame-page .wg-orders-hd-l .ohd-sub { color: hsl(var(--secondary-foreground) / .7); font-size: 12px; }
+.wargame-page .wg-orders-hd-r { display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: hsl(var(--secondary-foreground) / .8); }
+
+.wargame-page .wg-see-board {
+  margin: 0 18px;
+  background: hsl(var(--accent) / .12);
+  border: 1px solid hsl(var(--accent) / .45);
+  border-left: 3px solid hsl(var(--accent));
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-top: 14px;
+  font-size: 12.5px; line-height: 1.55;
+}
+.wargame-page .wg-see-board .sb-label {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: hsl(38 80% 32%);
+  margin-bottom: 4px;
+}
+.dark .wargame-page .wg-see-board .sb-label { color: hsl(38 80% 65%); }
+.wargame-page .wg-see-board .sb-body { color: hsl(var(--foreground)); }
+.wargame-page .wg-see-board .sb-confirm {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed hsl(var(--accent) / .4);
+  font-size: 11.5px;
+}
+
+.wargame-page .wg-orders-bd { padding: 6px 18px 18px; }
+.wargame-page .wg-orders.serif .wg-orders-bd { font-family: "Hoefler Text", "Iowan Old Style", "Charter", "Sitka Text", Georgia, serif; font-size: 14px; line-height: 1.6; }
+
+.wargame-page .wg-section {
+  padding: 12px 0;
+  border-top: 1px solid hsl(var(--rule));
+}
+.wargame-page .wg-section:first-of-type { border-top: 0; padding-top: 8px; }
+.wargame-page .wg-section-hd {
+  display: flex; align-items: baseline; gap: 12px;
+  margin-bottom: 6px;
+}
+.wargame-page .wg-section-num {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .12em;
+  color: hsl(var(--muted-foreground));
+}
+.wargame-page .wg-section-title {
+  font-size: 13px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: hsl(var(--foreground));
+}
+.wargame-page .wg-orders.serif .wg-section-title { font-family: ui-sans-serif, system-ui, sans-serif; }
+.wargame-page .wg-section-tag {
+  margin-left: auto;
+  font-size: 11px; color: hsl(var(--muted-foreground));
+  font-variant-numeric: tabular-nums;
+}
+.wargame-page .wg-section-body { color: hsl(var(--foreground)); }
+.wargame-page .wg-section-body p { margin: 0 0 8px; }
+.wargame-page .wg-section-body p:last-child { margin-bottom: 0; }
+.wargame-page .wg-section-body em { font-style: italic; color: hsl(var(--muted-foreground)); }
+.wargame-page .wg-section-body strong { font-weight: 700; }
+.wargame-page .wg-section-body code,
+.wargame-page .wg-section-body .hex {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: .92em;
+  background: hsl(var(--muted));
+  border-radius: 3px; padding: 1px 4px;
+  color: hsl(var(--foreground));
+}
+.wargame-page .wg-orders.serif .wg-section-body code,
+.wargame-page .wg-orders.serif .wg-section-body .hex { font-size: .82em; }
+
+.wargame-page .wg-orders-actions {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 18px;
+  background: hsl(var(--muted) / .5);
+  border-top: 1px solid hsl(var(--border));
+  flex-wrap: wrap;
+}
+.wargame-page .wg-orders-actions .meta { margin-left: auto; font-size: 11px; color: hsl(var(--muted-foreground)); display: flex; gap: 10px; align-items: center; }
+
+/* ── empty state ──────────────────────────────────────── */
+.wargame-page .wg-empty {
+  text-align: center;
+  padding: 38px 20px;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+}
+.wargame-page .wg-empty .e-icon {
+  width: 44px; height: 44px; border-radius: 6px;
+  background: hsl(var(--muted)); color: hsl(var(--muted-foreground));
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 12px;
+}
+.wargame-page .wg-empty .e-title { color: hsl(var(--foreground)); font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+
+/* streaming */
+.wargame-page .wg-streaming-meta {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  color: hsl(var(--accent));
+}
+.wargame-page .wg-spinner {
+  width: 11px; height: 11px; border-radius: 50%;
+  border: 2px solid hsl(var(--accent) / .25);
+  border-top-color: hsl(var(--accent));
+  animation: wg-spin 1s linear infinite;
+  display: inline-block;
+}
+@keyframes wg-spin { to { transform: rotate(360deg); } }
+.wargame-page .wg-caret {
+  display: inline-block; width: 8px; height: 1em;
+  background: hsl(var(--primary)); margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: wg-caret 1s steps(2) infinite;
+}
+@keyframes wg-caret { 50% { opacity: 0; } }
+
+/* ── modal ────────────────────────────────────────────── */
+.wargame-page .wg-modal-scrim {
+  position: fixed; inset: 0;
+  background: hsl(222 40% 6% / .55);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50;
+}
+.wargame-page .wg-modal {
+  background: hsl(var(--card)); color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  width: 560px; max-width: calc(100vw - 32px);
+  box-shadow: 0 30px 80px hsl(222 40% 4% / .35);
+  overflow: hidden;
+}
+.wargame-page .wg-modal-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.wargame-page .wg-modal-hd .mh-title { font-weight: 700; font-size: 15px; }
+.wargame-page .wg-modal-bd { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+.wargame-page .wg-modal-ft {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  padding: 12px 18px;
+  background: hsl(var(--muted) / .5);
+  border-top: 1px solid hsl(var(--border));
+}
+
+/* share card preview */
+.wargame-page .wg-share-card {
+  border: 1px solid hsl(var(--border-strong));
+  border-radius: 6px;
+  background: hsl(var(--card));
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.wargame-page .wg-share-card .sc-watermark {
+  position: absolute; right: -10px; top: -8px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 90px; font-weight: 700; letter-spacing: -.05em;
+  color: hsl(var(--accent) / .08);
+  pointer-events: none;
+  line-height: 1;
+}
+.wargame-page .wg-share-card .sc-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: hsl(var(--muted-foreground));
+  letter-spacing: .04em; text-transform: uppercase; font-weight: 600;
+  padding-bottom: 8px; border-bottom: 1px solid hsl(var(--border));
+}
+.wargame-page .wg-share-card .sc-headline { font-size: 17px; font-weight: 700; line-height: 1.3; }
+.wargame-page .wg-share-card .sc-quote {
+  font-family: "Hoefler Text", "Iowan Old Style", Georgia, serif;
+  font-size: 13.5px; line-height: 1.55;
+  border-left: 2px solid hsl(var(--accent));
+  padding-left: 11px;
+  color: hsl(var(--foreground));
+}
+.wargame-page .wg-share-card .sc-ft {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: hsl(var(--muted-foreground));
+  padding-top: 10px; border-top: 1px solid hsl(var(--border));
+}
+
+/* new campaign form */
+.wargame-page .wg-field { display: flex; flex-direction: column; gap: 5px; }
+.wargame-page .wg-field-row { display: flex; gap: 10px; }
+.wargame-page .wg-field-row > .wg-field { flex: 1; }
+.wargame-page .wg-field-hint { font-size: 11px; color: hsl(var(--muted-foreground)); }
+
+/* mobile-specific layout (when .mobile is set on the .wg-app root) */
+.wargame-page.mobile .wg-topbar { padding: 8px 14px; }
+.wargame-page.mobile .wg-topbar .wg-nav-tabs { display: none; }
+.wargame-page.mobile .wg-brand-sub { display: none; }
+.wargame-page.mobile .wg-workspace { padding: 12px 14px 24px; }
+.wargame-page.mobile .wg-cols { grid-template-columns: 1fr; }
+.wargame-page.mobile .wg-turnlog { position: static; max-height: none; }
+.wargame-page.mobile .wg-orders-hd { padding: 10px 14px; flex-direction: column; align-items: flex-start; gap: 6px; }
+.wargame-page.mobile .wg-orders-bd, .wargame-page.mobile .wg-see-board { padding-left: 14px; padding-right: 14px; margin-left: 0; margin-right: 0; }
+.wargame-page.mobile .wg-see-board { margin: 12px 14px 0; }
+.wargame-page.mobile .wg-orders-actions { padding: 12px 14px; }
+.wargame-page.mobile .wg-orders-actions .meta { width: 100%; }
+.wargame-page.mobile .wg-campaign-picker { flex-wrap: wrap; padding: 4px 4px 4px 10px; }
+.wargame-page.mobile .wg-campaign-picker .cp-meta { padding: 6px 0 4px; width: 100%; border-top: 1px dashed hsl(var(--border)); margin-top: 4px; }

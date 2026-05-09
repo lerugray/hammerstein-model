@@ -130,6 +130,40 @@ hp.py --dry-run "<query>"
 Requires `OPENROUTER_API_KEY` in env and the
 [hammerstein CLI](https://github.com/rayweiss/hammerstein) installed.
 
+## Reproducing the distillation
+
+Everything needed to retrain the Hammerstein-7B adapter and re-run
+the eval is in this repo. The synthetic training set
+([`tools/distill/data/synthetic-2026-05-08.jsonl`](tools/distill/data/synthetic-2026-05-08.jsonl),
+308 pairs, ~1 MB) and the held-out eval set
+([`tools/distill/data/eval-set.jsonl`](tools/distill/data/eval-set.jsonl),
+40 strategic + 4 forgetting-check prompts) are checked in. The
+teacher system prompt used for generation +
+ablation-arm conditioning is at
+[`tools/distill/data/hammerstein-system-prompt.txt`](tools/distill/data/hammerstein-system-prompt.txt).
+
+```bash
+# 1. Cloud setup (RunPod RTX 4090 24 GB, ~$0.50/hr) — see
+#    tools/distill/HOWTO-CLOUD.md for the full walk
+bash <(curl -sL https://raw.githubusercontent.com/lerugray/hammerstein-model/master/tools/distill/setup_pod.sh)
+
+# 2. Train (~50 min, ~$0.50)
+python tools/distill/train.py --model-key qwen-7b --backend unsloth --execute
+
+# 3. Eval — 4 conditions on 40 prompts (~$0.32 for the gold OpenRouter calls)
+python tools/distill/eval.py \
+    --student-path tools/distill/output/qwen-7b-hammerstein-lora/lora-adapter \
+    --vanilla-path unsloth/Qwen2.5-7B-Instruct-bnb-4bit
+
+# 4. (Optional) GGUF + Ollama (~6 min on RTX A5000, ~$0.07)
+python tools/distill/convert_gguf.py --quant q4_k_m
+```
+
+Hyperparameters, hardware specs, and dataset provenance are detailed
+in [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). The full workflow sequence
++ Hammerstein audit-driven gate decisions are in
+[tools/distill/README.md](tools/distill/README.md).
+
 ## Cost arc
 
 | Stage | Spend |

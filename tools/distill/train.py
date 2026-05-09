@@ -99,7 +99,7 @@ def estimate_train_time(n_rows: int, epochs: int, batch_size: int, grad_accum: i
 
 def main() -> int:
     p = argparse.ArgumentParser(description="QLoRA training scaffold")
-    p.add_argument("--data", default=str(DATA_DIR / "synthetic-latest.jsonl"))
+    p.add_argument("--data", default=str(DATA_DIR / "synthetic-2026-05-08.jsonl"))
     p.add_argument("--model-key", default="qwen-7b", choices=list(DEFAULTS.keys()))
     p.add_argument("--backend", default="unsloth", choices=["unsloth", "mlx", "kaggle"])
     p.add_argument("--output", default=None)

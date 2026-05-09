@@ -104,8 +104,8 @@ What already exists and what the wrapper consumes:
 | `hammerstein` CLI | `~/.local/bin/hammerstein` | Inference + corpus retrieval. Wrapper subprocesses this. |
 | Existing call log | `~/.hammerstein/logs/hammerstein-calls.jsonl` | 57 structured entries with `retrieved_corpus_ids`. The retrieval target. |
 | Corpus | `~/Desktop/Dev Work/hammerstein/corpus/entries/` | 35 entries; YAML frontmatter has `quadrant`, `principle`, `quality`. |
-| GS project state | `~/Desktop/Dev Work/generalstaff-private/state/hammerstein-model/` | `MISSION.md` + `tasks.json`. Source for ambient context preamble. |
-| Project audit tee | `~/Desktop/Dev Work/generalstaff-private/hammerstein-audit-log.jsonl` | Project-relevant audit tee (2 entries today). |
+| Project state dir | operator-supplied via `--state-dir <path>`, or auto-detected from a configurable root | `MISSION.md` + `tasks.json` + `turn-log.md` (wargame). Source for ambient context preamble. The reference layout is the operator's own [General Staff](#about-general-staff) command-and-control system; any directory with the same files works. |
+| Project audit tee | per-project log appended by the operator's tooling | Project-relevant audit tee. Optional — the wrapper degrades gracefully without it. |
 | `--show-prompt` flag | CLI option | ~200ms peek at assembled prompt without inference. Free way to discover which corpus IDs would be retrieved for a new query. |
 | `--context-file` flag | CLI option | Inject preamble (project-local paths only). |
 
@@ -375,10 +375,21 @@ audit-this-plan, "Audit the V1 IMPLEMENTATION PLAN…").
 
 ## References
 
-- 2026-05-07 original audit (verdict: bank Option B):
-  `generalstaff-private/hammerstein-audit-log.jsonl` line 1
-- Q1-Q4 walk: this Opus session 2026-05-08, summary above
-- Pushback memory:
-  `generalstaff-private/.claude/projects/.../memory/project_hammerstein_ai_diy_pushback.md`
-- Substrate roots: `~/Desktop/Dev Work/hammerstein/`, `~/.hammerstein/`,
-  `~/Desktop/Dev Work/generalstaff-private/state/hammerstein-model/`
+- 2026-05-07 original audit (verdict: bank Option B): logged in the
+  operator's private project audit tee
+- Q1-Q4 walk: dedicated 2026-05-08 design session, summary above
+- Substrate roots: `~/Desktop/Dev Work/hammerstein/` (corpus + CLI),
+  `~/.hammerstein/` (call logs), and an operator-supplied project-
+  state directory (see `--state-dir` flag)
+
+## About General Staff
+
+Several substrate references above point at the operator's own
+"General Staff" command-and-control system — a private repo of
+project-state directories (`MISSION.md`, `tasks.json`, audit logs)
+keyed by project name. The hp wrapper auto-detects this layout when
+run inside a project directory whose name matches a GS state dir,
+and otherwise reads `--state-dir <path>` (any directory with a
+`MISSION.md` works). None of the GS internals are required to use
+the wrapper, train the adapter, or reproduce the eval — they're the
+operator's own dogfood data source.

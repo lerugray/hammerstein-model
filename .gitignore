@@ -7,6 +7,9 @@
 *.swp
 *~
 
+# Claude Code local settings + scheduled-task lockfiles
+.claude/
+
 # Local secrets
 .env
 .env.local
@@ -45,3 +48,9 @@ tools/distill/data/gen-log-*.log
 tools/distill/data/eval-2*.jsonl
 tools/distill/output/
 # Note: eval-set.jsonl IS committed (hand-curated, not regeneratable)
+# Note: synthetic-2026-05-08.jsonl IS committed (the actual training set
+# for the public Hammerstein-7B adapter, ~1 MB, kept for reproducibility)
+!tools/distill/data/synthetic-2026-05-08.jsonl
+# eval-2026-05-08.jsonl + summary IS committed (the published eval result)
+!tools/distill/data/eval-2026-05-08.jsonl
+!tools/distill/data/eval-2026-05-08.summary.md

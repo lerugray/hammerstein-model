@@ -46,7 +46,7 @@ The setup script clones the repo, installs deps, and verifies CUDA.
 From your Mac, in a separate terminal:
 
 ```bash
-cd "/Users/rayweiss/Desktop/Dev Work/hammerstein-model"
+cd <your-local-checkout-of-hammerstein-model>
 scp -P <port> tools/distill/data/synthetic-2026-05-08.jsonl \
     root@<pod-ip>:/workspace/hammerstein-model/tools/distill/data/
 ```

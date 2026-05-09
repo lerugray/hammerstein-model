@@ -79,9 +79,20 @@ Total cost: $2.81 training + $0.315 gold (40 OpenRouter calls) +
 
 ## Eval result — strategic prompts (n=40)
 
-Higher = more framework-correct. Score is the fraction of structural
-markers (`load-bearing`, `clever-lazy`, `verification`, `failure mode`,
-`counter-observation`, etc.) present in the response, capped at 1.0.
+> **What "structural score" actually measures.** It's the presence
+> of 11 framework markers (`load-bearing`, `clever-lazy`,
+> `verification`, `failure mode`, `counter-observation`, …) in the
+> response, capped at 1.0 once 4+ are present. This is a **form-level
+> proxy** — it tests whether the response *looks* like it's using
+> the framework, not whether it reasons more deeply. Both gold and
+> student saturate at 1.0 by design, so the **Δ=+0.206 student vs.
+> ablation** comparison is the meaningful one (both run on the same
+> base model; only the adapter differs). The exact marker list and
+> threshold are in
+> [`tools/distill/eval.py`](tools/distill/eval.py) (`structural_score`,
+> ~line 84). Eval set was held out from training (no contamination).
+
+Higher = more framework-correct.
 
 | Condition | Avg structural score | Interpretation |
 |---|---|---|
@@ -101,6 +112,14 @@ markers (`load-bearing`, `clever-lazy`, `verification`, `failure mode`,
   prompt. The framework's portability genuinely lives in the weights.
 
 ## Eval result — out-of-domain forgetting check (n=4)
+
+> **Sample-size note.** Four prompts is a *minimal falsification set*,
+> not an OOD benchmark. Picked to span clearly non-strategic shapes
+> (creative, technical-explanatory, factual, instructional) and
+> spot whether the adapter framework-ifies them. A larger set would
+> sharpen the leakage estimate; this one is sufficient to show the
+> adapter is materially better than the prompt-only ablation but
+> not pristine. Future work: expand to 20–50 OOD prompts.
 
 Lower = healthier. The model should NOT framework-ify "write a haiku
 about cats." Score is the fraction of strategic-reasoning vocabulary
@@ -198,8 +217,26 @@ ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M \
 
 The conversion pipeline (`tools/distill/convert_gguf.py` +
 `run_gguf.sh`) ran on a RunPod RTX A5000 pod in ~6 min once the deps
-were sorted. Total cost across the GGUF effort (including a dud
-community-cloud pod and a numpy-version retry): ~$0.22.
+were sorted. Cost breakdown (transparent — including the misses):
+
+| | |
+|---|---:|
+| Successful conversion (RTX A5000 secure US-IL-1, ~6 min) | ~$0.07 |
+| Dud community-cloud pod (FR, dead PyPI throughput, ~10 min wasted) | ~$0.05 |
+| numpy-version retry (US, ~10 min) | ~$0.10 |
+| **Subtotal** | **~$0.22** |
+
+**Why Q4_K_M?** Balances size (~4.7 GB) and quality on the 7B base
+for 8 GB RAM devices — the most common "consumer Mac" target. Q5_K_M
+(~5.4 GB) and Q6_K (~6.3 GB) are also reasonable if you have headroom
+and want a hair more fidelity; the conversion script accepts either
+via `--quant`. Q3_K_M (~3.8 GB) trades visible quality for fitting
+on a 4 GB device.
+
+The system prompt used during synthetic-data generation (and as the
+ablation arm's static prompt) is checked in at
+[`tools/distill/data/hammerstein-system-prompt.txt`](tools/distill/data/hammerstein-system-prompt.txt)
+so anyone can verify the teacher conditioning.
 
 ## Sharing / portfolio distribution
 
@@ -235,16 +272,15 @@ To flip public: `python tools/distill/hf_push.py --public`.
   will be commodity. This adapter has a 6-month portfolio half-life;
   the corpus appreciates indefinitely.
 
-## Next steps (Ray's call)
+## Next steps
 
 - [x] ~~Flip HuggingFace repo public~~ (done 2026-05-08)
 - [x] ~~Update top-level [README.md](README.md) status table~~ (done)
 - [x] ~~Convert to GGUF + Ollama-ready~~ (done; Q4_K_M GGUF live on HF)
 - [ ] (Optional) Re-train with mixed-mode data to fix out-of-domain
       leakage — would push the forgetting-check score to ~0.05 if
-      done right. Cost: ~$1, ~1 hr. Marginal per the GS-Claude take.
-- [ ] (Optional) Loud-launch post when the time's right — the artifact
-      can survive scrutiny; the launch is a separate decision.
+      done right. Cost: ~$1, ~1 hr. Deferred; "polished product" rather
+      than the "honest portfolio piece" this v0 already is.
 
 ## Per-prompt details
 

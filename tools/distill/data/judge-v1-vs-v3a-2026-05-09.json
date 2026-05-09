@@ -1,0 +1,330 @@
+{
+  "outcomes": {
+    "v3a_wins": 27,
+    "v1_wins": 13
+  },
+  "n": 40,
+  "v3a_win_rate_excl_ties": 0.675,
+  "details": [
+    {
+      "idx": 3,
+      "query": "Audit this plan: open-source our internal admin tool to 'build community' withou",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 0,
+      "query": "Audit this plan: ship an MVP of my SaaS to 5 beta users this Friday before addin",
+      "v3a_slot": "B",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 6,
+      "query": "Audit this plan: fork the upstream library to add the feature we need rather tha",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 2,
+      "query": "Audit this plan: spend 2 weeks rewriting our React UI in Svelte to 'improve perf",
+      "v3a_slot": "B",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 7,
+      "query": "Audit this plan: migrate our entire team from Slack to Discord because Discord i",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 1,
+      "query": "Audit this plan: switch our 50K-row Postgres database to MongoDB to 'scale bette",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 9,
+      "query": "Audit this plan: cut our marketing budget 50% to fund a new hire for the enginee",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 5,
+      "query": "Audit this plan: launch a Patreon for our YouTube channel that has 800 subscribe",
+      "v3a_slot": "B",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 8,
+      "query": "Audit this plan: ship the new pricing page experiment to 100% of users instead o",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 14,
+      "query": "Scope this idea: a CLI tool that converts natural language into ffmpeg commands.",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 4,
+      "query": "Audit this plan: hire a junior dev for the first time when our senior devs are a",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 12,
+      "query": "Scope this idea: a Discord bot for tabletop RPG groups that tracks initiative an",
+      "v3a_slot": "A",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 10,
+      "query": "Scope this idea: a Chrome extension that auto-summarizes long Slack threads usin",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 17,
+      "query": "Scope this idea: a hosted service that converts blog posts to podcast episodes v",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 13,
+      "query": "Scope this idea: a markdown-based bullet journal app that syncs via git to multi",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 11,
+      "query": "Scope this idea: a static-site generator that compiles Notion docs into a portfo",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 16,
+      "query": "Scope this idea: an iOS app that helps remote workers track focus hours via Pomo",
+      "v3a_slot": "A",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 15,
+      "query": "Scope this idea: a niche newsletter for indie game developers covering market tr",
+      "v3a_slot": "B",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 22,
+      "query": "Is this worth doing: porting my Python tool to Go to 'make it faster' when curre",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 23,
+      "query": "Is this worth doing: refactoring my codebase to TypeScript when I'm the only dev",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 20,
+      "query": "Is this worth doing: spending 4 hours setting up full CI/CD for a personal proje",
+      "v3a_slot": "B",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 21,
+      "query": "Is this worth doing: writing a personal blog when my goal is software-job signal",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 18,
+      "query": "Scope this idea: a side-business teaching Cursor/Claude Code workflows to non-te",
+      "v3a_slot": "A",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 24,
+      "query": "Is this worth doing: applying for a tech conference talk when I have 6 weeks to ",
+      "v3a_slot": "B",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 26,
+      "query": "We have 3 weeks until the investor demo: feature work on the headline flow, poli",
+      "v3a_slot": "B",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 25,
+      "query": "What should we do next: ship the broken-but-functional v1, polish for two more w",
+      "v3a_slot": "A",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 29,
+      "query": "Three open job offers: $X at a Series A startup, $Y at a FAANG IC role, $Z remot",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 31,
+      "query": "Our open-source project has 2K GitHub stars and 15 stale PRs. Triage the PRs, wr",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 27,
+      "query": "Our beta has 12 active users with 50% weekly retention. Push for more users or f",
+      "v3a_slot": "B",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 19,
+      "query": "Scope this idea: a self-hosted alternative to Linktree using a single GitHub Pag",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 28,
+      "query": "The team is split on whether to ship a partial fix Friday or wait until Monday f",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 33,
+      "query": "Review from a different angle: we've decided to use REST instead of GraphQL for ",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 32,
+      "query": "End of sprint: we have time for one more thing \u2014 fix the flaky test, write the m",
+      "v3a_slot": "A",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v1_wins"
+    },
+    {
+      "idx": 36,
+      "query": "Review from a different angle: we plan to write the docs after launching. A seni",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 34,
+      "query": "Review from a different angle: we ruled out a Discord community because 'we don'",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 35,
+      "query": "Review from a different angle: the team agrees iOS-first is the right call for o",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 38,
+      "query": "Review from a different angle: we decided not to add SSO because 'MVP doesn't ne",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 37,
+      "query": "Review from a different angle: we treat slow page loads as a CDN problem. What i",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 39,
+      "query": "Review from a different angle: we're convinced the bug is in our code. What if i",
+      "v3a_slot": "A",
+      "raw_judge": "A",
+      "verdict": "A",
+      "outcome": "v3a_wins"
+    },
+    {
+      "idx": 30,
+      "query": "We have $5K marketing budget for Q2. Spend it on Google Ads, content creation, o",
+      "v3a_slot": "B",
+      "raw_judge": "B",
+      "verdict": "B",
+      "outcome": "v3a_wins"
+    }
+  ]
+}

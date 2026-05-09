@@ -76,3 +76,4 @@ tools/distill/output/
 !tools/distill/data/eval-v3a-2026-05-09.jsonl
 !tools/distill/data/eval-v3a-2026-05-09.summary.md
 !tools/distill/data/compare-v3a-2026-05-09.md
+!tools/distill/data/judge-v1-vs-v3a-2026-05-09.json

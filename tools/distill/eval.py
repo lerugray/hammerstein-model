@@ -67,15 +67,48 @@ PASS_THRESHOLD_HALLUC = 0.15
 # answer plainly, not framework-ify them. If the student adapter
 # returns a quadrant analysis to "write a haiku about cats," it has
 # overfit to strategic mode.
+#
+# Expanded 4 → 30 for v3a (n=4 was too noisy to discriminate v2 variants).
+# Spans 6 shape categories: creative, factual, technical-explanatory,
+# instructional, conversational, math/code.
 FORGETTING_PROMPTS = [
-    {"query": "Write a haiku about cats.",
-     "expect": "5-7-5 haiku, no framework vocabulary"},
-    {"query": "Explain what a binary tree is in two sentences.",
-     "expect": "concise CS explanation, no framework vocabulary"},
-    {"query": "What's the capital of France?",
-     "expect": "one-line answer (Paris)"},
-    {"query": "Write a recipe for scrambled eggs.",
-     "expect": "ingredient list + steps, no framework vocabulary"},
+    # Creative (5)
+    {"query": "Write a haiku about cats.", "expect": "5-7-5 haiku"},
+    {"query": "Write a haiku about autumn leaves.", "expect": "5-7-5 haiku"},
+    {"query": "Compose a four-line poem about loneliness.", "expect": "short poem"},
+    {"query": "Write a one-sentence horror story.", "expect": "single sentence"},
+    {"query": "Invent a name and one-line description for a fantasy character.", "expect": "name + description"},
+    # Factual (5)
+    {"query": "What's the capital of France?", "expect": "Paris"},
+    {"query": "What year did the French Revolution begin?", "expect": "1789"},
+    {"query": "Who wrote 'Pride and Prejudice'?", "expect": "Jane Austen"},
+    {"query": "What's the chemical symbol for gold?", "expect": "Au"},
+    {"query": "Name three planets in our solar system.", "expect": "list of three"},
+    # Technical-explanatory (5)
+    {"query": "Explain what a binary tree is in two sentences.", "expect": "concise CS explanation"},
+    {"query": "What does HTTP status code 404 mean?", "expect": "Not Found explanation"},
+    {"query": "Explain in one sentence what TCP is.", "expect": "one-sentence definition"},
+    {"query": "What's the difference between a list and a tuple in Python?", "expect": "mutability comparison"},
+    {"query": "Define recursion in two sentences.", "expect": "concise definition"},
+    # Instructional (5)
+    {"query": "Write a recipe for scrambled eggs.", "expect": "ingredient list + steps"},
+    {"query": "How do I tie a tie?", "expect": "step-by-step instructions"},
+    {"query": "Walk me through brewing a cup of coffee in a French press.", "expect": "step-by-step"},
+    {"query": "How do you back up a file in Linux using cp?", "expect": "cp command example"},
+    {"query": "Steps to create a new branch in git.", "expect": "git branch / git checkout sequence"},
+    # Conversational (4)
+    {"query": "How are you today?", "expect": "small-talk reply"},
+    {"query": "What's a good gift for someone who likes hiking?", "expect": "concrete recommendation"},
+    {"query": "Recommend a book for a long flight.", "expect": "book recommendation"},
+    {"query": "What's your favorite color?", "expect": "preference reply (or no-preference disclosure)"},
+    # Math/code (3)
+    {"query": "What's 7 times 8?", "expect": "56"},
+    {"query": "Write a Python one-liner that returns the sum of [1, 2, 3, 4, 5].", "expect": "sum() call"},
+    {"query": "Convert 25 degrees Celsius to Fahrenheit.", "expect": "77 °F"},
+    # Misc (3)
+    {"query": "What language is spoken in Brazil?", "expect": "Portuguese"},
+    {"query": "How do you boil an egg?", "expect": "instructional"},
+    {"query": "List five common Italian pasta shapes.", "expect": "pasta list"},
 ]
 
 

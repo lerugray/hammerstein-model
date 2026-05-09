@@ -54,6 +54,9 @@ tools/distill/output/
 # v2 datasets — v2a (qwen3.6-plus teacher) + v2b (DeepSeek v4-pro teacher)
 !tools/distill/data/synthetic-2026-05-09.jsonl
 !tools/distill/data/synthetic-v2b-2026-05-09.jsonl
+# v3a dataset (v2a strategic + ~12.5% off-domain mixin to fix OOD regression)
+!tools/distill/data/synthetic-v3a-2026-05-09.jsonl
+!tools/distill/data/off-domain-2026-05-09.jsonl
 # eval-2026-05-08.jsonl + summary IS committed (the published eval result)
 !tools/distill/data/eval-2026-05-08.jsonl
 !tools/distill/data/eval-2026-05-08.summary.md
@@ -65,3 +68,11 @@ tools/distill/output/
 !tools/distill/data/eval-v2b-2026-05-09.jsonl
 !tools/distill/data/eval-v2b-2026-05-09.summary.md
 !tools/distill/data/compare-v1-v2-2026-05-09.md
+# v3a eval results (re-eval of v1 + v2a + v3a on expanded 30-OOD set)
+!tools/distill/data/eval-v1-rerun-v3a-2026-05-09.jsonl
+!tools/distill/data/eval-v1-rerun-v3a-2026-05-09.summary.md
+!tools/distill/data/eval-v2a-rerun-v3a-2026-05-09.jsonl
+!tools/distill/data/eval-v2a-rerun-v3a-2026-05-09.summary.md
+!tools/distill/data/eval-v3a-2026-05-09.jsonl
+!tools/distill/data/eval-v3a-2026-05-09.summary.md
+!tools/distill/data/compare-v3a-2026-05-09.md

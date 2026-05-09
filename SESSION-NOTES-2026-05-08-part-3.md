@@ -1,0 +1,341 @@
+# Session Notes — 2026-05-08 (Part 3)
+
+Picks up where [SESSION-NOTES-2026-05-08-part-2.md](SESSION-NOTES-2026-05-08-part-2.md)
+left off — adapter shipped public, Phase 5 wargame extension live,
+VASSAL-EXTENSION.md design doc landed, repo still PRIVATE awaiting a
+public-launch sweep. This session built Phase 6 (web UI v0 + v1),
+flipped the repo public, and prepped the artifact for the
+r/LocalLLaMA launch post Sunday morning ET.
+
+## Headline outcomes
+
+1. **Phase 6.0 — local audit dashboard shipped.** FastAPI + React +
+   Tailwind + shadcn-flavored components at `127.0.0.1:8765`,
+   launched via `./hp_web.sh`. Surfaces the three load-bearing CLI
+   gaps an explore-agent audit confirmed:
+   - Phase-3 verdict card pinned at top (CONTINUE / EXTEND / ABORT
+     with each gate's value vs threshold)
+   - Sortable + filterable table of recent hp calls, normalized to
+     a single contract so `hp.py` audit rows and `hp_vision.py`
+     wargame rows render side-by-side with a kind badge
+   - One-click `conclusion_changed` toggle. Atomic rewrite of
+     `hp-metrics.jsonl` under `fcntl.LOCK_EX` so concurrent hp
+     appends and web toggles can't corrupt the file
+   - Click a row → side-drawer with full query / response / corpus
+     IDs (audit) or attachments + state-dir (wargame)
+   - Dark/light theme, keyboard escape, mobile-responsive
+
+2. **Phase 6.1 — wargamer surface shipped.** Faithful TS port of
+   Claude Design's bundle (claude.ai/design returned 11 files,
+   ~127 KB uncompressed gzipped to a tarball Anthropic API served
+   at `/v1/design/h/<hash>`). Sibling page to the dashboard,
+   reachable via Dashboard | Wargame tab toggle. Three smart
+   additions Claude Design made beyond the brief, all preserved:
+   - **"What I see on the board"** sanity-check belt at the top of
+     the orders panel — cashes the brief's image-quality risk into
+     a load-bearing UI element with Confirm / Flag-misread actions
+     and an explicit "Unread:" line for things the AI couldn't read
+   - Running campaign-spend pill in the topbar (with sparkline)
+   - Dev preview chip strip at the bottom that flips orders panel
+     between empty / drafting / streaming / completed states +
+     toggles serif typography. Lets you poke at every state without
+     wiring real input flows yet
+   - Bridge Crossing T3 placeholder content where the AI commander
+     pushes back on the operator's plan to withdraw the left flank.
+     "do NOT withdraw to consolidate. The ridge is the hinge."
+   - Backend wiring (POST → `hp_vision.py`) deferred. UI behavior
+     and state-machine are real; only the "Issue orders" call is
+     stubbed to flip to the streaming-state fixture.
+
+3. **Repo flipped to PUBLIC.** Was the load-bearing gate for the
+   r/LocalLLaMA Sunday-morning smoke test. Pre-flip work:
+   - **Sweep**: no secrets / keys / IPs / SSH info in tracked files
+     or git history. Only `lerugray` and HF/GitHub usernames remain
+     (intentional and required for users to find the artifacts).
+     The "PAT-based auth" commit (16f4344) used `github_pat_xxxxxxxx`
+     placeholders, no real token.
+   - **Reproducibility tighten** (TIGHTEN-FIRST verdict from a
+     spawned audit agent):
+     - Cherry-picked `synthetic-2026-05-08.jsonl` (1.04 MB, 308
+       pairs) from the `data` branch onto master so `git clone`
+       reproduces training. Updated `train.py` default filename.
+     - Added structural-score transparency block to
+       HAMMERSTEIN-7B.md: "It's keyword presence, capped at 1.0
+       once 4+ are present. Form-level proxy. The Δ=+0.206 student
+       vs. ablation comparison is the meaningful one."
+     - Added a "Reproducing the distillation" section to root
+       README with the full 4-step command sequence + absolute
+       links to eval harness, training set, eval set, teacher
+       system prompt, per-prompt results
+     - Lower-priority polish: Q4_K_M rationale, system prompt
+       provenance pointer, GGUF cost itemized split (incl.
+       dud-pod retry waste), forgetting-check sample-size note
+   - **Voice scrub**: MISSION.md / RESEARCH-QUESTIONS.md / DESIGN.md
+     scrubbed for public-shaped voice. "Ray" → "the operator,"
+     "GS state" footnoted, broken `generalstaff-private/...` paths
+     removed, README's "Ray's framework, in one paragraph" →
+     "The framework, in one paragraph."
+   - **Path generalization**: hardcoded `/Users/rayweiss/...` paths
+     in HOWTO-CLOUD.md + run_eval.sh templated to
+     `<your-local-checkout-of-hammerstein-model>`.
+   - **`.claude/` defensively gitignored** so the local Claude Code
+     config can never accidentally land in a future commit.
+
+4. **HF model card synced.** Was 5,890 bytes (sparse, missing
+   half the GitHub HAMMERSTEIN-7B.md content). Now 13,145 bytes —
+   full mirror plus a top-of-page "Reproducibility" section with
+   absolute github.com links. Cashes Hammerstein's "link
+   reproducible eval artifacts" missed-axis call. Canonical card
+   source persisted at `tools/distill/HF-MODEL-CARD.md` so future
+   syncs are versioned alongside the GitHub card.
+
+5. **Sister banner rendered + README polished.** Used the rasterize
+   plugin (Cairo for the install, Pillow + freetype for the actual
+   render — Cairo's macOS toy text API mangles "fr" ligature in
+   Didot Italic). 1536×592, navy/cream/rust/gold matching the
+   hammerstein flagship banner. Wordmark "[H] Hammerstein-7B,"
+   tagline "The framework, distilled," foot pillars
+   `PERSISTENT · DISTILLED · LOCAL`. Render script lives at
+   `docs/images/render_banner.py` for reproducibility. Stop-slop
+   pass on the README: em dashes out of prose (kept in tables),
+   adverbs killed, inanimate-as-actor lines recast, the
+   "What it isn't: a daemon..." negative-listing formula
+   rewritten as a direct sentence.
+
+6. **Dead-link fix (launch blocker).** README and HAMMERSTEIN-7B.md
+   linked to `github.com/rayweiss/hammerstein` (404). Wasn't a
+   missing repo, just a username typo — the framework lives at
+   `github.com/lerugray/hammerstein` (PUBLIC, MIT-licensed, has
+   the corpus + CLI). Fixed 5 occurrences. **Ray was about to have
+   GS-private spin up a gist with the framework context; the actual
+   public framework repo already exists.**
+
+## Cost spent this session
+
+| Item | Spend |
+|---|---:|
+| Hammerstein audit (improvement-axis triage, qwen3.6-plus) | $0.0099 |
+| Explore agent: load-bearing UI capability research | $0 (Anthropic quota) |
+| Reproducibility audit agent (TIGHTEN-FIRST verdict) | $0 (Anthropic quota) |
+| Build + smoke testing | $0 |
+| **Session total OpenRouter** | **~$0.01** |
+
+Anthropic quota burned by the construction work itself was non-trivial
+(Opus session across ~6 hours), not metered separately.
+
+## Hammerstein audit verdict (kept us focused)
+
+Asked `audit-this-plan` against a slate of pre-launch improvements
+(mixed-mode retrain, eval expansion, 3x synthetic regen, imatrix
+re-quant, public benchmark, model-card polish, ship-as-is). Verdict:
+
+**Ship F + B + G:**
+- F: Polish HF model card to match GitHub HAMMERSTEIN-7B.md (~30 min, $0)
+- B: Expand forgetting-check eval from 4 → ~30 prompts (~1 hr, ~$0.30)
+- G: Spend remaining ~6.5 hrs on launch post + comment prep + live monitoring
+
+**Skip A / C / D / E:**
+- A (mixed-mode retrain): "rarely takes the quoted 1-3 hours when data
+  prep, validation, and artifact generation are included. A missed
+  Sunday launch kills momentum."
+- C (3x synthetic): same schedule risk + diminishing returns
+- D (imatrix re-quant): marginal + uncertain whether Unsloth already
+  uses it
+- E (public benchmark): "misframes the product. Showing flat MMLU
+  scores invites 'why use this?' critiques. The adapter's value is
+  structural, not general-purpose."
+
+**Missed axis Hammerstein flagged (free to add):**
+- Pre-bake 3-4 reply drafts to likely r/LocalLLaMA critiques
+- Structure launch post with **"Scope & Limitations"** section
+  upfront, not buried
+- Link the eval script in the HF card so transparency outperforms
+  marginal metric gains
+- Have a rapid-response eval notebook ready as fallback if comments
+  attack methodology
+
+F shipped this session. B and the missed-axis items are for Saturday.
+
+## Mistakes + lessons
+
+1. **First banner render had a "The f ramework" gap.** Cairo's macOS
+   toy text API (`select_font_face`/`show_text`) mis-handles the
+   Didot Italic "fr" ligature — measures the advance as if ligated,
+   but draws individual glyphs apart. Lesson: for typography-heavy
+   raster work on macOS via the rasterize plugin, **default to
+   Pillow + freetype, not Cairo's toy API.** Cairo + Pango handles
+   ligatures correctly but Pango is Linux-only. Pillow's
+   `ImageFont.truetype(path, size, index=N)` directly addresses
+   `.ttc` font collection faces and respects ligatures.
+
+2. **First HF card-sync attempt failed because I assumed env-var
+   token.** `~/.generalstaff/.env` doesn't have `HF_TOKEN`; the
+   write token lives at `~/.huggingface_token` (mode 600) per the
+   convention `tools/distill/hf_push.py` already uses. Lesson:
+   when an existing repo script reads a token from a specific
+   path, read that path before reaching for env vars.
+
+3. **`gh repo edit --description "...$4..."` ate the dollar sign.**
+   Shell expanded `$4` as a positional parameter, so the
+   description landed as "all in ~ of cloud spend" instead of
+   "all in ~$4 of cloud spend." Lesson: single-quote any `gh`
+   description that contains `$N`, or escape it.
+
+4. **The "Hammerstein framework" link was broken in 5 spots before
+   anyone clicked it.** Username typo (`rayweiss` vs `lerugray`)
+   in README + HAMMERSTEIN-7B.md. The link existed in private mode
+   for so long that nobody clicked it; would have been the first
+   404 on the public launch. Lesson: when flipping a repo public,
+   anonymous-fetch every link in the top-of-funnel docs (README,
+   model card, MISSION.md). curl checks would have caught this in
+   30 seconds.
+
+5. **`base_url` deprecation warning in tsconfig was a red herring.**
+   First Vite build failed with "Option 'baseUrl' is deprecated."
+   Spent a moment chasing path-alias setup before noticing the
+   error message itself said how to fix it. Lesson: TS error
+   messages with explicit migration hints are usually right.
+
+## What's open / pending
+
+These are decisions, not autonomous-action items. Saturday's work
+sequence per the Hammerstein audit:
+
+1. **B: expand forgetting-check eval set 4 → ~30 prompts**
+   (~$0.30, ~1.5 hr Saturday morning). Deliverable: a sharper
+   OOD leakage number, updated in both HAMMERSTEIN-7B.md and the
+   HF card. Hand-write 25-30 OOD prompts spanning creative /
+   factual / instructional / technical-explanatory / conversational
+   shapes; re-run student + ablation + vanilla; report the number.
+
+2. **Pre-bake 3-4 r/LocalLLaMA reply drafts** to likely critiques
+   (dataset size 308 pairs, OOD leakage 0.312, "why not run real
+   benchmarks," "isn't this just keyword counting"). Each reply
+   should be ≤200 words, citation-ready, link the relevant eval
+   artifact or section of HAMMERSTEIN-7B.md. ~1 hr Saturday afternoon.
+
+3. **Draft the launch post.** Per the audit: "Scope & Limitations"
+   section upfront. Lead with ADAPTER WINS + ~$4 total spend; show
+   the 4-condition table; honest about OOD leakage. CTA is
+   `ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`. ~1.5 hr
+   Saturday evening. Ray publishes Sunday morning ET.
+
+4. **Wargame backend wiring (Phase 6.2, deferred from tonight).**
+   POST endpoint that drives `hp_vision.py` and streams the
+   response back to the wargame UI. The UI state-machine is ready;
+   only the actual inference call is stubbed. ~2-3 hr work,
+   non-blocking on launch.
+
+5. **Mobile breakpoint preview** — Claude Design's bundle had a
+   device-frame view (414×900 with iPhone notch) for the mobile
+   layout; I scoped the mobile CSS but didn't wire the device-
+   frame preview. The responsive layout already kicks in on real
+   mobile devices, so this is polish, not a blocker.
+
+6. **`tools/distill/hf_push.py` script's `~/.huggingface_token`
+   convention** isn't documented in the repo. Worth a one-line
+   note in the file's docstring or HOWTO-CLOUD.md so a stranger
+   reproducing knows where to put the token.
+
+## Files shipped this session
+
+| Path | Purpose |
+|---|---|
+| **Phase 6.0 (audit dashboard)** | |
+| [`hp_web.sh`](hp_web.sh) | Launcher (builds frontend if stale, runs uvicorn) |
+| [`web/__init__.py`](web/__init__.py) | Package marker |
+| [`web/requirements.txt`](web/requirements.txt) | FastAPI + uvicorn pin |
+| [`web/backend/server.py`](web/backend/server.py) | FastAPI app: /api/status, /api/calls, /api/conclusion-changed, SPA fallback |
+| [`web/backend/test_normalize.py`](web/backend/test_normalize.py) | 4 tests for the audit/vision row-shape normalization |
+| [`web/frontend/`](web/frontend/) | Vite + React + TS + Tailwind + shadcn-style components, ~25 files |
+| **Phase 6.1 (wargame surface)** | |
+| [`web/frontend/src/wargame/wargame.css`](web/frontend/src/wargame/wargame.css) | 786 lines, scoped under .wargame-page |
+| [`web/frontend/src/wargame/Icon.tsx`](web/frontend/src/wargame/Icon.tsx) | Lucide-style monoline icon subset |
+| [`web/frontend/src/wargame/content.ts`](web/frontend/src/wargame/content.ts) | Bridge Crossing T3 placeholder content |
+| [`web/frontend/src/wargame/components.tsx`](web/frontend/src/wargame/components.tsx) | TopBar, CampaignPicker, dropzones, status textarea, issue row, turn card |
+| [`web/frontend/src/wargame/OrdersPanel.tsx`](web/frontend/src/wargame/OrdersPanel.tsx) | Kriegspiel orders panel + Share + NewCampaign modals |
+| [`web/frontend/src/wargame/WargamePage.tsx`](web/frontend/src/wargame/WargamePage.tsx) | Page composition + state machine + dev preview chips |
+| [`web/frontend/src/components/Header.tsx`](web/frontend/src/components/Header.tsx) (modified) | Lifted dark-mode state, added Dashboard \| Wargame tab nav |
+| [`web/frontend/src/App.tsx`](web/frontend/src/App.tsx) (rewritten) | Tab routing + dark-mode ownership |
+| **Launch prep** | |
+| [`docs/images/banner.png`](docs/images/banner.png) | 1536×592 sister banner |
+| [`docs/images/render_banner.py`](docs/images/render_banner.py) | Pillow + freetype render script |
+| [`docs/WARGAMER-UI-BRIEF.md`](docs/WARGAMER-UI-BRIEF.md) | The brief Claude Design consumed |
+| [`tools/distill/HF-MODEL-CARD.md`](tools/distill/HF-MODEL-CARD.md) | Canonical HF card source-of-truth |
+| [`tools/distill/data/synthetic-2026-05-08.jsonl`](tools/distill/data/synthetic-2026-05-08.jsonl) | Cherry-picked from data branch (308 pairs, 1 MB) |
+| Modified: README.md, HAMMERSTEIN-7B.md, MISSION.md, RESEARCH-QUESTIONS.md, DESIGN.md, WEB-UI-EXTENSION.md, tools/distill/{README.md, HOWTO-CLOUD.md, run_eval.sh, train.py}, .gitignore | |
+
+Plus a corresponding HF push of the synced model card to
+[`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora).
+
+## Commits this session (all pushed to GitHub master)
+
+```
+9cfd793 Phase 6.1: implement Claude Design's wargame surface
+d750a02 launch prep: dead-link fix, HF card sync, wargamer UI brief
+1cb4798 README: family banner + stop-slop pass for r/LocalLLaMA
+c07baaa launch prep: reproducibility tighten + voice scrub for public flip
+f8d5d9e Phase 6.0 — local web dashboard (FastAPI + React + Tailwind)
+```
+
+5 commits. ~7,400 line additions across the session.
+
+## State at end of session
+
+- `master`: 5 commits ahead of where part-2 left off, all pushed
+- **Repo visibility: PUBLIC** ([github.com/lerugray/hammerstein-model](https://github.com/lerugray/hammerstein-model))
+- HF: model card synced (13,145 bytes, mirrors GitHub + Reproducibility section)
+- Web app: works locally via `./hp_web.sh` on `127.0.0.1:8765`. Dashboard tab + Wargame tab both render. Wargame backend wiring is the only stub.
+- Test suite: 22/22 wrapper tests + 4/4 normalize tests passing
+- Frontend build: clean (Vite 1749 modules, 278 KB JS gzipped to 85 KB)
+- RunPod: still 0 pods, 0 volumes (clean from part-2)
+- Total project spend: ~$4.05 + ~$0.01 this session = **~$4.06 end-to-end**
+
+## Pre-launch checklist for Saturday's session
+
+1. Run `./hp_web.sh`, click the Wargame tab, verify it renders in
+   light + dark mode (sanity check after a fresh terminal session).
+2. Hand-write 25-30 OOD prompts → re-run eval (B from the audit).
+3. Update HAMMERSTEIN-7B.md + tools/distill/HF-MODEL-CARD.md +
+   push HF card with the sharper OOD number.
+4. Pre-bake reply drafts to: dataset-size-308, OOD-leakage-0.312,
+   why-not-MMLU, structural-score-is-keyword-counting.
+5. Draft launch post. "Scope & Limitations" upfront, not buried.
+6. Sunday morning ET: post to r/LocalLLaMA. Be present in comments.
+
+## What this session means in framework terms
+
+Three layers of the framework auditing itself again:
+
+1. **Hammerstein verdict overrode the build instinct.** Asked
+   `audit-this-plan` whether to spend Friday night doing technical
+   improvements (retrain, regen, re-quant, benchmark). Verdict:
+   skip all of them; signal > metric gains; ship the existing
+   weights with better documentation. Listened. The two things
+   that actually shipped (HF card sync + wargame UI per the brief)
+   are both signal moves, not capability moves. The corpus-vs-
+   engineering memory from part-2 said exactly this.
+
+2. **The wargamer UI brief became its own audit surface.** Claude
+   Design returned three additions beyond the brief — the
+   "What I see on the board" sanity-check belt being the load-
+   bearing one. That risk was named in the brief ("the orders
+   panel should always include a 'what I see on the board' line
+   that the operator can sanity-check"), but the designer made it
+   structural, not advisory. Cashed a brief sentence into a UI
+   element with its own actions.
+
+3. **The dead-link find avoided a self-inflicted vaporware moment.**
+   A 404 on the "Hammerstein framework" link from the launch post
+   would have been the first comment thread, killing momentum
+   before anyone read the model card. The framework's "verify
+   load-bearing premises" discipline caught the problem 36 hours
+   before launch instead of 6 hours into it.
+
+The corpus + framework keep appreciating; the model is the snapshot.
+This session was almost entirely about the applied surface
+(dashboard + wargame + launch surface) and the documentation
+(reproducibility + voice + accuracy of links). That's the
+high-payoff axis the part-2 memory note flagged. Continued to land.
+
+That's the design.

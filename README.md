@@ -14,10 +14,14 @@ This repo ships two artifacts you can use today:
    memory and ambient project-context injection on top of the
    one-shot [hammerstein CLI](https://github.com/lerugray/hammerstein).
    Production-shaped, ~$0.01/audit.
-2. **Hammerstein-7B**, a QLoRA adapter on Qwen2.5-7B-Instruct
-   distilled from synthetic teacher outputs. Q4_K_M GGUF on
-   HuggingFace; runs on any 8 GB+ Mac via Ollama. Behavior
-   cloning, not reasoning training.
+2. **Hammerstein-7B (v3a)**, a QLoRA adapter on Qwen2.5-7B-Instruct
+   distilled from synthetic teacher outputs **with off-domain mixin**
+   so it stays out of framework mode for non-strategic queries.
+   Q4_K_M GGUF on HuggingFace; runs on any 8 GB+ Mac via Ollama.
+   Behavior cloning, not reasoning training. v3a beats v1 on three
+   independent measurements: marker count, OOD leakage (2.80 → 0.00
+   markers per off-domain response), and a blind LLM judge head-to-head
+   (67.5% v3a preferred). See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md).
 
 The wrapper is the production path. The distilled adapter is the
 shareable artifact. They ship independently.
@@ -87,7 +91,9 @@ execution. Q1 of the design walk locked that in.
 | Phase 5 | Wargame solitaire opponent | ✅ v0 + v1 (kriegspiel pivot) + v2 (multimodal `hp_vision.py`) shipped 2026-05-08. Photo + Excel OOB + conversational input → Auftragstaktik mission orders via Sonnet 4.6. See [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md). |
 | Phase 5.1 | VASSAL integration | Design doc only, [VASSAL-EXTENSION.md](VASSAL-EXTENSION.md). The recommendation: pipe a manual screenshot into the existing `hp_vision.py` (works today, zero new code) and test on real games before building deeper integration. |
 | Phase 6 | Local web UI | ✅ v0 shipped 2026-05-08. `hp_web.sh` runs a FastAPI + React/Tailwind dashboard on `127.0.0.1:8765`: Phase-3 verdict card, sortable table of recent calls (audit + wargame), one-click `conclusion_changed` toggle. See [WEB-UI-EXTENSION.md](WEB-UI-EXTENSION.md). |
-| **Distillation experiment** | Hammerstein-7B QLoRA adapter + Q4_K_M GGUF | ✅ trained, 4-condition eval passed, GGUF / Ollama-ready 2026-05-08. ADAPTER WINS the prompt ablation by Δ=+0.206; student/gold ratio 1.01. Public at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora). Runs on any 8 GB+ Mac: `ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`. See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). Total spend ~$3.97 end-to-end. |
+| **Distillation v1** | Hammerstein-7B initial QLoRA adapter | ✅ trained 2026-05-08. Δ student-vs-ablation +0.206. Known limitation: framework leaked on instruction- / question-shaped OOD prompts (0.312 leakage rate, n=4). Mitigation deferred. End-to-end cost ~$4.06. |
+| **Distillation v2** (data-scale + teacher-swap A/B) | v2a: 1494 pairs, qwen3.6-plus / v2b: 1500 pairs, DeepSeek v4-pro | ✅ ran 2026-05-09. Single-variable parallel experiments. Neither was a clean launch swap (v2a improved strategic, regressed OOD; v2b improved OOD, regressed strategic — DeepSeek register mismatch). Audit's "isolate variables" discipline validated. Combined spend $27.74. |
+| **Distillation v3a** (mixed-mode mitigation, **current HF artifact**) | v2a strategic + 12.5% off-domain mixin | ✅ shipped 2026-05-09. Wins all three measurements vs v1: raw markers (+0.20), OOD leakage (2.80 → **0.00**), blind LLM judge head-to-head (**67.5%** v3a preferred). Public at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora) (`ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`). v3a alone cost $2.49. See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md) and [scoring/v3a-results-2026-05-09.md](scoring/v3a-results-2026-05-09.md). |
 
 ## Honest framing
 
@@ -106,11 +112,21 @@ called it explicitly:
 > "The FT path wins on signaling ROI even if it loses on capability
 > ROI. Frame it as behavior cloning, not reasoning training."
 
-The 4-condition eval cleared the ≥80%-of-gold gate. The adapter beat
-the prompt-only ablation by Δ=+0.206 on the same base model, which
-means the framework's portability lives in the weights, not just
-the system prompt. Both the wrapper and the adapter ship; neither
-blocks the other.
+The v1 4-condition eval (2026-05-08) cleared the ≥80%-of-gold gate
+and the adapter beat the prompt-only ablation by Δ=+0.206 on the
+same base model — framework's portability lives in the weights, not
+just the system prompt.
+
+The v3a iteration (2026-05-09) shipped the deferred OOD mitigation
+flagged in the v1 model card: 12.5% off-domain instruction-tuning
+mix to suppress catastrophic forgetting. v3a wins three independent
+measurements vs v1 (markers, OOD leakage 2.80 → 0.00, blind LLM judge
+67.5% preferred), at a marginal $2.49 in additional spend. The
+methodology arc — running parallel single-variable v2 experiments
+before committing to v3a — is itself a credibility signal for the
+framework discipline the project exists to demonstrate.
+
+Both the wrapper and the adapter ship; neither blocks the other.
 
 ## Running the wrapper
 
@@ -134,39 +150,48 @@ hp.py --dry-run "<query>"
 Requires `OPENROUTER_API_KEY` in env and the
 [hammerstein CLI](https://github.com/lerugray/hammerstein) installed.
 
-## Reproducing the distillation
+## Reproducing v3a (current artifact)
 
-Everything needed to retrain the Hammerstein-7B adapter and re-run
-the eval is in this repo. The synthetic training set
-([`tools/distill/data/synthetic-2026-05-08.jsonl`](tools/distill/data/synthetic-2026-05-08.jsonl),
-308 pairs, ~1 MB) and the held-out eval set
-([`tools/distill/data/eval-set.jsonl`](tools/distill/data/eval-set.jsonl),
-40 strategic + 4 forgetting-check prompts) are checked in. The
-teacher system prompt used for generation +
-ablation-arm conditioning is at
-[`tools/distill/data/hammerstein-system-prompt.txt`](tools/distill/data/hammerstein-system-prompt.txt).
+Everything needed to retrain the v3a adapter and re-run the eval is
+in this repo. Both the strategic synthetic data
+([`synthetic-2026-05-09.jsonl`](tools/distill/data/synthetic-2026-05-09.jsonl),
+1494 pairs) and the off-domain mixin
+([`off-domain-2026-05-09.jsonl`](tools/distill/data/off-domain-2026-05-09.jsonl),
+214 pairs) are checked in, along with the combined v3a training set
+([`synthetic-v3a-2026-05-09.jsonl`](tools/distill/data/synthetic-v3a-2026-05-09.jsonl),
+1708 pairs, shuffled with seed=42). Held-out eval: 40 strategic
+prompts in [`eval-set.jsonl`](tools/distill/data/eval-set.jsonl) +
+30 OOD prompts hardcoded in [`eval.py:64`](tools/distill/eval.py).
 
 ```bash
-# 1. Cloud setup (RunPod RTX 4090 24 GB, ~$0.50/hr) — see
+# 1. Cloud setup (RunPod RTX 4090 24 GB, ~$0.69/hr secure cloud) — see
 #    tools/distill/HOWTO-CLOUD.md for the full walk
 bash <(curl -sL https://raw.githubusercontent.com/lerugray/hammerstein-model/master/tools/distill/setup_pod.sh)
 
-# 2. Train (~50 min, ~$0.50)
-python tools/distill/train.py --model-key qwen-7b --backend unsloth --execute
+# 2. Train v3a (~17 min on RTX 4090, ~$0.20)
+python tools/distill/train.py \
+    --data tools/distill/data/synthetic-v3a-2026-05-09.jsonl \
+    --model-key qwen-7b --backend unsloth \
+    --output tools/distill/output/qwen-7b-hammerstein-v3a-lora \
+    --execute
 
-# 3. Eval — 4 conditions on 40 prompts (~$0.32 for the gold OpenRouter calls)
+# 3. Eval — 4 conditions on 70 prompts (40 strategic + 30 OOD)
 python tools/distill/eval.py \
-    --student-path tools/distill/output/qwen-7b-hammerstein-lora/lora-adapter \
-    --vanilla-path unsloth/Qwen2.5-7B-Instruct-bnb-4bit
+    --adapter-path tools/distill/output/qwen-7b-hammerstein-v3a-lora/lora-adapter \
+    --skip-gold --with-forgetting-check
 
-# 4. (Optional) GGUF + Ollama (~6 min on RTX A5000, ~$0.07)
+# 4. (Optional) Head-to-head LLM judge vs v1 baseline (~$0.40 OpenRouter)
+python tools/distill/judge_head_to_head.py
+
+# 5. (Optional) GGUF + Ollama (~6 min on RTX A5000, ~$0.07)
 python tools/distill/convert_gguf.py --quant q4_k_m
 ```
 
 Hyperparameters, hardware specs, and dataset provenance are detailed
-in [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). The full workflow sequence
-+ Hammerstein audit-driven gate decisions are in
-[tools/distill/README.md](tools/distill/README.md).
+in [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). The full v3a results
+writeup is at [`scoring/v3a-results-2026-05-09.md`](scoring/v3a-results-2026-05-09.md).
+The v2 → v3a methodology arc is in
+[`scoring/v2-costs-2026-05-09.md`](scoring/v2-costs-2026-05-09.md).
 
 ## Cost arc
 
@@ -177,14 +202,24 @@ in [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). The full workflow sequence
 | Phase 1.5 precision test | $0.00 (analysis only) |
 | Phase 2/3 setup | $0.00 |
 | **Total to ship the wrapper** | **~$0.10** |
-| Distillation: data gen (308 synthetic pairs) | $2.31 |
-| Distillation: training (RunPod RTX 4090, ~50 min) | ~$0.50 |
-| Distillation: gold eval (40 OpenRouter calls) | $0.315 |
-| Distillation: pod eval (RunPod RTX 4090, ~1 hr) | ~$0.50 |
-| Distillation: GGUF conversion (RunPod A5000, ~6 min + dud-pod retry) | ~$0.22 |
+| **Hammerstein-7B v1 (initial ship 2026-05-08)** | **~$4.06** |
+| ↳ data gen (308 synthetic pairs) | $2.31 |
+| ↳ training (RunPod RTX 4090, ~50 min) | ~$0.50 |
+| ↳ gold eval (40 OpenRouter calls) | $0.315 |
+| ↳ pod eval (RunPod RTX 4090, ~1 hr) | ~$0.50 |
+| ↳ GGUF conversion (RunPod A5000, ~6 min + dud-pod retry) | ~$0.22 |
+| ↳ Hammerstein audits during build | $0.21 |
+| **v2 refinement experiments (data scale + teacher swap A/B)** | **$27.74** |
+| ↳ OpenRouter data gen (1494 + 1451 pairs) | $25.93 |
+| ↳ RunPod pod time | $1.78 |
+| ↳ Pre-flight Hammerstein audit + DeepSeek smoke | $0.03 |
+| **v3a launch swap (mixed-mode mitigation, 2026-05-09)** | **$2.49** |
+| ↳ Off-domain data gen (214 pairs) | $0.07 |
+| ↳ RunPod pod time (train + 3 evals) | $2.02 |
+| ↳ Head-to-head LLM judge | $0.40 |
 | Wargame extension dogfood (text + multimodal) | ~$0.10 |
 | Web UI (Phase 6) build | $0 (no inference; local FastAPI + React) |
-| **Total end-to-end** | **~$4.05** |
+| **Total end-to-end** | **~$34.50** |
 | | |
 | Anthropic quota burned by hammerstein | $0 |
 

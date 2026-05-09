@@ -1,18 +1,35 @@
-# Hammerstein-7B — Distilled LoRA Adapter
+---
+base_model: unsloth/Qwen2.5-7B-Instruct-bnb-4bit
+library_name: peft
+pipeline_tag: text-generation
+license: apache-2.0
+tags:
+- lora
+- qlora
+- sft
+- unsloth
+- trl
+- hammerstein
+- strategic-reasoning
+---
 
-**Status:** Trained 2026-05-08, **4-condition eval passed** the same day.
-ADAPTER WINS the prompt ablation by Δ=+0.206 — the framework lives in
-the weights, not just in the system prompt. Pushed public to HuggingFace
-at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora),
-including a Q4_K_M GGUF for `ollama run` on any Mac (8 GB+).
+# Hammerstein-7B (LoRA adapter)
+
+QLoRA adapter that bakes the [Hammerstein framework](https://github.com/lerugray/hammerstein)
+into `Qwen2.5-7B-Instruct` via behavior cloning on synthetic teacher
+outputs. Loading the base + this adapter and running inference
+**with no system prompt** produces framework-correct strategic-
+reasoning outputs.
+
+> **Status:** Trained 2026-05-08, **4-condition eval passed** the same day.
+> ADAPTER WINS the prompt ablation by Δ=+0.206. Q4_K_M GGUF is on this
+> repo: `ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`.
+
+> **Source repo:** [github.com/lerugray/hammerstein-model](https://github.com/lerugray/hammerstein-model)
+> — full code, eval harness, reproducibility recipe, and the parent
+> wrapper (`hp.py`) all live there.
 
 ## What this is
-
-A QLoRA adapter that takes `Qwen2.5-7B-Instruct` (the open base
-model) and bakes the [Hammerstein framework](https://github.com/lerugray/hammerstein)
-into its output behavior via fine-tuning. Loading the base + this
-adapter and running inference with **no system prompt** produces
-framework-correct strategic-reasoning outputs.
 
 This is **behavior cloning, not reasoning training.** The student
 learned to mimic the teacher's (Qwen3.6-plus + Hammerstein system
@@ -20,22 +37,6 @@ prompt + corpus retrieval) output structure on a synthetic
 distillation dataset of 308 (query, response) pairs. The reasoning
 competence still lives in the corpus + the wrapper that retrieves
 from it; this adapter is a deployable snapshot of the *style*.
-
-## Files
-
-The adapter lives at:
-```
-tools/distill/output/qwen-7b-hammerstein-lora/lora-adapter/
-├── adapter_config.json       # PEFT config
-├── adapter_model.safetensors # 323 MB LoRA weights
-├── chat_template.jinja       # Qwen2.5 chat format
-├── tokenizer.json
-├── tokenizer_config.json
-└── README.md (model card; mirrored to HF)
-```
-
-This directory is gitignored locally (323 MB exceeds GitHub's
-100 MB single-file limit). For distribution see "Sharing" below.
 
 ## Training summary
 
@@ -54,6 +55,31 @@ This directory is gitignored locally (323 MB exceeds GitHub's
 | **Wallclock** | ~50 min |
 | **Cost** | ~$0.50 (training) + $2.31 (data gen) = **$2.81 total** |
 
+## Reproducibility
+
+Everything needed to retrain the adapter and re-run the eval is in
+the GitHub repo. Training data and held-out eval set are checked in.
+
+```bash
+git clone https://github.com/lerugray/hammerstein-model
+cd hammerstein-model
+
+# Train (~50 min on RTX 4090, ~$0.50)
+python tools/distill/train.py --model-key qwen-7b --backend unsloth --execute
+
+# Eval (~$0.32 for the gold OpenRouter calls; rest runs on the pod)
+python tools/distill/eval.py \
+    --student-path tools/distill/output/qwen-7b-hammerstein-lora/lora-adapter \
+    --vanilla-path unsloth/Qwen2.5-7B-Instruct-bnb-4bit
+```
+
+Direct links to the load-bearing files:
+- [Training set (308 pairs)](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/data/synthetic-2026-05-08.jsonl)
+- [Held-out eval set (40 strategic + 4 OOD)](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/data/eval-set.jsonl)
+- [Teacher system prompt](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/data/hammerstein-system-prompt.txt)
+- [Eval harness + scoring rubric](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/eval.py)
+- [Per-prompt × per-condition results](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/data/eval-2026-05-08.jsonl)
+
 ## Eval — 4-condition design
 
 The interesting question isn't "does the adapter match gold." It's
@@ -67,12 +93,11 @@ runs four conditions on every held-out prompt:
 | **gold** | Qwen3.6-plus + full wrapper (system prompt + corpus retrieval) | The current production. Gold standard. |
 | **student** | base Qwen2.5-7B + this adapter, NO system prompt | Did the framework get baked into the weights? |
 | **ablation** | base Qwen2.5-7B + Hammerstein system prompt, NO adapter | Could a system prompt alone replicate the adapter? |
-| **vanilla** | base Qwen2.5-7B alone | Sanity floor — what the model does with nothing. |
+| **vanilla** | base Qwen2.5-7B alone | Sanity floor. What the model does with nothing. |
 
-40 held-out strategic prompts ([eval-set.jsonl](tools/distill/data/eval-set.jsonl))
-across 5 templates and 27 domains, plus 4 out-of-domain
-forgetting-check prompts (haiku, binary tree, capital of France,
-scrambled-eggs recipe).
+40 held-out strategic prompts across 5 templates and 27 domains, plus
+4 out-of-domain forgetting-check prompts (haiku, binary tree, capital
+of France, scrambled-eggs recipe).
 
 Total cost: $2.81 training + $0.315 gold (40 OpenRouter calls) +
 ~$0.50 pod time = **~$3.65 end-to-end**.
@@ -83,29 +108,30 @@ Total cost: $2.81 training + $0.315 gold (40 OpenRouter calls) +
 > of 11 framework markers (`load-bearing`, `clever-lazy`,
 > `verification`, `failure mode`, `counter-observation`, …) in the
 > response, capped at 1.0 once 4+ are present. This is a **form-level
-> proxy** — it tests whether the response *looks* like it's using
+> proxy**: it tests whether the response *looks* like it's using
 > the framework, not whether it reasons more deeply. Both gold and
 > student saturate at 1.0 by design, so the **Δ=+0.206 student vs.
 > ablation** comparison is the meaningful one (both run on the same
 > base model; only the adapter differs). The exact marker list and
-> threshold are in
-> [`tools/distill/eval.py`](tools/distill/eval.py) (`structural_score`,
-> ~line 84). Eval set was held out from training (no contamination).
+> threshold are in [`eval.py`](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/eval.py)
+> (`structural_score`, ~line 84). Eval set was held out from training
+> (no contamination).
 
 Higher = more framework-correct.
 
 | Condition | Avg structural score | Interpretation |
 |---|---|---|
-| gold | 0.994 | Saturated — all markers present in nearly every response |
-| **student** | **1.000** | Saturated — student matches the gold rubric |
-| ablation | 0.794 | Partial — system prompt alone gets you ~80% of the way |
-| vanilla | 0.081 | Near zero — base model doesn't naturally use these markers |
+| gold | 0.994 | Saturated. All markers present in nearly every response. |
+| **student** | **1.000** | Saturated. Student matches the gold rubric. |
+| ablation | 0.794 | Partial. System prompt alone gets you ~80% of the way. |
+| vanilla | 0.081 | Near zero. Base model doesn't naturally use these markers. |
 
 **Verdicts:**
-- **student / gold ratio: 1.01** — passes the ≥0.80 threshold by a
-  wide margin. Caveat: gold is also at the metric's ceiling, so this
-  is a "tie at saturation" not "student is as smart as Qwen3.6."
-  The structural-score rubric tests *form*, not reasoning quality.
+- **student / gold ratio: 1.01.** Passes the ≥0.80 threshold by a
+  wide margin. Caveat: gold is also at the metric's ceiling, so
+  this is a "tie at saturation," not "student is as smart as
+  Qwen3.6." The structural-score rubric tests *form*, not reasoning
+  quality.
 - **ADAPTER WINS the ablation by Δ=+0.206.** This is the load-bearing
   finding. With both conditions running on the same base model
   (Qwen2.5-7B), the adapter materially outperforms a static system
@@ -127,9 +153,9 @@ that leaks into responses to non-strategic prompts.
 
 | Condition | Avg framework-vocab leakage | Interpretation |
 |---|---|---|
-| vanilla | 0.000 | Pristine — no leakage, as expected |
-| **student** | **0.312** | Mixed — leaks on some prompt shapes |
-| ablation | 0.625 | Heavy leakage — system prompt over-applies framework |
+| vanilla | 0.000 | Pristine. No leakage, as expected. |
+| **student** | **0.312** | Mixed. Leaks on some prompt shapes. |
+| ablation | 0.625 | Heavy leakage. System prompt over-applies framework. |
 
 **What this means in practice:** the adapter is *materially healthier*
 than the prompt-only ablation on out-of-domain prompts (half the
@@ -147,17 +173,16 @@ or factual questions** (which look superficially similar to "audit
 this plan"), and behaves cleanly on prompts shaped like creative or
 explanatory tasks.
 
-The ablation's failures are categorically worse — its responses to
+The ablation's failures are categorically worse. Its responses to
 the same four prompts include repetition collapse (`] ] ] ] ]`),
 made-up project names ("FutureTech Insights"), and complete
-role-claim derailing where the model never answers the actual
-question.
+role-claim derailing where the model never answers the question.
 
 **Mitigation if we re-train:** mix 10–20% off-domain instruct data
 (e.g. Alpaca, Anthropic's HH-RLHF) into the training set. Standard
 practice for catastrophic-forgetting suppression. Adds maybe $1 of
-data-gen cost, ~10 min more training. Deferred for now — flagging
-as known limitation in the v0 model card.
+data-gen cost, ~10 min more training. Deferred for now and flagged
+as a known limitation.
 
 ## Using the adapter
 
@@ -173,7 +198,7 @@ model = AutoPeftModelForCausalLM.from_pretrained(
 )
 tokenizer = AutoTokenizer.from_pretrained("lerugray/hammerstein-7b-lora")
 
-# No system prompt — framework is in the weights
+# No system prompt: framework is in the weights
 messages = [{"role": "user", "content": "Audit this plan: <your query>"}]
 prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
@@ -193,8 +218,8 @@ python tools/distill/infer.py \
 
 ### Option 3: GGUF + Ollama (Mac / CPU / no-GPU users)
 
-The Q4_K_M-quantized GGUF (~4.7 GB) is on the same HF repo. Anyone
-with **8 GB+ RAM** can run it locally via Ollama:
+The Q4_K_M-quantized GGUF (~4.7 GB) is on this repo. Anyone with
+**8 GB+ RAM** can run it locally via Ollama:
 
 ```bash
 # One-time setup (Mac: brew install ollama if not present):
@@ -215,9 +240,12 @@ ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M \
     "Audit this plan: ship MVP Friday"
 ```
 
-The conversion pipeline (`tools/distill/convert_gguf.py` +
-`run_gguf.sh`) ran on a RunPod RTX A5000 pod in ~6 min once the deps
-were sorted. Cost breakdown (transparent — including the misses):
+### Quantization recipe + cost transparency
+
+The conversion pipeline ([`convert_gguf.py`](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/convert_gguf.py)
++ [`run_gguf.sh`](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/run_gguf.sh))
+ran on a RunPod RTX A5000 pod in ~6 min once the deps were sorted.
+Cost breakdown, including the misses:
 
 | | |
 |---|---:|
@@ -227,7 +255,7 @@ were sorted. Cost breakdown (transparent — including the misses):
 | **Subtotal** | **~$0.22** |
 
 **Why Q4_K_M?** Balances size (~4.7 GB) and quality on the 7B base
-for 8 GB RAM devices — the most common "consumer Mac" target. Q5_K_M
+for 8 GB RAM devices, the most common "consumer Mac" target. Q5_K_M
 (~5.4 GB) and Q6_K (~6.3 GB) are also reasonable if you have headroom
 and want a hair more fidelity; the conversion script accepts either
 via `--quant`. Q3_K_M (~3.8 GB) trades visible quality for fitting
@@ -235,27 +263,14 @@ on a 4 GB device.
 
 The system prompt used during synthetic-data generation (and as the
 ablation arm's static prompt) is checked in at
-[`tools/distill/data/hammerstein-system-prompt.txt`](tools/distill/data/hammerstein-system-prompt.txt)
+[`hammerstein-system-prompt.txt`](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/data/hammerstein-system-prompt.txt)
 so anyone can verify the teacher conditioning.
-
-## Sharing / portfolio distribution
-
-Pushed to HuggingFace at
-[`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora)
-via [`tools/distill/hf_push.py`](tools/distill/hf_push.py). The
-public-flip gates have all landed:
-
-1. ✅ Full 40-prompt × 4-condition eval (ADAPTER WINS)
-2. ✅ Forgetting check ran (mixed result, disclosed in this card)
-3. ✅ Model card updated with full eval results
-
-To flip public: `python tools/distill/hf_push.py --public`.
 
 ## What this isn't
 
 - **Not smarter than Qwen3.6.** It's smaller. The wrapper that uses
   Qwen3.6 still produces better strategic reasoning because the
-  underlying model is bigger. This adapter is a *artifact* — a
+  underlying model is bigger. This adapter is an *artifact*: a
   shippable, distributable proof that the framework can be baked
   into a 7B model.
 - **Not a replacement for the wrapper.** The wrapper stays as
@@ -272,20 +287,10 @@ To flip public: `python tools/distill/hf_push.py --public`.
   will be commodity. This adapter has a 6-month portfolio half-life;
   the corpus appreciates indefinitely.
 
-## Next steps
-
-- [x] ~~Flip HuggingFace repo public~~ (done 2026-05-08)
-- [x] ~~Update top-level [README.md](README.md) status table~~ (done)
-- [x] ~~Convert to GGUF + Ollama-ready~~ (done; Q4_K_M GGUF live on HF)
-- [ ] (Optional) Re-train with mixed-mode data to fix out-of-domain
-      leakage — would push the forgetting-check score to ~0.05 if
-      done right. Cost: ~$1, ~1 hr. Deferred; "polished product" rather
-      than the "honest portfolio piece" this v0 already is.
-
 ## Per-prompt details
 
 Full eval results (40 strategic + 4 forgetting-check prompts × 4
 conditions) are in
-[`tools/distill/data/eval-2026-05-08.jsonl`](tools/distill/data/eval-2026-05-08.jsonl)
-and the headline summary is at
-[`tools/distill/data/eval-2026-05-08.summary.md`](tools/distill/data/eval-2026-05-08.summary.md).
+[`eval-2026-05-08.jsonl`](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/data/eval-2026-05-08.jsonl)
+and the headline summary at
+[`eval-2026-05-08.summary.md`](https://github.com/lerugray/hammerstein-model/blob/master/tools/distill/data/eval-2026-05-08.summary.md).

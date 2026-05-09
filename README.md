@@ -3,7 +3,7 @@
 ![Hammerstein-7B. The framework, distilled. Persistent · Distilled · Local](docs/images/banner.png)
 
 A persistent strategic-reasoning agent built around the
-**[Hammerstein framework](https://github.com/rayweiss/hammerstein)**:
+**[Hammerstein framework](https://github.com/lerugray/hammerstein)**:
 a clever-lazy / clever-industrious / stupid-industrious /
 stupid-lazy diagnostic for catching misdirected effort in software,
 design, and strategy decisions.
@@ -12,7 +12,7 @@ This repo ships two artifacts you can use today:
 
 1. **`hp.py`**, a stateful CLI wrapper that adds cross-session
    memory and ambient project-context injection on top of the
-   one-shot [hammerstein CLI](https://github.com/rayweiss/hammerstein).
+   one-shot [hammerstein CLI](https://github.com/lerugray/hammerstein).
    Production-shaped, ~$0.01/audit.
 2. **Hammerstein-7B**, a QLoRA adapter on Qwen2.5-7B-Instruct
    distilled from synthetic teacher outputs. Q4_K_M GGUF on
@@ -132,7 +132,7 @@ hp.py --dry-run "<query>"
 ```
 
 Requires `OPENROUTER_API_KEY` in env and the
-[hammerstein CLI](https://github.com/rayweiss/hammerstein) installed.
+[hammerstein CLI](https://github.com/lerugray/hammerstein) installed.
 
 ## Reproducing the distillation
 
@@ -191,7 +191,7 @@ in [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md). The full workflow sequence
 ## License
 
 License pending (MIT most likely, matching the upstream framework).
-The [hammerstein corpus + framework](https://github.com/rayweiss/hammerstein)
+The [hammerstein corpus + framework](https://github.com/lerugray/hammerstein)
 has its own license; this repo is downstream tooling.
 
 ## The framework, in one paragraph

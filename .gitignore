@@ -51,6 +51,17 @@ tools/distill/output/
 # Note: synthetic-2026-05-08.jsonl IS committed (the actual training set
 # for the public Hammerstein-7B adapter, ~1 MB, kept for reproducibility)
 !tools/distill/data/synthetic-2026-05-08.jsonl
+# v2 datasets — v2a (qwen3.6-plus teacher) + v2b (DeepSeek v4-pro teacher)
+!tools/distill/data/synthetic-2026-05-09.jsonl
+!tools/distill/data/synthetic-v2b-2026-05-09.jsonl
 # eval-2026-05-08.jsonl + summary IS committed (the published eval result)
 !tools/distill/data/eval-2026-05-08.jsonl
 !tools/distill/data/eval-2026-05-08.summary.md
+# v2 eval results (re-eval of v1 + v2a + v2b in same env for clean comparison)
+!tools/distill/data/eval-v1-rerun-2026-05-09.jsonl
+!tools/distill/data/eval-v1-rerun-2026-05-09.summary.md
+!tools/distill/data/eval-v2a-2026-05-09.jsonl
+!tools/distill/data/eval-v2a-2026-05-09.summary.md
+!tools/distill/data/eval-v2b-2026-05-09.jsonl
+!tools/distill/data/eval-v2b-2026-05-09.summary.md
+!tools/distill/data/compare-v1-v2-2026-05-09.md

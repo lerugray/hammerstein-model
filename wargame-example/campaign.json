@@ -1,0 +1,8 @@
+{
+  "slug": "wargame-example",
+  "name": "Bridge Crossing — Steinbach",
+  "started": "2026-05-08",
+  "spend_budget": 1.2,
+  "spend": 0.18,
+  "model": "anthropic/claude-sonnet-4.6"
+}

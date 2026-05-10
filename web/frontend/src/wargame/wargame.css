@@ -439,6 +439,10 @@
   background: hsl(var(--card));
   font-size: 12.5px;
   overflow: hidden;
+  /* In a flex column, items shrink by default — that was clipping
+     the status + intent text to ~174px when content needed ~410px.
+     Lock natural height; the parent .wg-turnlog-bd already scrolls. */
+  flex-shrink: 0;
 }
 .wargame-page .wg-turncard.current { border-color: hsl(var(--primary) / .6); box-shadow: 0 0 0 3px hsl(var(--primary) / .08); }
 

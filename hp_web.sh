@@ -14,6 +14,22 @@ FRONT="$WEB/frontend"
 DIST="$FRONT/dist"
 VENV="$WEB/.venv"
 
+# Load API keys for the wargame mode (which calls OpenRouter via
+# hp_vision.py). Looks in two places, in order:
+#   ~/.hammerstein.env   (user-global)
+#   ./.env               (project-local, gitignored)
+# Either may set OPENROUTER_API_KEY=... and any other env vars
+# hp_vision.py needs. Both are optional — the dashboard tab works
+# without any keys; only the wargame tab's "Issue orders" requires it.
+for env_file in "$HOME/.hammerstein.env" "$ROOT/.env"; do
+  if [ -f "$env_file" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$env_file"
+    set +a
+  fi
+done
+
 if [ ! -d "$VENV" ]; then
   echo "hp_web: creating venv at $VENV"
   python3 -m venv "$VENV"

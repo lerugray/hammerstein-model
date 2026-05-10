@@ -1,0 +1,34 @@
+[
+  {
+    "turn": 4,
+    "time": "May 8 · 21:14",
+    "model": "claude-sonnet-4.6",
+    "status": "Red has 2nd Bn (str 2) near the bridge approach but in the open and taking artillery hits, 3rd Bn (str 2) on the east flank, both infantry battalions bloodied. Engineers were lost on the bridge in Turn 2. Two turns left to win — must seize the village or die trying.",
+    "intent": "Seize the village by the end of Turn 6. Accept heavy casualties to break the enemy line and establish a permanent foothold on the far bank.",
+    "current": true
+  },
+  {
+    "turn": 3,
+    "time": "May 8 · 18:46",
+    "model": "claude-sonnet-4.6",
+    "status": "End of Turn 2: Eng Co eliminated on the bridge by Blue Recon Co overwatch. 2nd Bn at D5 str 3, 3rd Bn at F4 str 3 in forest. No pontoon option. Bridge approach contested.",
+    "intent": "Force the bridge with infantry only. 2nd Bn fixes D2/C3 from D4; 3rd Bn shifts through forest E4 to assault E2 artillery from the flank.",
+    "current": false
+  },
+  {
+    "turn": 2,
+    "time": "May 8 · 17:12",
+    "model": "claude-sonnet-4.6",
+    "status": "End of Turn 1: 2nd Bn at D5 str 3 (took 1 art hit). 3rd Bn at E4 str 4. Eng Co at D4 str 1. Bridge D3 still uncontested but in artillery range.",
+    "intent": "Engineers seize the bridge (D4 → D3). 3rd Bn shifts through forest. 2nd Bn holds D5 with overwatch on the crossing.",
+    "current": false
+  },
+  {
+    "turn": 1,
+    "time": "May 8 · 16:08",
+    "model": "claude-sonnet-4.6",
+    "status": "Initial deployment per tasks.json. Red on row 5; Blue holds village D2 + bridge approach. Weather clear, time 0600 local. River fordable only via the bridge at D3.",
+    "intent": "Engineers advance to D4 to begin pontoon prep. 2nd Bn moves to D5 to follow the engineers across. 3rd Bn moves to E4 to threaten the eastern flank.",
+    "current": false
+  }
+]

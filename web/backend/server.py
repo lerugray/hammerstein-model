@@ -225,6 +225,9 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="hp-web", lifespan=lifespan)
 
+from web.backend.wargame_api import router as wargame_router  # noqa: E402
+app.include_router(wargame_router)
+
 
 @app.get("/api/status")
 def get_status() -> dict[str, Any]:

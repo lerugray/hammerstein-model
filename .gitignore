@@ -28,6 +28,15 @@ logs/
 .hp-preamble.md
 quarantine/
 
+# Wargamer-mode uploads (board photos, etc) — user-private, even
+# for the shipped example campaign.
+wargame-example/uploads/
+wargames/*/uploads/
+
+# Local dev tooling for the wargame web UI (Playwright screenshot
+# helper, etc) — useful for QA, not part of the shipped product.
+web/backend/_*.py
+
 # Local venv
 .venv/
 

@@ -1,0 +1,5 @@
+# wargame state-dirs are user-private (campaign data, board photos).
+# only the public example lives at /wargame-example/ at repo root.
+*
+!.gitignore
+!README.md

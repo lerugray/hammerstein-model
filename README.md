@@ -26,6 +26,19 @@ This repo ships two artifacts you can use today:
 The wrapper is the production path. The distilled adapter is the
 shareable artifact. They ship independently.
 
+Plus a local web surface at `http://127.0.0.1:8765` (launched by
+`./hp_web.sh`) with two tabs:
+
+- **Dashboard** — read-only audit history + Phase-3 verdict over
+  the wrapper's own call log.
+- **Wargame** — solo-wargamer mode using the multimodal
+  `hp_vision.py` sibling. Drop a board photo + status report,
+  upload a rulebook PDF (auto-converted + LLM-digested into an
+  AI Commander Reference), and get back kriegspiel-style
+  Auftragstaktik orders structured by the model. NotebookLM-style
+  persistent context per campaign. See
+  [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md).
+
 ## Origin
 
 The 2026-05-07 hammerstein audit voted "bank" on this proposal: too

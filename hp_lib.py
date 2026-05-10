@@ -182,6 +182,30 @@ def read_project_state(state_dir: Path) -> str:
         # Trim to last N turns so the preamble doesn't grow unbounded
         # as a long campaign accumulates.
         parts.append(f"### turn-log.md\n\n{trim_turn_log(turn_log.read_text())}\n")
+    # Sources: rules/*.md uploaded via the wargamer-mode UI ("Sources"
+    # panel). NotebookLM-style — uploaded rulebooks (PDF auto-converted
+    # to MD) live persistently with the campaign and ground every issue
+    # call. Sorted by name so the order is stable across calls.
+    #
+    # Karpathy three-layer pattern (mini): if a `<book>.digest.md`
+    # sidecar exists, prefer it over the full `<book>.md`. The digest
+    # is an LLM-curated AI Commander Reference (~3k tok vs ~16k tok
+    # for the raw rulebook) generated at upload time. Falls back to
+    # the full rulebook if no digest is present.
+    rules_dir = state_dir / "rules"
+    if rules_dir.is_dir():
+        all_md = sorted(rules_dir.glob("*.md"))
+        digest_files = {
+            f.stem.removesuffix(".digest"): f
+            for f in all_md if f.name.endswith(".digest.md")
+        }
+        for f in all_md:
+            if f.name.endswith(".digest.md"):
+                continue  # handled via digest_files lookup below
+            preferred = digest_files.get(f.stem, f)
+            parts.append(
+                f"### rules/{preferred.name}\n\n{preferred.read_text()}\n"
+            )
     return "\n".join(parts)
 
 

@@ -87,12 +87,30 @@ commander.
 - The wargame's MISSION.md / tasks.json / turn-log.md if a state
   directory was provided.
 
-### What you produce — strict 5-section structure
+### What you produce — strict 8-section structure
 
-Use Level-2 headers exactly as below. No other sections. No
-"Framework call" preamble. No "Counter-observation" suffix.
+Use Level-2 headers exactly as below, in this order. No other
+sections. No "Framework call" preamble. No "Counter-observation"
+suffix.
 
 ```
+## What I see on the board
+
+A bulleted list of concrete observations from the photos / OOB /
+status report — one bullet per discrete fact. This is the
+sanity-check belt: the operator reads it first to confirm you
+parsed the board correctly before trusting your orders. Be
+specific (units, hexes if visible, strengths, terrain). 4-8
+bullets typical.
+
+## Unread
+
+One single-line statement of the most important thing you could
+NOT confirm from the inputs, framed as a confirm-this request to
+the operator. Format: "I cannot read X — confirm Y before doing
+Z." If everything is readable, write exactly: "All clear — board
+fully readable."
+
 ## Situation
 
 What you read from the report and any imagery (1-2 sentences).
@@ -119,6 +137,13 @@ turn — single concentrated effort."
 
 Reserve commitment trigger + withdrawal trigger (named features,
 not hex coords). If past the point of withdrawal, say so.
+
+## Acknowledged
+
+A single closing line acknowledging the orders are issued and
+naming the next expected report. Format: "— Acknowledged.
+Awaiting turn N+1 board state." (substitute the actual next turn
+number if known from the state).
 ```
 
 ### Output discipline
@@ -127,6 +152,10 @@ not hex coords). If past the point of withdrawal, say so.
   features, not grid cells. No analytical hedging. No framework
   vocabulary unless directly relevant. The strategic-audit voice
   belongs to the other use case.
+- The "What I see on the board" + "Unread" + "Acknowledged"
+  sections wrap the orders. They are not optional. The operator's
+  UI surfaces them as a sanity-check belt and a closing
+  acknowledgment; missing sections render the panel broken.
 """
 
 

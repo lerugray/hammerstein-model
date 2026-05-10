@@ -1,9 +1,11 @@
 // Wargame surface — top-level building blocks.
-// Faithful TypeScript port of the Claude Design source bundle.
+// Originally a faithful TypeScript port of the Claude Design source
+// bundle; now wired to the live /api/wargame/* backend (see api.ts).
 
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
-import type { CampaignInfo, Photo, Sheet, TurnLogEntry } from "./content";
+import type { TurnLogEntry } from "./content";
+import type { Campaign } from "./api";
 
 export type Phase = "empty" | "drafting" | "streaming" | "completed";
 export type ActiveTab = "dashboard" | "wargame";
@@ -16,9 +18,12 @@ interface TopBarProps {
   spendBudget: number;
   activeTab: ActiveTab;
   onSwitchTab: (tab: ActiveTab) => void;
+  onReload?: () => void;
 }
 
-export function TopBar({ dark, onToggleDark, spend, spendBudget, activeTab, onSwitchTab }: TopBarProps) {
+export function TopBar({
+  dark, onToggleDark, spend, spendBudget, activeTab, onSwitchTab, onReload,
+}: TopBarProps) {
   return (
     <header className="wg-topbar">
       <div className="wg-topbar-l">
@@ -56,7 +61,7 @@ export function TopBar({ dark, onToggleDark, spend, spendBudget, activeTab, onSw
         <button className="wg-icon-btn" title="Theme" onClick={onToggleDark}>
           <Icon name={dark ? "sun" : "moon"} />
         </button>
-        <button className="wg-icon-btn" title="Reload">
+        <button className="wg-icon-btn" title="Reload" onClick={onReload}>
           <Icon name="refresh" />
         </button>
         <button className="wg-icon-btn" title="Settings">
@@ -69,11 +74,25 @@ export function TopBar({ dark, onToggleDark, spend, spendBudget, activeTab, onSw
 
 // ── Campaign picker ──────────────────────────────────────
 interface CampaignPickerProps {
-  campaign: CampaignInfo;
+  campaigns: Campaign[];
+  active: Campaign | null;
+  onSelect: (slug: string) => void;
   onNew: () => void;
 }
 
-export function CampaignPicker({ campaign, onNew }: CampaignPickerProps) {
+function relTime(startedISO: string): string {
+  if (!startedISO) return "";
+  const d = new Date(startedISO);
+  if (isNaN(d.getTime())) return startedISO;
+  const days = Math.floor((Date.now() - d.getTime()) / 86400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "1 day";
+  if (days < 30) return `${days} days`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? "1 mo" : `${months} mo`;
+}
+
+export function CampaignPicker({ campaigns, active, onSelect, onNew }: CampaignPickerProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -83,44 +102,56 @@ export function CampaignPicker({ campaign, onNew }: CampaignPickerProps) {
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
+
+  const display = active ?? campaigns[0] ?? null;
+
   return (
     <div ref={ref} className="wg-campaign-picker">
       <span className="cp-label">Campaign</span>
-      <span className="cp-name">{campaign.name}</span>
-      <span className="wg-badge b-primary">turn {campaign.turn}</span>
-      <span className="cp-meta">
-        <span>
-          state-dir{" "}
-          <code style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11 }}>
-            ~/.hammerstein/wargames/steinbach/
-          </code>
+      <span className="cp-name">{display ? display.name : "no campaigns"}</span>
+      {display && <span className="wg-badge b-primary">turn {display.turn || "—"}</span>}
+      {display && (
+        <span className="cp-meta">
+          <span>
+            state-dir{" "}
+            <code style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11 }}>
+              {display.slug === "wargame-example"
+                ? "wargame-example/"
+                : `wargames/${display.slug}/`}
+            </code>
+          </span>
+          <span>·</span>
+          <span>
+            <b>{display.model}</b>
+          </span>
         </span>
-        <span>·</span>
-        <span>
-          <b>{campaign.cost_breakdown.model}</b>
-        </span>
-      </span>
+      )}
       <button className="cp-chev" onClick={() => setOpen((o) => !o)} aria-label="Switch campaign">
         <Icon name="chev-down" />
       </button>
       {open && (
         <div className="wg-dropdown">
-          <div className="wg-dd-item" onClick={() => setOpen(false)}>
-            <Icon name="check" className="wg-icon-sm" />
-            <span className="dd-name">Bridge Crossing — Steinbach</span>
-            <span className="dd-meta">turn 3 · 6 days</span>
-          </div>
-          <div className="wg-dd-item" onClick={() => setOpen(false)}>
-            <span style={{ width: 14 }} />
-            <span className="dd-name">Operation Saturn — Voronezh</span>
-            <span className="dd-meta">turn 11 · 23 days</span>
-          </div>
-          <div className="wg-dd-item" onClick={() => setOpen(false)}>
-            <span style={{ width: 14 }} />
-            <span className="dd-name">Tannenberg '14 — sandbox</span>
-            <span className="dd-meta">turn 1 · today</span>
-          </div>
-          <div className="wg-dd-sep" />
+          {campaigns.map((c) => (
+            <div
+              key={c.slug}
+              className="wg-dd-item"
+              onClick={() => {
+                setOpen(false);
+                onSelect(c.slug);
+              }}
+            >
+              {display && c.slug === display.slug ? (
+                <Icon name="check" className="wg-icon-sm" />
+              ) : (
+                <span style={{ width: 14 }} />
+              )}
+              <span className="dd-name">{c.name}</span>
+              <span className="dd-meta">
+                turn {c.turn || "—"} · {relTime(c.started)}
+              </span>
+            </div>
+          ))}
+          {campaigns.length > 0 && <div className="wg-dd-sep" />}
           <div
             className="wg-dd-item wg-dd-new"
             onClick={() => {
@@ -139,14 +170,64 @@ export function CampaignPicker({ campaign, onNew }: CampaignPickerProps) {
 
 // ── Image dropzone ───────────────────────────────────────
 interface ImageDropzoneProps {
-  photos: Photo[];
+  files: File[];
+  onChange: (files: File[]) => void;
   active: boolean;
 }
 
-export function ImageDropzone({ photos, active }: ImageDropzoneProps) {
-  const showPhotos = photos.length > 0;
+export function ImageDropzone({ files, onChange, active }: ImageDropzoneProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    const urls = files.map((f) => URL.createObjectURL(f));
+    setPreviewUrls(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [files]);
+
+  function addFiles(list: FileList | null) {
+    if (!list || !list.length) return;
+    const next = [...files];
+    for (const f of Array.from(list)) {
+      if (f.type.startsWith("image/")) next.push(f);
+    }
+    onChange(next);
+  }
+
+  function remove(idx: number) {
+    const next = files.slice();
+    next.splice(idx, 1);
+    onChange(next);
+  }
+
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault();
+    addFiles(e.dataTransfer.files);
+  }
+
+  const showPhotos = files.length > 0;
+  const totalKb = files.reduce((a, f) => a + Math.round(f.size / 1024), 0);
+  const oversized = files.some((f) => f.size > 2 * 1024 * 1024);
+
   return (
-    <div className={`wg-dropzone ${active ? "active" : ""}`}>
+    <div
+      className={`wg-dropzone ${active ? "active" : ""}`}
+      onClick={() => inputRef.current?.click()}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={onDrop}
+      style={{ cursor: "pointer" }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        multiple
+        style={{ display: "none" }}
+        onChange={(e) => {
+          addFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div className="wg-dz-prompt">
           <span className="wg-dz-icon">
@@ -166,10 +247,10 @@ export function ImageDropzone({ photos, active }: ImageDropzoneProps) {
         </div>
         {showPhotos && (
           <div className="wg-dz-meta">
-            <span>{photos.length} image{photos.length === 1 ? "" : "s"}</span>
+            <span>{files.length} image{files.length === 1 ? "" : "s"}</span>
             <span>·</span>
-            <span>{photos.reduce((a, p) => a + p.kb, 0).toLocaleString()} KB</span>
-            {photos.some((p) => p.kb > 2048) && (
+            <span>{totalKb.toLocaleString()} KB</span>
+            {oversized && (
               <span className="wg-dz-warn">
                 <Icon name="alert" className="wg-icon-sm" /> server-side downscale
               </span>
@@ -179,19 +260,45 @@ export function ImageDropzone({ photos, active }: ImageDropzoneProps) {
       </div>
       {showPhotos && (
         <div className="wg-dz-thumbs">
-          {photos.map((p, i) => (
-            <div key={i} className="wg-thumb">
-              <div className={`wg-thumb-art ${i === 1 ? "t2" : ""}`} />
-              <button className="wg-thumb-x" aria-label="Remove">
+          {files.map((f, i) => (
+            <div key={i} className="wg-thumb" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="wg-thumb-art"
+                style={{
+                  backgroundImage: previewUrls[i] ? `url(${previewUrls[i]})` : undefined,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              />
+              <button
+                className="wg-thumb-x"
+                aria-label="Remove"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  remove(i);
+                }}
+              >
                 <Icon name="x" className="wg-icon-sm" />
               </button>
               <div className="wg-thumb-meta">
-                <span>{p.label}</span>
-                <span>{p.kb > 1024 ? `${(p.kb / 1024).toFixed(1)}MB` : `${p.kb}KB`}</span>
+                <span title={f.name}>
+                  {f.name.length > 16 ? f.name.slice(0, 14) + "…" : f.name}
+                </span>
+                <span>
+                  {f.size > 1024 * 1024
+                    ? `${(f.size / 1024 / 1024).toFixed(1)}MB`
+                    : `${Math.round(f.size / 1024)}KB`}
+                </span>
               </div>
             </div>
           ))}
-          <button className="wg-thumb-add">
+          <button
+            className="wg-thumb-add"
+            onClick={(e) => {
+              e.stopPropagation();
+              inputRef.current?.click();
+            }}
+          >
             <Icon name="plus" />
             <span>add another</span>
           </button>
@@ -201,34 +308,327 @@ export function ImageDropzone({ photos, active }: ImageDropzoneProps) {
   );
 }
 
-// ── OOB sheet dropzone ───────────────────────────────────
-interface SheetDropzoneProps {
-  sheet: Sheet | null;
+// ── Sources panel (NotebookLM-style: rules + reference images) ──
+interface SourcesPanelProps {
+  slug: string | null;
+  sources: import("./api").Source[];
+  uploading: boolean;
+  error: string | null;
+  onUpload: (files: File[]) => void;
+  onDelete: (kind: import("./api").SourceKind, name: string) => void;
+  onRegenerateDigest?: (name: string) => Promise<void>;
 }
 
-export function SheetDropzone({ sheet }: SheetDropzoneProps) {
-  if (sheet) {
+// Token-budget warning threshold. Sonnet 4.6 has a 200k context but
+// turn-by-turn play accumulates: digest + state + status + photos.
+// Warn at 30k preamble tokens — well below the limit but a sign that
+// the campaign has accumulated a lot of context the operator may want
+// to prune.
+const TOKEN_WARN_THRESHOLD = 30_000;
+
+const ACCEPTED_EXT_SET = new Set([
+  ".pdf", ".md", ".markdown", ".txt",
+  ".jpg", ".jpeg", ".png", ".webp", ".gif",
+]);
+
+export function SourcesPanel({
+  slug, sources, uploading, error, onUpload, onDelete, onRegenerateDigest,
+}: SourcesPanelProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [regeneratingName, setRegeneratingName] = useState<string | null>(null);
+
+  async function handleRegenerate(name: string) {
+    if (!onRegenerateDigest) return;
+    setRegeneratingName(name);
+    try {
+      await onRegenerateDigest(name);
+    } finally {
+      setRegeneratingName(null);
+    }
+  }
+  // Reference image previews are not currently fetched client-side
+  // (server doesn't expose a static route for <state-dir>/reference/
+  // yet); the row shows a placeholder image icon. If we want real
+  // thumbnails later, add a /api/wargame/campaigns/{slug}/reference/{name}
+  // endpoint and `URL.createObjectURL` the response Blob.
+
+  function pick(list: FileList | null) {
+    if (!list || !list.length) return;
+    const accepted: File[] = [];
+    for (const f of Array.from(list)) {
+      const lower = f.name.toLowerCase();
+      const dot = lower.lastIndexOf(".");
+      const ext = dot >= 0 ? lower.slice(dot) : "";
+      if (ACCEPTED_EXT_SET.has(ext)) accepted.push(f);
+    }
+    if (accepted.length) onUpload(accepted);
+  }
+
+  const rules = sources.filter((s) => s.kind === "rules");
+  const refs = sources.filter((s) => s.kind === "reference");
+  const totalTokens = rules.reduce((a, s) => a + s.tokens_est, 0);
+  const overBudget = totalTokens > TOKEN_WARN_THRESHOLD;
+
+  return (
+    <div className="wg-card" style={{ marginBottom: "var(--dens-gap)" }}>
+      <div className="wg-card-hd">
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <Icon name="sheet" className="wg-icon-sm" /> Sources
+          <span
+            style={{
+              color: "hsl(var(--muted-foreground))",
+              fontWeight: 400,
+              fontSize: 11.5,
+            }}
+          >
+            — rulebooks + reference images, persisted in every turn's context
+          </span>
+        </span>
+        <span
+          className="hd-r"
+          style={{ color: "hsl(var(--muted-foreground))", fontSize: 11.5 }}
+        >
+          {sources.length === 0 ? (
+            "no sources mounted"
+          ) : (
+            <>
+              <b style={{ color: "hsl(var(--foreground))" }}>{rules.length}</b>{" "}
+              rule{rules.length === 1 ? "" : "s"} ·{" "}
+              <b style={{ color: "hsl(var(--foreground))" }}>{refs.length}</b>{" "}
+              ref image{refs.length === 1 ? "" : "s"}
+              {totalTokens > 0 && (
+                <>
+                  {" · "}
+                  <b style={{ color: overBudget ? "hsl(38 90% 36%)" : "hsl(var(--foreground))" }}>
+                    ~{totalTokens.toLocaleString()}
+                  </b>{" "}
+                  tok in preamble
+                  {overBudget && (
+                    <span
+                      style={{ color: "hsl(38 90% 36%)", marginLeft: 6 }}
+                      title="Per-turn cost is climbing. Consider pruning sources or trimming digests."
+                    >
+                      <Icon name="alert" className="wg-icon-sm" /> high
+                    </span>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </span>
+      </div>
+      <div className="wg-card-bd" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {sources.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {sources.map((s) => {
+              const isImage = s.kind === "reference";
+              const hasDigest = !!s.has_digest;
+              const digestTok = s.digest_tokens_est ?? 0;
+              const thumbUrl =
+                isImage && slug
+                  ? `/api/wargame/campaigns/${encodeURIComponent(slug)}/reference/${encodeURIComponent(s.name)}`
+                  : null;
+              const regenerating = regeneratingName === s.name;
+              return (
+                <div
+                  key={`${s.kind}-${s.name}`}
+                  className="wg-sheet-preview"
+                  style={{ padding: "6px 10px" }}
+                >
+                  <span className="sp-icon" style={{ overflow: "hidden" }}>
+                    {thumbUrl ? (
+                      <img
+                        src={thumbUrl}
+                        alt=""
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          borderRadius: 3,
+                        }}
+                      />
+                    ) : (
+                      <Icon name={isImage ? "image" : "sheet"} className="wg-icon-sm" />
+                    )}
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <div className="sp-name">{s.name}</div>
+                    <div className="sp-cols">
+                      {(s.size_bytes / 1024).toFixed(1)} KB
+                      {hasDigest ? (
+                        <>
+                          {" · digest "}~{digestTok.toLocaleString()} tok in preamble (full
+                          rulebook on disk for citation)
+                        </>
+                      ) : s.tokens_est > 0 ? (
+                        ` · ~${s.tokens_est.toLocaleString()} tok in preamble`
+                      ) : (
+                        ""
+                      )}
+                      {" · "}
+                      {s.source}
+                    </div>
+                  </div>
+                  {hasDigest && (
+                    <span
+                      className="wg-badge b-accent"
+                      style={{ marginRight: 4 }}
+                      title="LLM-curated AI Commander Reference generated at upload"
+                    >
+                      digest
+                    </span>
+                  )}
+                  <span
+                    className={`wg-badge ${isImage ? "b-accent" : "b-mono"}`}
+                    style={{ marginRight: 4 }}
+                  >
+                    {isImage ? "ref image" : "rules"}
+                  </span>
+                  {!isImage && onRegenerateDigest && (
+                    <button
+                      className="wg-btn wg-btn-ghost wg-btn-sm"
+                      onClick={() => handleRegenerate(s.name)}
+                      disabled={regenerating || uploading}
+                      title="Regenerate the LLM digest from the full rulebook (~$0.05, ~90s)"
+                      style={{ marginRight: 2 }}
+                    >
+                      {regenerating ? "…" : (
+                        <Icon name="refresh" className="wg-icon-sm" />
+                      )}
+                    </button>
+                  )}
+                  <button
+                    className="wg-btn wg-btn-ghost wg-btn-sm"
+                    onClick={() => onDelete(s.kind, s.name)}
+                    title="Remove from sources"
+                  >
+                    <Icon name="x" className="wg-icon-sm" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div
+          className="wg-dropzone compact"
+          onClick={() => !uploading && inputRef.current?.click()}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (!uploading) pick(e.dataTransfer.files);
+          }}
+          style={{ cursor: uploading ? "wait" : "pointer", opacity: uploading ? 0.6 : 1 }}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.md,.markdown,.txt,.jpg,.jpeg,.png,.webp,.gif"
+            multiple
+            style={{ display: "none" }}
+            onChange={(e) => {
+              pick(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <span className="wg-dz-icon" style={{ width: 28, height: 28 }}>
+            <Icon name="sheet" className="wg-icon-sm" />
+          </span>
+          <div className="wg-dz-prompt" style={{ alignItems: "baseline" }}>
+            <div>
+              <div>
+                <b>{uploading ? "Converting…" : "Drop a source"}</b>{" "}
+                <span
+                  style={{ color: "hsl(var(--muted-foreground))", fontWeight: 400 }}
+                >
+                  · PDF rulebook (auto-converted) · .md / .txt · or reference image (.jpg / .png)
+                </span>
+              </div>
+              <div style={{ fontSize: 11.5, color: "hsl(var(--muted-foreground))" }}>
+                Persists with the campaign — every turn's orders ground in
+                these sources. Reference images (map, counter sheet, TEC) get
+                attached to every API call.
+              </div>
+            </div>
+          </div>
+          <span className="wg-badge b-mono" style={{ marginLeft: "auto" }}>
+            .pdf / .md / .img
+          </span>
+        </div>
+        {error && (
+          <div style={{ color: "hsl(0 70% 45%)", fontSize: 12 }}>{error}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── OOB sheet dropzone ───────────────────────────────────
+interface SheetDropzoneProps {
+  file: File | null;
+  onChange: (file: File | null) => void;
+}
+
+export function SheetDropzone({ file, onChange }: SheetDropzoneProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function pick(list: FileList | null) {
+    if (!list || !list.length) return;
+    const f = list[0];
+    if (
+      f.name.toLowerCase().endsWith(".xlsx") ||
+      f.name.toLowerCase().endsWith(".xlsm")
+    ) {
+      onChange(f);
+    }
+  }
+
+  if (file) {
     return (
       <div className="wg-sheet-preview">
         <span className="sp-icon">
           <Icon name="sheet" className="wg-icon-sm" />
         </span>
         <div style={{ flex: 1 }}>
-          <div className="sp-name">{sheet.name}</div>
+          <div className="sp-name">{file.name}</div>
           <div className="sp-cols">
-            sheet: <b style={{ color: "hsl(var(--foreground))" }}>{sheet.sheetName}</b> · cols:{" "}
-            {sheet.cols.join(", ")}
+            uploaded ·{" "}
+            <b style={{ color: "hsl(var(--foreground))" }}>
+              {(file.size / 1024).toFixed(1)} KB
+            </b>{" "}
+            · parsed server-side per turn
           </div>
         </div>
-        <span className="wg-badge b-accent">parsed · {sheet.rows} rows</span>
-        <button className="wg-btn wg-btn-ghost wg-btn-sm">
+        <span className="wg-badge b-accent">.xlsx</span>
+        <button
+          className="wg-btn wg-btn-ghost wg-btn-sm"
+          onClick={() => onChange(null)}
+        >
           <Icon name="x" className="wg-icon-sm" />
         </button>
       </div>
     );
   }
   return (
-    <div className="wg-dropzone compact">
+    <div
+      className="wg-dropzone compact"
+      onClick={() => inputRef.current?.click()}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        pick(e.dataTransfer.files);
+      }}
+      style={{ cursor: "pointer" }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".xlsx,.xlsm"
+        style={{ display: "none" }}
+        onChange={(e) => {
+          pick(e.target.files);
+          e.target.value = "";
+        }}
+      />
       <span className="wg-dz-icon" style={{ width: 28, height: 28 }}>
         <Icon name="sheet" className="wg-icon-sm" />
       </span>
@@ -296,18 +696,19 @@ interface IssueRowProps {
   state: Phase;
   onIssue: () => void;
   tokens: number;
+  error?: string | null;
 }
 
-export function IssueRow({ enabled, state, onIssue, tokens }: IssueRowProps) {
+export function IssueRow({ enabled, state, onIssue, tokens, error }: IssueRowProps) {
   // Sonnet 4.6 OpenRouter pricing: ~$6.50/M input, ~$22.50/M output
   const cost = (tokens / 1000) * 6.5e-3 + (612 / 1000) * 22.5e-3;
   if (state === "streaming") {
     return (
       <div className="wg-issue-row">
         <div className="wg-issue-cost">
-          <span>streaming response</span>
+          <span>issuing orders</span>
           <span className="wg-streaming-meta">
-            <span className="wg-spinner" /> 318 tok · 4.2s elapsed
+            <span className="wg-spinner" /> waiting on hp_vision.py
           </span>
         </div>
         <button className="wg-btn wg-issue-btn" disabled style={{ marginLeft: "auto" }}>
@@ -317,7 +718,7 @@ export function IssueRow({ enabled, state, onIssue, tokens }: IssueRowProps) {
     );
   }
   return (
-    <div className="wg-issue-row">
+    <div className="wg-issue-row" style={{ flexWrap: "wrap" }}>
       <div className="wg-issue-cost">
         <span>cost preview</span>
         <span className="ic-bd">
@@ -333,6 +734,18 @@ export function IssueRow({ enabled, state, onIssue, tokens }: IssueRowProps) {
       >
         <Icon name="send" /> Issue orders
       </button>
+      {error && (
+        <div
+          style={{
+            flexBasis: "100%",
+            color: "hsl(0 70% 45%)",
+            fontSize: 11.5,
+            marginTop: 4,
+          }}
+        >
+          {error}
+        </div>
+      )}
     </div>
   );
 }
@@ -361,20 +774,8 @@ export function TurnCard({ entry, expanded, onToggle }: TurnCardProps) {
           <span className="tag">INTENT</span>
           <span>{entry.intent}</span>
         </div>
-        {expanded && entry.turn === 3 && (
-          <>
-            <hr className="wg-rule" style={{ margin: "10px 0" }} />
-            <div style={{ fontSize: 12, lineHeight: 1.55 }}>
-              <strong>Main effort:</strong> 2nd Bn at <code className="hex">0509</code> — hold the
-              cornfield line. <br />
-              <strong>Supporting:</strong> Bttry A — HE on bridge approach, then shift fire to{" "}
-              <code className="hex">0710</code>. <br />
-              <strong>Reserves:</strong> 3rd Co. <em>holds</em> the ridge. Do not withdraw.
-            </div>
-          </>
-        )}
         <div className="wg-tc-model">
-          <Icon name="info" className="wg-icon-sm" /> {entry.model} · 4,792 tok · $0.03
+          <Icon name="info" className="wg-icon-sm" /> {entry.model}
         </div>
       </div>
     </div>

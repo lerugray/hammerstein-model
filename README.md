@@ -108,6 +108,12 @@ execution. Q1 of the design walk locked that in.
 | **Distillation v2** (data-scale + teacher-swap A/B) | v2a: 1494 pairs, qwen3.6-plus / v2b: 1500 pairs, DeepSeek v4-pro | ✅ ran 2026-05-09. Single-variable parallel experiments. Neither was a clean launch swap (v2a improved strategic, regressed OOD; v2b improved OOD, regressed strategic — DeepSeek register mismatch). Audit's "isolate variables" discipline validated. Combined spend $27.74. |
 | **Distillation v3a** (mixed-mode mitigation, **current HF artifact**) | v2a strategic + 12.5% off-domain mixin | ✅ shipped 2026-05-09. Wins all three measurements vs v1: raw markers (+0.20), OOD leakage (2.80 → **0.00**), blind LLM judge head-to-head (**67.5%** v3a preferred). Public at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora) (`ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`). v3a alone cost $2.49. See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md) and [scoring/v3a-results-2026-05-09.md](scoring/v3a-results-2026-05-09.md). |
 
+## Wargame surface (Phase 6.1)
+
+![Hammerstein-7B issuing Auftragstaktik mission orders against a real Ukraine 2022 BGG photo test — board read, situation, intent, main effort, with cost in the corner.](docs/images/launch/wargame-orders-panel.png)
+
+The flagship application: drop the rulebook + a board photo + a one-line status report; get back a structured Auftragstaktik order set (situation / intent / main effort) with the model's read of what it sees on the board. NotebookLM-style sources panel persists campaign rulebooks across turns; full turn log links every order back to the photo it was issued against. See [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md).
+
 ## Honest framing
 
 `hp.py` is a **thin wrapper** by design. The framework (system

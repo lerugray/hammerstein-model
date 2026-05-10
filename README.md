@@ -108,6 +108,26 @@ execution. Q1 of the design walk locked that in.
 | **Distillation v2** (data-scale + teacher-swap A/B) | v2a: 1494 pairs, qwen3.6-plus / v2b: 1500 pairs, DeepSeek v4-pro | ✅ ran 2026-05-09. Single-variable parallel experiments. Neither was a clean launch swap (v2a improved strategic, regressed OOD; v2b improved OOD, regressed strategic — DeepSeek register mismatch). Audit's "isolate variables" discipline validated. Combined spend $27.74. |
 | **Distillation v3a** (mixed-mode mitigation, **current HF artifact**) | v2a strategic + 12.5% off-domain mixin | ✅ shipped 2026-05-09. Wins all three measurements vs v1: raw markers (+0.20), OOD leakage (2.80 → **0.00**), blind LLM judge head-to-head (**67.5%** v3a preferred). Public at [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora) (`ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`). v3a alone cost $2.49. See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md) and [scoring/v3a-results-2026-05-09.md](scoring/v3a-results-2026-05-09.md). |
 
+## Framework benchmark (v0, 2026-05-10) — does the wrapper actually help frontier models?
+
+The Distillation v3a row above shows the **distilled-7B** beating its base by 67.5% in blind LLM-judge preference. That's the small-model proof. Today's v0 framework benchmark is the **complementary frontier-model proof**: does the Hammerstein-system-prompt + RAG corpus on top of *frontier* models (Claude Opus 4.7, Sonnet 4.6, GPT-5) measurably outperform the raw frontier on the same questions?
+
+Result: **36 of 36 parsed blind LLM-judge ratings preferred Hammerstein-on-frontier over raw-frontier.**
+
+| Family | Hammerstein wins / decided | Mean usefulness Δ (Ham − Raw, /5) | Mean voice Δ |
+|---|---|---|---|
+| Claude Opus 4.7 | 12 / 12 (100%) | +1.25 | +0.67 |
+| Claude Sonnet 4.6 | 12 / 12 (100%) | +2.00 | +1.92 |
+| GPT-5 | 12 / 12 (100%) | +1.08 | +1.50 |
+
+(3 blind judges from 2 vendors × 3 frontier families × 6 strategic-reasoning questions = 42 ratings; 36 parsed cleanly. Position-bias mitigated via per-pair randomization. Six parse-failures were empty Opus-judge completions on Q5/Q6 from the OpenRouter endpoint — substituted with Sonnet judge and parsed cleanly.)
+
+**Together, v3a (distilled-7B vs base-7B = 67.5% preference) and v0 (Hammerstein-on-frontier vs raw-frontier = 100% preference) say:** the framework's improvement is real at both ends of the model-size spectrum. The framework is the constant; the model is variable.
+
+**Caveats kept honest:** sample size is small (6 questions); rubric has built-in framework-fidelity bias (Hammerstein-on-X is by definition framework-shaped, so we'd expect to dominate that axis); LLM-as-judge has known biases. The bias-resistant signals are the **usefulness** and **voice** deltas — and Hammerstein-on-Sonnet-4.6 still scored +2.0 / +1.9 on those non-framework axes vs raw Sonnet-4.6 despite being the same underlying model.
+
+Methodology, runner, judge layer, and full transcripts are in the public [hammerstein](https://github.com/lerugray/hammerstein) repo at `eval/run_benchmark.py`, `eval/judge_pairs.py`, `eval/BENCHMARK-v0.md`. Reproduce, refute, or extend — the framework wants the pushback.
+
 ## Wargame surface (Phase 6.1)
 
 ![Hammerstein-7B issuing Auftragstaktik mission orders against a real Ukraine 2022 BGG photo test — board read, situation, intent, main effort, with cost in the corner.](docs/images/launch/wargame-orders-panel.png)

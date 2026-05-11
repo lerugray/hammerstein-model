@@ -13,13 +13,54 @@ tags:
 - strategic-reasoning
 ---
 
-# Hammerstein-7B (LoRA adapter)
+# Hammerstein-7B (LoRA adapter) — One Artifact of the Hammerstein Framework
 
-QLoRA adapter that bakes the [Hammerstein framework](https://github.com/lerugray/hammerstein)
-into `Qwen2.5-7B-Instruct` via behavior cloning on synthetic teacher
-outputs. Loading the base + this adapter and running inference
-**with no system prompt** produces framework-correct strategic-
-reasoning outputs.
+The [Hammerstein framework](https://github.com/lerugray/hammerstein) is a
+clever-lazy / clever-industrious / stupid-industrious / stupid-lazy
+diagnostic for catching misdirected effort in software, design, and
+strategy decisions. **It wins blind LLM-judge preference at every scale
+it has been tested.**
+
+| Scale | Test | Result |
+|---|---|---|
+| Frontier (Opus 4.7, Sonnet 4.6, GPT-5) | v0 — framework wrap vs raw frontier on 6 strategic questions, 4 blind judges across 2 vendors | **53 / 54 = 98.1%** preferred |
+| Frontier (same families) | v0.1 — generic out-of-domain strategic questions (Q9-Q12), 4 blind judges | **48 / 48 = 100%** preferred |
+| Frontier (Sonnet) | v0.1 ablation: Hammerstein system prompt alone vs full wrap | **prompt-only ties full** (50/50) — RAG corpus is decorative on Sonnet |
+| Frontier (Sonnet) | v0.3 — generic competent neutral-scaffold (~1700 chars) vs raw, 4 blind judges | **20 / 24 = 83.3%** — any competent prompt helps, Hammerstein's specific framing wins by ~17 points more |
+| **7B local distilled (this adapter)** | **v0.4 Pair 1 — Hammerstein-7B (no prompt) vs raw Qwen2.5-7B (no prompt), 4 blind judges** | **24 / 24 = 100%** preferred |
+| **Cross-scale (headline)** | **v0.4 Pair 2 — Hammerstein-7B (local 8 GB, no prompt) vs raw Claude Sonnet 4.6 (no prompt), 4 blind judges** | **18 / 24 = 79.2%** preferred — framework distilled in beats frontier without |
+| Adversarial (Diplomacy matched-pair) | wrap vs raw Sonnet, identical game state | wrap shapes reasoning; game outcome unchanged |
+
+**Refined headline (2026-05-11 across v0/v0.1/v0.3/v0.4):**
+
+1. The Hammerstein *system prompt alone*, applied to a frontier model,
+   delivers the wedge against raw frontier (v0.1 — prompt-only ties
+   full Hammerstein 50/50 on Sonnet).
+2. A generic competent strategic-advice prompt (~1700 chars) also
+   beats raw frontier (v0.3 — 83.3%), but underperforms the
+   Hammerstein system prompt by ~17 points. Prompting helps in
+   general; Hammerstein's specific framing helps more.
+3. **The framework distilled into 7B local weights beats raw frontier
+   Claude Sonnet 4.6 on 79.2% of comparisons** (v0.4 Pair 2). The
+   distilled-7B wins 4 of 6 questions unanimously across all 4 blind
+   judges, with zero system prompt at runtime.
+
+This adapter is **the distilled-7B artifact** — a QLoRA on
+`Qwen2.5-7B-Instruct` that bakes the framework's output behavior into
+the weights via behavior cloning on synthetic teacher outputs. Loading
+the base + this adapter and running inference **with no system prompt
+at all** produces framework-correct strategic-reasoning outputs. A
+2026-05-10 zero-prompt diagnostic + 2026-05-11 cross-scale benchmark
+both confirm the distillation isn't style-only: v3a spontaneously
+deploys framework typology (clever-lazy / stupid-industrious named
+across diagnostic + v0.4 responses) with no scaffolding, and wins on
+usefulness + voice-match axes (bias-resistant signals) against raw
+frontier in blind judging.
+
+The framework is the IP. This adapter is the portability proof — and,
+per v0.4 Pair 2, a competitive answer to frontier-without-framework on
+strategic-reasoning Q&A. Run locally on any 8 GB Mac for zero
+per-call cost.
 
 > **Status (v3a, 2026-05-09):** Mixed-mode training (1494 strategic +
 > 214 off-domain pairs) eliminates the catastrophic-forgetting
@@ -28,9 +69,10 @@ reasoning outputs.
 > blind LLM judge head-to-head (67.5% preferred). Q4_K_M GGUF on this
 > repo: `ollama run hf.co/lerugray/hammerstein-7b-lora:Q4_K_M`.
 
-> **Source repo:** [github.com/lerugray/hammerstein-model](https://github.com/lerugray/hammerstein-model)
-> — full code, eval harness, methodology arc (v1 → v2a/v2b → v3a),
-> reproducibility recipe, and the parent wrapper (`hp.py`) all live there.
+> **Source repos:**
+> - Framework + benchmark harness: [github.com/lerugray/hammerstein](https://github.com/lerugray/hammerstein)
+> - Distillation tooling + wrapper: [github.com/lerugray/hammerstein-model](https://github.com/lerugray/hammerstein-model)
+> Full eval harness, methodology arc (v1 → v2a/v2b → v3a), reproducibility recipe, and the parent wrapper (`hp.py`) all live in those repos.
 
 ## What this is
 

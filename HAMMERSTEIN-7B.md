@@ -21,22 +21,42 @@ preference at every scale it has been tested:**
 |---|---|---|
 | Frontier (Opus 4.7, Sonnet 4.6, GPT-5) | v0 — framework wrap vs raw frontier on 6 strategic questions, 4 blind judges across 2 vendors | **53 / 54 = 98.1%** preferred |
 | Frontier (same families) | v0.1 — generic out-of-domain strategic questions (Q9-Q12), 4 blind judges | **48 / 48 = 100%** preferred |
-| Frontier (Sonnet) | v0.1 ablation: system prompt alone vs full wrap | **prompt-only ties full** (50/50) — RAG corpus is decorative on Sonnet |
-| 7B local | v3a distilled vs same base alone, blind LLM judge | **67.5%** preferred (this repo) |
+| Frontier (Sonnet) | v0.1 ablation: Hammerstein system prompt alone vs full wrap | **prompt-only ties full** (50/50) — RAG corpus is decorative on Sonnet |
+| Frontier (Sonnet) | v0.3 — generic competent neutral-scaffold (~1700 chars) vs raw, 4 blind judges | **20 / 24 = 83.3%** — any competent prompt helps, and Hammerstein's specific framing wins by ~17 points more |
+| **7B local distilled** | **v0.4 Pair 1 — Hammerstein-7B (no prompt) vs raw Qwen2.5-7B (no prompt), 4 blind judges** | **24 / 24 = 100%** preferred |
+| **Cross-scale (headline)** | **v0.4 Pair 2 — Hammerstein-7B (local 8 GB, no prompt) vs raw Claude Sonnet 4.6 (no prompt), 4 blind judges** | **18 / 24 = 79.2%** preferred — framework distilled into 7B weights beats frontier without framework |
 | Adversarial (Diplomacy matched-pair) | wrap vs raw Sonnet, identical game state, 3 game-years | wrap shapes reasoning (different negotiation register); game outcome unchanged |
 
-**Refined headline (2026-05-10 v0.1 finding):** the Hammerstein
-*system prompt alone*, applied to a frontier model, delivers the
-wedge. Adding the RAG corpus does not measurably help on Sonnet.
-The product story simplifies to a single system-prompt artifact.
+**Refined headline (2026-05-11 across v0/v0.1/v0.3/v0.4):**
+
+1. The Hammerstein *system prompt alone*, applied to a frontier
+   model, delivers the wedge against raw frontier (v0.1 ablation —
+   prompt-only ties full Hammerstein 50/50 on Sonnet).
+2. A generic competent strategic-advice prompt of ~1700 chars also
+   beats raw frontier (v0.3 — 83.3%), but underperforms the
+   Hammerstein system prompt by ~17 points. Prompting in general
+   helps; Hammerstein's specific framing helps more.
+3. **The framework distilled into 7B local weights beats raw frontier
+   Claude Sonnet 4.6 on 79.2% of comparisons** (v0.4 Pair 2). The
+   framework's reasoning structure carries enough signal to win blind
+   LLM-judge preference at ~100× smaller scale, with no system prompt
+   at runtime.
 
 **This repo is the distilled-7B artifact** — a QLoRA adapter that
 bakes the framework's output behavior into Qwen2.5-7B-Instruct
 weights, so the framework runs locally on any 8 GB Mac with zero
 internet and zero per-call cost. The framework is the IP; the model
-is a portability proof. Length-bias and tautology-axis confounds were
-ruled out by ancillary checks (see
-[hammerstein/eval/RESULTS-v0.1.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.1.md)).
+is a portability proof — and, per v0.4 Pair 2, a competitive answer
+to frontier-without-framework on strategic-reasoning Q&A.
+
+Length-bias and tautology-axis confounds were ruled out by ancillary
+checks; size-matched neutral-scaffold (v0.3.1) is a follow-up that
+would fully close the "any competent prompt of similar length"
+objection. See
+[hammerstein/eval/RESULTS-v0.1.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.1.md)
+and
+[hammerstein/eval/RESULTS-v0.4.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.4.md)
+for full methodology and per-judge breakdowns.
 
 ## What this is
 

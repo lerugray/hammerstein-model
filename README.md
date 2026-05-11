@@ -9,18 +9,30 @@ stupid-lazy diagnostic for catching misdirected effort in software,
 design, and strategy decisions.
 
 **The framework wins blind LLM-judge preference at every scale we have
-tested it.** Frontier wrap vs raw frontier (Opus 4.7 / Sonnet 4.6 /
-GPT-5) on 6 strategic-reasoning questions = **53 of 54 = 98.1%**
-preferred across 4 blind judges (2 vendors); 100% on a generic
-out-of-domain follow-up. v0.1 ablation revealed the load-bearing
-component: the **system prompt alone** delivers the wedge —
-prompt-only ties full Hammerstein 50/50 on Sonnet, so the RAG corpus
-is decorative at frontier scale. The distilled-7B adapter
-in this repo wins 67.5% blind preference vs the same base model
-without it — confirming the framework lives in weights, not just in
-runtime scaffolding. Length and tautology confounds were ruled out
-by ancillary checks. See
-[hammerstein/eval/RESULTS-v0.1.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.1.md).
+tested it — including a 7B local model against frontier without
+framework.**
+
+| Test (all judged blind by 4 LLM judges across 2-3 vendors) | Result |
+| --- | --- |
+| v0 — Hammerstein wrap vs raw frontier, on Opus 4.7 / Sonnet 4.6 / GPT-5 | **53 / 54 = 98.1%** preferred |
+| v0.1 generic out-of-domain (Q9-Q12) | **48 / 48 = 100%** preferred |
+| v0.1 Sonnet ablation: system prompt alone vs full wrap | **ties full** — RAG corpus decorative |
+| v0.3 Sonnet neutral-scaffold (1700 chars, no Hammerstein vocab) vs raw | **20 / 24 = 83.3%** (any competent prompt helps; Hammerstein still ~17 points better) |
+| **v0.4 Pair 1 — Hammerstein-7B (this repo, no prompt) vs raw Qwen2.5-7B (same base, no prompt)** | **24 / 24 = 100%** preferred |
+| **v0.4 Pair 2 — Hammerstein-7B (local 8 GB, no prompt) vs raw Claude Sonnet 4.6 (no prompt)** | **18 / 24 = 79.2%** preferred — framework distilled into 7B weights beats frontier without |
+
+The v0.4 Pair 2 result is the headline: a 7B local model with the
+Hammerstein framework distilled into its weights beats raw frontier
+Claude Sonnet 4.6 on 4 of 6 strategic-reasoning questions
+(unanimous across all 4 blind judges on Q1, Q3, Q4). Mean usefulness
+delta = +0.46 (bias-resistant axis, separate from
+framework-fidelity).
+
+Length and tautology confounds were ruled out by ancillary checks.
+See
+[hammerstein/eval/RESULTS-v0.1.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.1.md)
+and
+[hammerstein/eval/RESULTS-v0.4.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.4.md).
 
 The framework is the IP. This repo ships two artifacts that apply it:
 

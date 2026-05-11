@@ -8,27 +8,37 @@ a clever-lazy / clever-industrious / stupid-industrious /
 stupid-lazy diagnostic for catching misdirected effort in software,
 design, and strategy decisions.
 
-**The framework wins blind LLM-judge preference at every scale we have
-tested it — including a 7B local model against frontier without
-framework.**
+**On the framework-discipline benchmark we built (6 strategic-reasoning
+Q&A questions scored by blind LLM judges against a clever-lazy /
+verification-gate / structural-fix rubric), the framework wins at
+every scale we have tested — from frontier wrap down to a 7B distilled
+local model.**
 
-| Test (all judged blind by 4 LLM judges across 2-3 vendors) | Result |
+| Test (judged blind by 4 LLM judges across 2-3 vendors) | Result |
 | --- | --- |
 | v0 — Hammerstein wrap vs raw frontier, on Opus 4.7 / Sonnet 4.6 / GPT-5 | **53 / 54 = 98.1%** preferred |
 | v0.1 generic out-of-domain (Q9-Q12) | **48 / 48 = 100%** preferred |
 | v0.1 Sonnet ablation: system prompt alone vs full wrap | **ties full** — RAG corpus decorative |
-| v0.3 Sonnet neutral-scaffold (1700 chars, no Hammerstein vocab) vs raw | **20 / 24 = 83.3%** (any competent prompt helps; Hammerstein still ~17 points better) |
+| v0.3 Sonnet neutral-scaffold (1700 chars, no Hammerstein vocab) vs raw | **20 / 24 = 83.3%** (any competent prompt helps; Hammerstein-on-Sonnet at 100% v0 is ~17 points better) |
 | **v0.4 Pair 1 — Hammerstein-7B (this repo, no prompt) vs raw Qwen2.5-7B (same base, no prompt)** | **24 / 24 = 100%** preferred |
-| **v0.4 Pair 2 — Hammerstein-7B (local 8 GB, no prompt) vs raw Claude Sonnet 4.6 (no prompt)** | **18 / 24 = 79.2%** preferred — framework distilled into 7B weights beats frontier without |
+| **v0.4 Pair 2 — Hammerstein-7B (local 8 GB, no prompt) vs raw Claude Sonnet 4.6 (no prompt)** | **18 / 24 = 79.2%** preferred on this benchmark |
 
-The v0.4 Pair 2 result is the headline: a 7B local model with the
-Hammerstein framework distilled into its weights beats raw frontier
-Claude Sonnet 4.6 on 4 of 6 strategic-reasoning questions
-(unanimous across all 4 blind judges on Q1, Q3, Q4). Mean usefulness
-delta = +0.46 (bias-resistant axis, separate from
-framework-fidelity).
+The v0.4 Pair 2 result is the headline for the distillation: a 7B
+local model with the framework distilled in beats raw frontier Claude
+Sonnet 4.6 on 4 of 6 strategic-reasoning questions (unanimous across
+all 4 blind judges on Q1, Q3, Q4) on the framework-discipline
+benchmark. Mean usefulness delta = +0.46, voice delta = +0.75 (1-5
+scale, both bias-resistant axes separate from the framework-fidelity
+axis which is biased toward framework vocabulary by rubric design).
 
-Length and tautology confounds were ruled out by ancillary checks.
+**What this shows:** the distillation carries framework discipline
+into 7B weights well enough to beat frontier-without-framework on
+framework-shaped tasks. **What it does NOT show:** the 7B is a better
+general-purpose model than Sonnet. Generalization to math / code /
+long-context reasoning is untested.
+
+Length and tautology confounds were partially ruled out by ancillary
+checks.
 See
 [hammerstein/eval/RESULTS-v0.1.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.1.md)
 and

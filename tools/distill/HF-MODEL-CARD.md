@@ -18,8 +18,11 @@ tags:
 The [Hammerstein framework](https://github.com/lerugray/hammerstein) is a
 clever-lazy / clever-industrious / stupid-industrious / stupid-lazy
 diagnostic for catching misdirected effort in software, design, and
-strategy decisions. **It wins blind LLM-judge preference at every scale
-it has been tested.**
+strategy decisions. **On the framework-discipline benchmark we built
+(6 strategic-reasoning Q&A questions scored by blind LLM judges against
+a clever-lazy / verification-gate / structural-fix rubric), the framework
+wins at every scale we have tested — from frontier wrap down to a 7B
+distilled local model.**
 
 | Scale | Test | Result |
 |---|---|---|
@@ -41,9 +44,16 @@ it has been tested.**
    Hammerstein system prompt by ~17 points. Prompting helps in
    general; Hammerstein's specific framing helps more.
 3. **The framework distilled into 7B local weights beats raw frontier
-   Claude Sonnet 4.6 on 79.2% of comparisons** (v0.4 Pair 2). The
-   distilled-7B wins 4 of 6 questions unanimously across all 4 blind
-   judges, with zero system prompt at runtime.
+   Claude Sonnet 4.6 on 79.2% of comparisons on the same benchmark**
+   (v0.4 Pair 2). 4 of 6 questions unanimous across 4 blind judges,
+   with no system prompt at runtime on the 7B side. Bias-resistant
+   axes (usefulness +0.46, voice +0.75) are positive but smaller than
+   framework-fidelity (+1.46) — the rubric rewards framework
+   vocabulary by design, so the framework-fidelity Δ is partly
+   tautological. **The result shows the distillation carries
+   framework discipline into 7B weights well enough to beat
+   frontier-without-framework on framework-shaped tasks — not that
+   the 7B is a better general-purpose model than Sonnet.**
 
 This adapter is **the distilled-7B artifact** — a QLoRA on
 `Qwen2.5-7B-Instruct` that bakes the framework's output behavior into
@@ -54,13 +64,14 @@ at all** produces framework-correct strategic-reasoning outputs. A
 both confirm the distillation isn't style-only: v3a spontaneously
 deploys framework typology (clever-lazy / stupid-industrious named
 across diagnostic + v0.4 responses) with no scaffolding, and wins on
-usefulness + voice-match axes (bias-resistant signals) against raw
-frontier in blind judging.
+bias-resistant usefulness + voice-match axes against raw frontier in
+blind judging on framework-shaped questions.
 
 The framework is the IP. This adapter is the portability proof — and,
-per v0.4 Pair 2, a competitive answer to frontier-without-framework on
-strategic-reasoning Q&A. Run locally on any 8 GB Mac for zero
-per-call cost.
+on the framework-discipline benchmark, a competitive answer to
+frontier-without-framework. Generalization to neutral benchmarks
+(math, code, long-context) is untested. Run locally on any 8 GB Mac
+for zero per-call cost.
 
 > **Status (v3a, 2026-05-09):** Mixed-mode training (1494 strategic +
 > 214 off-domain pairs) eliminates the catastrophic-forgetting

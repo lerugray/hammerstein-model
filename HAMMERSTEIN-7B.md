@@ -14,8 +14,11 @@ including a Q4_K_M GGUF for `ollama run` on any Mac (8 GB+).
 The [Hammerstein framework](https://github.com/lerugray/hammerstein)
 is a clever-lazy / clever-industrious / stupid-industrious /
 stupid-lazy diagnostic for catching misdirected effort in software,
-design, and strategy decisions. **The framework wins blind LLM-judge
-preference at every scale it has been tested:**
+design, and strategy decisions. **On the framework-discipline
+benchmark we built (6 strategic-reasoning Q&A questions scored by
+blind LLM judges against a clever-lazy / verification-gate /
+structural-fix rubric), the framework wins at every scale we have
+tested — from frontier wrap down to a 7B distilled local model:**
 
 | Scale | Test | Result |
 |---|---|---|
@@ -37,22 +40,30 @@ preference at every scale it has been tested:**
    Hammerstein system prompt by ~17 points. Prompting in general
    helps; Hammerstein's specific framing helps more.
 3. **The framework distilled into 7B local weights beats raw frontier
-   Claude Sonnet 4.6 on 79.2% of comparisons** (v0.4 Pair 2). The
-   framework's reasoning structure carries enough signal to win blind
-   LLM-judge preference at ~100× smaller scale, with no system prompt
-   at runtime.
+   Claude Sonnet 4.6 on 79.2% of judged comparisons on the same
+   benchmark** (v0.4 Pair 2). 4 of 6 questions unanimous across all
+   4 blind judges, with no system prompt at runtime on the 7B side.
+   Bias-resistant axes (usefulness +0.46, voice +0.75) are positive
+   but smaller than framework-fidelity (+1.46); the rubric rewards
+   framework vocabulary by design, so the framework-fidelity Δ is
+   partly tautological. **This shows the distillation carries
+   framework discipline into 7B weights well enough to beat
+   frontier-without-framework on framework-shaped tasks — not that
+   the 7B is a better general-purpose model than Sonnet.**
 
 **This repo is the distilled-7B artifact** — a QLoRA adapter that
 bakes the framework's output behavior into Qwen2.5-7B-Instruct
 weights, so the framework runs locally on any 8 GB Mac with zero
 internet and zero per-call cost. The framework is the IP; the model
-is a portability proof — and, per v0.4 Pair 2, a competitive answer
-to frontier-without-framework on strategic-reasoning Q&A.
+is a portability proof — and, on framework-discipline-scored
+strategic Q&A, a competitive answer to frontier-without-framework.
+Generalization to neutral benchmarks (math, code, long-context) is
+untested.
 
-Length-bias and tautology-axis confounds were ruled out by ancillary
-checks; size-matched neutral-scaffold (v0.3.1) is a follow-up that
-would fully close the "any competent prompt of similar length"
-objection. See
+Length-bias and tautology-axis confounds were partially ruled out by
+ancillary checks; size-matched neutral-scaffold (v0.3.1) is a
+follow-up that would fully close the "any competent prompt of similar
+length" objection. See
 [hammerstein/eval/RESULTS-v0.1.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.1.md)
 and
 [hammerstein/eval/RESULTS-v0.4.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.4.md)

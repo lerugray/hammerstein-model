@@ -2,13 +2,27 @@
 
 ![Hammerstein-7B. The framework, distilled. Persistent · Distilled · Local](docs/images/banner.png)
 
-A persistent strategic-reasoning agent built around the
+Artifacts of the
 **[Hammerstein framework](https://github.com/lerugray/hammerstein)**:
 a clever-lazy / clever-industrious / stupid-industrious /
 stupid-lazy diagnostic for catching misdirected effort in software,
 design, and strategy decisions.
 
-This repo ships two artifacts you can use today:
+**The framework wins blind LLM-judge preference at every scale we have
+tested it.** Frontier wrap vs raw frontier (Opus 4.7 / Sonnet 4.6 /
+GPT-5) on 6 strategic-reasoning questions = **53 of 54 = 98.1%**
+preferred across 4 blind judges (2 vendors); 100% on a generic
+out-of-domain follow-up. v0.1 ablation revealed the load-bearing
+component: the **system prompt alone** delivers the wedge —
+prompt-only ties full Hammerstein 50/50 on Sonnet, so the RAG corpus
+is decorative at frontier scale. The distilled-7B adapter
+in this repo wins 67.5% blind preference vs the same base model
+without it — confirming the framework lives in weights, not just in
+runtime scaffolding. Length and tautology confounds were ruled out
+by ancillary checks. See
+[hammerstein/eval/RESULTS-v0.1.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.1.md).
+
+The framework is the IP. This repo ships two artifacts that apply it:
 
 1. **`hp.py`**, a stateful CLI wrapper that adds cross-session
    memory and ambient project-context injection on top of the
@@ -18,13 +32,11 @@ This repo ships two artifacts you can use today:
    distilled from synthetic teacher outputs **with off-domain mixin**
    so it stays out of framework mode for non-strategic queries.
    Q4_K_M GGUF on HuggingFace; runs on any 8 GB+ Mac via Ollama.
-   Behavior cloning, not reasoning training. v3a beats v1 on three
-   independent measurements: marker count, OOD leakage (2.80 → 0.00
-   markers per off-domain response), and a blind LLM judge head-to-head
-   (67.5% v3a preferred). See [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md).
+   Behavior cloning, not reasoning training. See
+   [HAMMERSTEIN-7B.md](HAMMERSTEIN-7B.md).
 
 The wrapper is the production path. The distilled adapter is the
-shareable artifact. They ship independently.
+portability proof. They ship independently.
 
 Plus a local web surface at `http://127.0.0.1:8765` (launched by
 `./hp_web.sh`) with two tabs:

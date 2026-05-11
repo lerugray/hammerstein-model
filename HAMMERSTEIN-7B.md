@@ -1,4 +1,4 @@
-# Hammerstein-7B — Distilled LoRA Adapter
+# Hammerstein-7B — One Artifact of the Hammerstein Framework
 
 **Status (v3a, 2026-05-09):** Mixed-mode training (1494 strategic +
 214 off-domain pairs) eliminates the catastrophic-forgetting
@@ -9,15 +9,43 @@ Pushed public to HuggingFace at
 [`huggingface.co/lerugray/hammerstein-7b-lora`](https://huggingface.co/lerugray/hammerstein-7b-lora),
 including a Q4_K_M GGUF for `ollama run` on any Mac (8 GB+).
 
+## Framework first, model second
+
+The [Hammerstein framework](https://github.com/lerugray/hammerstein)
+is a clever-lazy / clever-industrious / stupid-industrious /
+stupid-lazy diagnostic for catching misdirected effort in software,
+design, and strategy decisions. **The framework wins blind LLM-judge
+preference at every scale it has been tested:**
+
+| Scale | Test | Result |
+|---|---|---|
+| Frontier (Opus 4.7, Sonnet 4.6, GPT-5) | v0 — framework wrap vs raw frontier on 6 strategic questions, 4 blind judges across 2 vendors | **53 / 54 = 98.1%** preferred |
+| Frontier (same families) | v0.1 — generic out-of-domain strategic questions (Q9-Q12), 4 blind judges | **48 / 48 = 100%** preferred |
+| Frontier (Sonnet) | v0.1 ablation: system prompt alone vs full wrap | **prompt-only ties full** (50/50) — RAG corpus is decorative on Sonnet |
+| 7B local | v3a distilled vs same base alone, blind LLM judge | **67.5%** preferred (this repo) |
+| Adversarial (Diplomacy matched-pair) | wrap vs raw Sonnet, identical game state, 3 game-years | wrap shapes reasoning (different negotiation register); game outcome unchanged |
+
+**Refined headline (2026-05-10 v0.1 finding):** the Hammerstein
+*system prompt alone*, applied to a frontier model, delivers the
+wedge. Adding the RAG corpus does not measurably help on Sonnet.
+The product story simplifies to a single system-prompt artifact.
+
+**This repo is the distilled-7B artifact** — a QLoRA adapter that
+bakes the framework's output behavior into Qwen2.5-7B-Instruct
+weights, so the framework runs locally on any 8 GB Mac with zero
+internet and zero per-call cost. The framework is the IP; the model
+is a portability proof. Length-bias and tautology-axis confounds were
+ruled out by ancillary checks (see
+[hammerstein/eval/RESULTS-v0.1.md](https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.1.md)).
+
 ## What this is
 
 A QLoRA adapter that takes `Qwen2.5-7B-Instruct` (the open base
-model) and bakes the [Hammerstein framework](https://github.com/lerugray/hammerstein)
-into its output behavior via fine-tuning. Loading the base + this
-adapter and running inference with **no system prompt** produces
-framework-correct strategic-reasoning outputs — and now (v3a)
-properly stays out of framework mode for non-strategic queries
-(haikus, recipes, factual questions).
+model) and bakes the framework into its output behavior via
+fine-tuning. Loading the base + this adapter and running inference
+with **no system prompt** produces framework-correct strategic-
+reasoning outputs — and now (v3a) properly stays out of framework
+mode for non-strategic queries (haikus, recipes, factual questions).
 
 This is **behavior cloning, not reasoning training.** The student
 learned to mimic the teacher's (Qwen3.6-plus + Hammerstein system
@@ -26,6 +54,14 @@ outputs. The reasoning competence still lives in the corpus + the
 wrapper that retrieves from it; this adapter is a deployable
 snapshot of the *style* — and, in v3a, of *when to apply that style
 and when not to*.
+
+A 2026-05-10 zero-prompt diagnostic confirmed the distillation isn't
+style-only: v3a spontaneously deploys framework typology
+(clever-lazy / stupid-industrious named in all three test responses),
+refuses weak framings, and proposes structural fixes — with **no
+system prompt** at all. The framework lives in the weights, not in
+the runtime scaffolding. See
+[hammerstein/eval/distill-diagnostic-results-2026-05-10.json](https://github.com/lerugray/hammerstein/blob/main/eval/distill-diagnostic-results-2026-05-10.json).
 
 ## Methodology arc (v1 → v2 → v3a)
 

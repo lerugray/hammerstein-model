@@ -61,17 +61,8 @@ The wrapper is the production path. The distilled adapter is the
 portability proof. They ship independently.
 
 Plus a local web surface at `http://127.0.0.1:8765` (launched by
-`./hp_web.sh`) with two tabs:
-
-- **Dashboard** — read-only audit history + Phase-3 verdict over
-  the wrapper's own call log.
-- **Wargame** — solo-wargamer mode using the multimodal
-  `hp_vision.py` sibling. Drop a board photo + status report,
-  upload a rulebook PDF (auto-converted + LLM-digested into an
-  AI Commander Reference), and get back kriegspiel-style
-  Auftragstaktik orders structured by the model. NotebookLM-style
-  persistent context per campaign. See
-  [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md).
+`./hp_web.sh`) — **Dashboard** tab provides a read-only audit
+history + Phase-3 verdict over the wrapper's own call log.
 
 ## Origin
 
@@ -120,8 +111,7 @@ execution. Q1 of the design walk locked that in.
 | [tests/test_hp.py](tests/test_hp.py) | 19 pytest cases (188 LOC) |
 | [tools/precision_test.py](tools/precision_test.py) | Phase 1.5 scoring harness |
 | [tools/distill/](tools/distill/) | Distillation experiment (gen / train / eval) |
-| [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md) | Phase 5 stretch — solitaire wargame opponent |
-| [WEB-UI-EXTENSION.md](WEB-UI-EXTENSION.md) | Phase 6 stretch — local web UI |
+| [WEB-UI-EXTENSION.md](WEB-UI-EXTENSION.md) | Phase 6 stretch — local web UI (Dashboard tab) |
 | [MODEL-EXPERIMENT.md](MODEL-EXPERIMENT.md) | Distillation experiment design + cost analysis |
 | [scoring/precision-2026-05-08.md](scoring/precision-2026-05-08.md) | Phase 1.5 honestly-scored precision evaluation |
 
@@ -161,12 +151,6 @@ Result: **36 of 36 parsed blind LLM-judge ratings preferred Hammerstein-on-front
 **Caveats kept honest:** sample size is small (6 questions); rubric has built-in framework-fidelity bias (Hammerstein-on-X is by definition framework-shaped, so we'd expect to dominate that axis); LLM-as-judge has known biases. The bias-resistant signals are the **usefulness** and **voice** deltas — and Hammerstein-on-Sonnet-4.6 still scored +2.0 / +1.9 on those non-framework axes vs raw Sonnet-4.6 despite being the same underlying model.
 
 Methodology, runner, judge layer, and full transcripts are in the public [hammerstein](https://github.com/lerugray/hammerstein) repo at `eval/run_benchmark.py`, `eval/judge_pairs.py`, `eval/BENCHMARK-v0.md`. Reproduce, refute, or extend — the framework wants the pushback.
-
-## Wargame surface (Phase 6.1)
-
-![Hammerstein-7B issuing Auftragstaktik mission orders against a real Ukraine 2022 BGG photo test — board read, situation, intent, main effort, with cost in the corner.](docs/images/launch/wargame-orders-panel.png)
-
-The flagship application: drop the rulebook + a board photo + a one-line status report; get back a structured Auftragstaktik order set (situation / intent / main effort) with the model's read of what it sees on the board. NotebookLM-style sources panel persists campaign rulebooks across turns; full turn log links every order back to the photo it was issued against. See [WARGAME-EXTENSION.md](WARGAME-EXTENSION.md).
 
 ## Honest framing
 

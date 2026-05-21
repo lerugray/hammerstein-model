@@ -61,6 +61,12 @@ if [ ! -f /tmp/sft-deps-installed ]; then
     pip install -q --upgrade pip
     # Pin transformers <4.50: transformers 5.x breaks Trainer imports
     pip install -q "transformers>=4.46,<4.50" trl peft datasets accelerate bitsandbytes sentencepiece
+    # trl/peft pull torchao as a transitive dep; recent torchao references
+    # torch.int1 which doesn't exist in the pod's torch 2.4 — it crashes
+    # peft's LoRA dispatcher at merge time. We don't use torchao (bitsandbytes
+    # handles quantization), so remove it. Observed 2026-05-21: merge step
+    # died with `AttributeError: module 'torch' has no attribute 'int1'`.
+    pip uninstall -y torchao 2>/dev/null || true
     touch /tmp/sft-deps-installed
 fi
 

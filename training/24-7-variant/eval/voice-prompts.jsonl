@@ -1,0 +1,30 @@
+{"id": "vp-001", "prompt": "What are the active revenue-generating projects in Ray's portfolio right now?"}
+{"id": "vp-002", "prompt": "Walk me through how the GS bot picks which task to run next in a cycle."}
+{"id": "vp-003", "prompt": "Describe the difference between mission-companion's Hammerstein mode and its RPG mode."}
+{"id": "vp-004", "prompt": "What is the ship gate for the 24/7 homelab bot variant?"}
+{"id": "vp-005", "prompt": "How does generalstaff-desktop's reconcile mechanism differ from the GS bot's cycle loop?"}
+{"id": "vp-006", "prompt": "What is the train_main_sft.py output structure after a successful run?"}
+{"id": "vp-007", "prompt": "Explain the provider routing order Ray uses across a billing cycle."}
+{"id": "vp-008", "prompt": "What happened in the TWAR PC Surface 5 hex-vs-area incident?"}
+{"id": "vp-009", "prompt": "What does the hammerstein-ai D1 database store and what is it used for?"}
+{"id": "vp-010", "prompt": "Explain what a verified_weak reviewer verdict means in the GS context."}
+{"id": "vp-011", "prompt": "What distinguishes clever-industrious from stupid-industrious in the Hammerstein framework?"}
+{"id": "vp-012", "prompt": "How does the Hammerstein audit pattern work end to end?"}
+{"id": "vp-013", "prompt": "What is the lean-ctx MCP and why does Ray use it in interactive Claude sessions?"}
+{"id": "vp-014", "prompt": "Describe the veridian-contraption project and its current commercial status."}
+{"id": "vp-015", "prompt": "What are Ray's three strategic domains where he has authority vs. where Claude decides autonomously?"}
+{"id": "vp-016", "prompt": "What is the Hammerstein-7B v3a model and how was it trained?"}
+{"id": "vp-017", "prompt": "How does the NCA pilot experiment relate to the 24/7 homelab bot training pipeline?"}
+{"id": "vp-018", "prompt": "What is the hands_off list in GeneralStaff and what protections does it provide?"}
+{"id": "vp-019", "prompt": "What is the mission-canon project trying to accomplish?"}
+{"id": "vp-020", "prompt": "How does retrogaze's deployment differ from a standard GitHub→hosting auto-deploy flow?"}
+{"id": "vp-021", "prompt": "What is the hammerstein-ai revenue gate and what triggers Phase 3+ work to unlock?"}
+{"id": "vp-022", "prompt": "Explain how cursor-agent CLI is scoped for Ray's workflow and what its hard constraints are."}
+{"id": "vp-023", "prompt": "What is the greater-than-alexander game and what are its design reference games?"}
+{"id": "vp-024", "prompt": "Why was Unsloth dropped from the 24/7 variant training pipeline?"}
+{"id": "vp-025", "prompt": "What does the scoping doc say about the deployment path for the 24/7 homelab bot?"}
+{"id": "vp-026", "prompt": "Describe the stop-slop rule and when it applies vs. when it's exempt."}
+{"id": "vp-027", "prompt": "What are the five axes in the 24/7 variant ship gate and what does each measure?"}
+{"id": "vp-028", "prompt": "How does the mission-companion architecture wire against different backend inference providers?"}
+{"id": "vp-029", "prompt": "What is the clever-lazy book and who is the intended audience?"}
+{"id": "vp-030", "prompt": "What is the bot/work diff-review rule and when is cherry-pick preferred over a branch merge?"}

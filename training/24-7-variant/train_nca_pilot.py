@@ -81,39 +81,72 @@ def parse_args() -> argparse.Namespace:
 # ---------------------------------------------------------------------------
 
 def load_nca_dataset(target_tokens: int, entropy_threshold: float):
-    """Download NCA dataset subset, filter high-entropy rollouts, tokenize."""
-    from datasets import load_dataset
-    import numpy as np
+    """Download NCA dataset subset from .npz shards, filter high-entropy rollouts.
 
-    print(f"Loading {DATASET_REPO} …")
-    print(f"  Filter: chaos_entropy > {entropy_threshold}")
+    The dataset is NOT a HuggingFace-standard format; load_dataset() fails on it.
+    Actual structure (inspected 2026-05-21):
+      - nca_dataset/data/shard_NNNNN.npz        (20 shards, ~set 1)
+      - nca_dataset_set2/data/shard_NNNNN.npz   (40 shards)
+      - nca_dataset_set3/data/shard_NNNNN.npz   (40 shards)
+    Each .npz has keys: frames (object array of rollouts), w (int16), h (int16)
+      frames[i]: shape (500, H, W), dtype int8, values 0-31 (already quantized tokens)
+    Metadata: dataset_labels_set{,2,3}.csv with columns including:
+      shard_name, rollout_idx, entropy (Shannon entropy, range ~3.45-3.75)
+    Note: entropy_threshold (default 0.6) is treated as a PERCENTILE cutoff (0-1).
+    All rollouts have entropy well above 0.6 on the raw scale; the arg is reused
+    as "keep rollouts above the Nth percentile of entropy across all metadata rows."
+    E.g. entropy_threshold=0.6 → keep rollouts above the 60th-percentile entropy value.
+    """
+    import numpy as np
+    import pandas as pd
+    from huggingface_hub import hf_hub_download
+
+    print(f"Loading {DATASET_REPO} via .npz shards …")
+    print(f"  Filter: entropy above {entropy_threshold:.0%} percentile")
     print(f"  Target: {target_tokens:,} tokens")
 
-    # The dataset stores rollout sequences as compressed .npz shards.
-    # The HuggingFace dataset card exposes them via the 'train' split with
-    # fields: sequence_tokens (List[int], len=500), chaos_entropy (float),
-    # spatial_complexity (float), activity_level (float).
-    # If the dataset card changes structure, check sample_usage.py in the HF repo.
-    ds = load_dataset(
-        DATASET_REPO,
-        split="train",
-        streaming=True,  # stream to avoid downloading 565 MB upfront
-        trust_remote_code=True,
-    )
+    # --- 1. Load all CSV metadata and compute the entropy cutoff ---
+    csv_frames = []
+    for suffix, set_dir in [("", "nca_dataset"), ("2", "nca_dataset_set2"), ("3", "nca_dataset_set3")]:
+        csv_name = f"dataset_labels_set{suffix}.csv"
+        local = hf_hub_download(DATASET_REPO, csv_name, repo_type="dataset")
+        df = pd.read_csv(local)
+        df["_set_dir"] = set_dir
+        csv_frames.append(df)
+    meta = pd.concat(csv_frames, ignore_index=True)
 
-    # Filter: high-entropy rollouts benefit reasoning tasks (per NCA eval doc)
-    ds_filtered = ds.filter(lambda x: x.get("chaos_entropy", 0.0) > entropy_threshold)
+    # entropy_threshold is a percentile (0-1); compute the raw entropy cutoff
+    entropy_cutoff = float(meta["entropy"].quantile(entropy_threshold))
+    high_entropy = meta[meta["entropy"] >= entropy_cutoff].copy()
+    # Sort by entropy descending so we consume the highest-quality rollouts first
+    high_entropy = high_entropy.sort_values("entropy", ascending=False).reset_index(drop=True)
+    print(f"  Entropy cutoff (p{entropy_threshold:.0%}): {entropy_cutoff:.4f}  "
+          f"({len(high_entropy):,} / {len(meta):,} rollouts pass)")
 
-    # Collect sequences up to target token budget
-    sequences = []
+    # --- 2. Iterate rollouts across shards until token budget is met ---
+    # Group by (set_dir, shard_name) to minimise redundant shard downloads
+    sequences: list[list[int]] = []
     token_count = 0
-    for example in ds_filtered:
-        tokens = example.get("sequence_tokens") or example.get("tokens") or []
-        if not tokens:
-            # Fallback: try to parse the raw array field
-            raw = example.get("sequence") or example.get("data")
-            if raw is not None:
-                tokens = list(np.array(raw).flatten().astype(int))
+    loaded_shards: dict[str, object] = {}  # cache open npz handles
+
+    for _, row in high_entropy.iterrows():
+        set_dir: str = row["_set_dir"]
+        shard_name: str = row["shard_name"]
+        rollout_idx: int = int(row["rollout_idx"])
+
+        shard_key = f"{set_dir}/{shard_name}"
+        if shard_key not in loaded_shards:
+            hf_path = f"{set_dir}/data/{shard_name}"
+            local_path = hf_hub_download(DATASET_REPO, hf_path, repo_type="dataset")
+            loaded_shards[shard_key] = np.load(local_path, allow_pickle=True)
+
+        data = loaded_shards[shard_key]
+        frames = data["frames"][rollout_idx]  # shape: (500, H, W), dtype int8
+
+        # Flatten the full rollout (all frames, all cells) into a 1D token sequence.
+        # Each cell is already a quantized symbolic token in [0, 31].
+        tokens = frames.flatten().astype(np.int64).tolist()
+
         sequences.append(tokens)
         token_count += len(tokens)
         if token_count >= target_tokens:

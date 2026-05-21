@@ -143,13 +143,18 @@ def load_model_and_tokenizer(model_path: str) -> tuple[Any, Any]:
     tokenizer.padding_side = "left"
 
     print(f"  Loading model from {model_path}...")
+    # Load directly in bf16 via torch_dtype — do NOT load fp32 then .to(bf16).
+    # The eval holds the trained model AND the base model on the GPU at once
+    # (voice axis needs both). Loading fp32 (~12 GB each for a 3B) overflows
+    # the 24 GB card on the second load → accelerate offloads modules to CPU →
+    # model.to(bf16) then crashes ("can't move a model offloaded to cpu").
+    # bf16 from the start = ~6 GB each, both fit, no offload, no .to() needed.
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         device_map="auto",
+        torch_dtype=torch.bfloat16,
         trust_remote_code=True,
     )
-    import torch
-    model = model.to(torch.bfloat16)
     model.eval()
     return model, tokenizer
 

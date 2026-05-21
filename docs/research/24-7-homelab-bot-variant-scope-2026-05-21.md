@@ -93,31 +93,48 @@ queries that Claude Max currently absorbs:
   deployment. Trains in BF16 on RunPod, converts to GGUF at deploy
   time.
 
-  **Deployment target confirmed (2026-05-21):** home PC has an
-  **RTX 3050, 6 GB VRAM**, Windows 11, already running the GS bot
-  dispatcher (`state/homelab/scoping-2026-05-21.md`). VRAM budget
-  for a 3B model:
-    - Q5_K_M weights ≈ 2.3-2.5 GB
-    - KV cache at 4096 context ≈ 0.5-1 GB
-    - Windows desktop compositor + GS dispatcher overhead ≈ 0.5-1 GB
-      (the home PC is also Ray's daily Windows machine + always-on
-      bot host — the GPU is shared, not dedicated)
-    - **Total ≈ 3.5-4.5 GB — comfortable headroom inside 6 GB.**
+  **Deployment path revised (2026-05-21 evening, Ray's update):**
+  the home PC (RTX 3050 6 GB, Windows 11, GS bot dispatcher host)
+  has limited system RAM and "Ollama doesn't run great on it" per
+  Ray. The 6 GB VRAM is adequate for a 3B model; the constraint is
+  the box's RAM + general-purpose contention. Ray's call: **use
+  RunPod for inference GPU power in the interim, until a
+  higher-powered rig exists** — explicitly a stopgap, not a
+  permanent 24/7 pod.
 
-  Q5_K_M stays the lock: the headroom matters because the GPU is
-  shared. If post-training the model wants more fidelity, Q6_K
-  (~2.8 GB weights) still fits; Q8_0 (~3.6 GB) is borderline once
-  the desktop + dispatcher are accounted for — avoid Q8 on this
-  card. If hl-007 (spare-PC parts assessment) surfaces a bigger
-  card (RTX 3060 12GB / 3070 8GB), the quant + context budget
-  open up — but v1 ships fine on the RTX 3050 as-is. No hardware
-  upgrade is a blocker for this variant.
-- **`[LOCK]` Inference runtime on homelab:** **Ollama** on the
-  Windows side of the home PC (Ollama has a native Windows build;
-  no WSL2 needed for the GPU path — it uses the Windows CUDA
-  runtime directly). Stable HTTP server on :11434 for
-  mission-companion to wire against. llama.cpp is the fallback if
-  Ollama's Windows CUDA path misbehaves.
+  Tiered deployment plan:
+
+  - **v1 interim — RunPod Serverless.** Deploy the trained GGUF as
+    a RunPod Serverless endpoint: scales to zero when idle, charges
+    per-second of actual inference. For occasional-advisor use (a
+    handful of queries/day) ≈ $5-30/mo, with a ~10-30s cold-start
+    on the first query after idle. **NOT a 24/7 running pod** — a
+    constantly-running RTX 4090 pod is ~$250-500/mo, which defeats
+    the lifestyle-tool cost posture. Scale-to-zero is the
+    load-bearing distinction (Ray confirmed 2026-05-21: "I didn't
+    mean to run it all the time").
+  - **v2 eventual — self-host.** Once Ray has a higher-powered rig
+    (or hl-007's spare-PC assessment yields a usable GPU box with
+    adequate RAM), move inference to owned hardware → zero marginal
+    cost. The 3B size + Q5_K_M GGUF was chosen precisely so the
+    model stays deployable on a modest owned rig, not just cloud.
+
+  **Model stays 3B** despite RunPod's bigger cards being available:
+  sizing up to 7B+ to fill cloud headroom would make the eventual
+  self-host harder + lock the variant to cloud. 3B at Q5_K_M is
+  deployable everywhere — RunPod Serverless now, modest owned rig
+  later. Keep the lock.
+
+  VRAM/quant reference (for whatever GPU hosts it): Q5_K_M weights
+  ≈ 2.3-2.5 GB, KV cache at 4096 ctx ≈ 0.5-1 GB. Fits a 6 GB card
+  with headroom; trivial on any RunPod card. Q6_K is the
+  fidelity-bump option if post-training eval wants it.
+- **`[LOCK]` Inference runtime:** **Ollama** (native CUDA, stable
+  HTTP server, GGUF support) on whatever host it lands on — RunPod
+  Serverless worker image for v1, owned hardware for v2.
+  mission-companion wires against the Ollama HTTP API regardless of
+  host, so the v1→v2 migration is a config change, not a rewrite.
+  llama.cpp is the fallback runtime.
 
 ## Training pipeline (three phases)
 

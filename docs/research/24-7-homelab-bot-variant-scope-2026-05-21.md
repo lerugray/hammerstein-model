@@ -87,13 +87,34 @@ queries that Claude Max currently absorbs:
     - **Hammerstein-7B v3a** — too big for homelab 24/7 + already
       shipped + not the use case.
 - **`[LOCK]` Quantization target:** **Q5_K_M GGUF** for homelab
-  deployment. ~3.5 GB VRAM footprint at 3B, fits on RTX 3060 / 4070
-  / similar consumer cards. Trains in BF16 on RunPod, converts to
-  GGUF at deploy time.
-- **`[LOCK]` Inference runtime on homelab:** **llama.cpp / Ollama**
-  (interchangeable; whichever Ray prefers). Both support GGUF Q5_K_M
-  natively + have stable HTTP servers for mission-companion to wire
-  against. Defer pick to Ray; both work.
+  deployment. Trains in BF16 on RunPod, converts to GGUF at deploy
+  time.
+
+  **Deployment target confirmed (2026-05-21):** home PC has an
+  **RTX 3050, 6 GB VRAM**, Windows 11, already running the GS bot
+  dispatcher (`state/homelab/scoping-2026-05-21.md`). VRAM budget
+  for a 3B model:
+    - Q5_K_M weights ≈ 2.3-2.5 GB
+    - KV cache at 4096 context ≈ 0.5-1 GB
+    - Windows desktop compositor + GS dispatcher overhead ≈ 0.5-1 GB
+      (the home PC is also Ray's daily Windows machine + always-on
+      bot host — the GPU is shared, not dedicated)
+    - **Total ≈ 3.5-4.5 GB — comfortable headroom inside 6 GB.**
+
+  Q5_K_M stays the lock: the headroom matters because the GPU is
+  shared. If post-training the model wants more fidelity, Q6_K
+  (~2.8 GB weights) still fits; Q8_0 (~3.6 GB) is borderline once
+  the desktop + dispatcher are accounted for — avoid Q8 on this
+  card. If hl-007 (spare-PC parts assessment) surfaces a bigger
+  card (RTX 3060 12GB / 3070 8GB), the quant + context budget
+  open up — but v1 ships fine on the RTX 3050 as-is. No hardware
+  upgrade is a blocker for this variant.
+- **`[LOCK]` Inference runtime on homelab:** **Ollama** on the
+  Windows side of the home PC (Ollama has a native Windows build;
+  no WSL2 needed for the GPU path — it uses the Windows CUDA
+  runtime directly). Stable HTTP server on :11434 for
+  mission-companion to wire against. llama.cpp is the fallback if
+  Ollama's Windows CUDA path misbehaves.
 
 ## Training pipeline (three phases)
 

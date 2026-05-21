@@ -48,7 +48,10 @@ if [ ! -f /tmp/nca-deps-installed ]; then
     echo "[1/4] Installing deps (~3-5 min first time)…"
     pip install -q --upgrade pip
     # OLMo via HF transformers (vanilla Trainer + bitsandbytes 4-bit; Unsloth OLMo support is incomplete)
-    pip install -q transformers datasets accelerate bitsandbytes evaluate lm-eval
+    # Pin transformers <4.50 — newer 5.x restructures Trainer imports.
+    # lm-eval pulls a conflicting transformers, so install it FIRST then pin explicitly.
+    pip install -q datasets accelerate bitsandbytes evaluate lm-eval
+    pip install -q --upgrade 'transformers>=4.46,<4.50'
     # NCA dataset needs scipy for .npz shard loading
     pip install -q scipy scikit-learn
     touch /tmp/nca-deps-installed

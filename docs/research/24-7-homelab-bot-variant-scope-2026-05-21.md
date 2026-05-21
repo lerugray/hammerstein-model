@@ -72,13 +72,16 @@ queries that Claude Max currently absorbs:
 
 ## `[LOCK]` Architecture
 
-- **`[LOCK]` Base model:** **Qwen3.6-3B-Instruct.**
-  Rationale: modern Qwen reasoning + Apache 2.0 license + 32k
-  context + matches the Qwen family already in Ray's stack
-  (Qwen3.6-plus is the prose flagship per his routing rules).
-  Unsloth supports it for QLoRA. 3B is the consumer-GPU sweet
-  spot — runs Q5_K_M GGUF at ~3 GB VRAM, leaves headroom for
-  context + simultaneous tools.
+- **`[LOCK]` Base model:** **Qwen/Qwen2.5-3B-Instruct.**
+  Original lock was Qwen3.6-3B-Instruct. Fallback applied 2026-05-21:
+  `Qwen/Qwen3.6-3B-Instruct` and `Qwen/Qwen3-3B-Instruct` both return
+  404 on HuggingFace (verified via HfApi). The Qwen3.6 family exists
+  at larger sizes (Qwen3.6-plus / 72B) but no 3B-Instruct variant is
+  published. Using Qwen/Qwen2.5-3B-Instruct (same Qwen family,
+  Apache 2.0, 32k ctx, same base the v3a 7B distillation built from).
+  Rationale for original choice still holds: modern Qwen reasoning +
+  Apache 2.0 license + 32k context + Qwen family consistency.
+  3B is the consumer-GPU sweet spot.
   Alternatives considered + rejected:
     - **Llama-3.2-3B-Instruct** — fine but Qwen reasoning edge
       shows on benchmarks at this size.

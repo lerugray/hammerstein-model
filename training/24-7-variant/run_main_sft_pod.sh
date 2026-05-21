@@ -1,12 +1,16 @@
 #!/bin/bash
-# Main SFT — Qwen3.6-3B-Instruct + Unsloth QLoRA on Hammerstein synthetic + Ray-stack SFT.
+# Main SFT — Qwen2.5-3B-Instruct vanilla peft QLoRA on Hammerstein synthetic + Ray-stack SFT.
 #
-# Goal: Qwen3.6-3B with Hammerstein voice + Ray-stack familiarity.
+# Goal: Qwen2.5-3B with Hammerstein voice + Ray-stack familiarity.
 # Deploys to homelab as Q5_K_M GGUF via Ollama. NOT pushed to HuggingFace.
 #
 # Scoping doc: docs/research/24-7-homelab-bot-variant-scope-2026-05-21.md
-# Base model: Qwen3.6-3B-Instruct (Apache 2.0, 32k ctx, [LOCK])
-# Method: QLoRA rank-16 via Unsloth (~70% less VRAM, 2× faster than vanilla LoRA)
+# Base model: Qwen/Qwen2.5-3B-Instruct (Apache 2.0, 32k ctx)
+#   NOTE: Qwen3.6-3B-Instruct [LOCK] does not exist on HuggingFace (verified 2026-05-21).
+#   Fallback: Qwen2.5-3B-Instruct (same family, Apache 2.0).
+# Method: vanilla peft QLoRA — BitsAndBytesConfig 4-bit NF4 + LoraConfig r=16
+#   NOTE: Unsloth dropped — incompatible with pod torch 2.4.1+cu124
+#   (AttributeError: module 'torch._inductor' has no attribute 'config')
 #
 # Pod: RTX 4090 (24 GB VRAM), CUDA 12.4 + PyTorch 2.4 template, 30 GB disk.
 # Estimated cost: ~$3 ($0.34-0.69/hr × 4-6 hrs).
@@ -15,8 +19,8 @@
 # Pipeline:
 #   [1/5] Repo + deps
 #   [2/5] Data validation (Hammerstein synthetic + Ray-stack SFT)
-#   [3/5] Train Qwen3.6-3B QLoRA
-#   [4/5] Merge adapter + convert to GGUF Q5_K_M
+#   [3/5] Train Qwen2.5-3B QLoRA
+#   [4/5] Merge adapter + convert to GGUF Q5_K_M via llama.cpp
 #   [5/5] Package for scp
 #
 # FIRE-READY — does NOT auto-launch the pod. Run this script on the pod after SSH.
@@ -53,10 +57,10 @@ cd "$REPO_DIR"
 git fetch --all && git checkout master && git pull
 
 if [ ! -f /tmp/sft-deps-installed ]; then
-    echo "[1/5] Installing deps (~3-5 min first time)…"
+    echo "[1/5] Installing deps (~3-5 min first time)..."
     pip install -q --upgrade pip
-    pip install -q "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
-    pip install -q trl peft transformers datasets accelerate bitsandbytes
+    # Pin transformers <4.50: transformers 5.x breaks Trainer imports
+    pip install -q "transformers>=4.46,<4.50" trl peft datasets accelerate bitsandbytes sentencepiece
     touch /tmp/sft-deps-installed
 fi
 
@@ -95,7 +99,7 @@ mkdir -p "$SFT_OUTPUT" "$GGUF_OUTPUT" "$RESULTS_DIR"
 # --- 3. Train QLoRA ---
 if [ ! -f "$SFT_OUTPUT/lora-adapter/adapter_config.json" ]; then
     echo ""
-    echo "[3/5] Training Qwen3.6-3B QLoRA…"
+    echo "[3/5] Training Qwen2.5-3B vanilla peft QLoRA..."
     echo "      rank=16 alpha=32 lr=2e-4 bs=2 grad_accum=16 epochs=3 max_seq=4096"
     echo "      Expected: 4-6 hrs on RTX 4090"
     python training/24-7-variant/train_main_sft.py \
@@ -108,51 +112,75 @@ else
 fi
 
 # --- 4. Merge adapter + GGUF conversion ---
-if [ ! -f "$GGUF_OUTPUT/model.gguf" ]; then
+# NOTE: Merge is now handled inside train_main_sft.py (vanilla peft merge_and_unload).
+#   The merged HF model lands at $SFT_OUTPUT/merged/ automatically after training.
+#   This step only runs GGUF conversion via llama.cpp.
+
+MERGED_DIR="$SFT_OUTPUT/merged"
+
+if [ ! -f "$GGUF_OUTPUT/model-q5_k_m.gguf" ]; then
     echo ""
-    echo "[4/5] Merging LoRA adapter into base model…"
-    python -c "
-from unsloth import FastLanguageModel
-import torch
+    echo "[4/5] Converting merged model to GGUF Q5_K_M via llama.cpp..."
 
-model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name='$SFT_OUTPUT/lora-adapter',
-    max_seq_length=4096,
-    dtype=torch.bfloat16,
-    load_in_4bit=False,  # merge to full precision first
-)
-model.save_pretrained_merged('$SFT_OUTPUT/merged', tokenizer, save_method='merged_16bit')
-print('Merge complete.')
-"
-
-    echo "      Converting merged model to GGUF Q5_K_M…"
-    # Use llama.cpp convert script (bundled with unsloth or installed separately)
-    if python -c "import llama_cpp" 2>/dev/null; then
-        python -c "
-from llama_cpp import Llama
-print('llama-cpp-python available — use its convert utility')
-"
+    if [ ! -d "$MERGED_DIR/config.json" ] && [ ! -f "$MERGED_DIR/config.json" ]; then
+        echo "      Waiting for merged model at $MERGED_DIR (produced by train step)..."
+        if [ ! -f "$MERGED_DIR/config.json" ]; then
+            echo "ERROR: Merged model not found at $MERGED_DIR"
+            echo "  Expected train_main_sft.py to write it. Check training log."
+            exit 1
+        fi
     fi
 
-    # Unsloth's built-in GGUF export (preferred — avoids separate llama.cpp build)
-    python -c "
-from unsloth import FastLanguageModel
-import torch
+    # Clone llama.cpp if not present
+    if [ ! -d /workspace/llama.cpp ]; then
+        echo "      Cloning llama.cpp..."
+        git clone --depth 1 https://github.com/ggerganov/llama.cpp.git /workspace/llama.cpp
+        pip install -q -r /workspace/llama.cpp/requirements.txt 2>/dev/null || true
+    fi
 
-model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name='$SFT_OUTPUT/merged',
-    max_seq_length=4096,
-    dtype=torch.bfloat16,
-    load_in_4bit=False,
-)
-# Save GGUF Q5_K_M to output dir
-model.save_pretrained_gguf(
-    '$GGUF_OUTPUT',
-    tokenizer,
-    quantization_method='q5_k_m',
-)
-print('GGUF Q5_K_M written to $GGUF_OUTPUT')
-"
+    mkdir -p "$GGUF_OUTPUT"
+
+    # Step 1: convert HF model to GGUF F16
+    GGUF_F16="$GGUF_OUTPUT/model-f16.gguf"
+    if [ ! -f "$GGUF_F16" ]; then
+        echo "      Converting to GGUF F16..."
+        python /workspace/llama.cpp/convert_hf_to_gguf.py \
+            "$MERGED_DIR" \
+            --outtype f16 \
+            --outfile "$GGUF_F16"
+    fi
+
+    # Step 2: quantize F16 -> Q5_K_M
+    GGUF_Q5="$GGUF_OUTPUT/model-q5_k_m.gguf"
+    if [ -f "$GGUF_F16" ] && [ ! -f "$GGUF_Q5" ]; then
+        echo "      Quantizing F16 -> Q5_K_M..."
+        # Build llama-quantize if not present
+        if [ ! -f /workspace/llama.cpp/build/bin/llama-quantize ] && \
+           [ ! -f /workspace/llama.cpp/llama-quantize ]; then
+            echo "      Building llama.cpp quantizer (cmake)..."
+            cmake -B /workspace/llama.cpp/build -S /workspace/llama.cpp \
+                -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -5
+            cmake --build /workspace/llama.cpp/build --config Release \
+                --target llama-quantize -j$(nproc) 2>&1 | tail -10
+        fi
+
+        QUANTIZE_BIN=""
+        if [ -f /workspace/llama.cpp/build/bin/llama-quantize ]; then
+            QUANTIZE_BIN=/workspace/llama.cpp/build/bin/llama-quantize
+        elif [ -f /workspace/llama.cpp/llama-quantize ]; then
+            QUANTIZE_BIN=/workspace/llama.cpp/llama-quantize
+        fi
+
+        if [ -n "$QUANTIZE_BIN" ]; then
+            "$QUANTIZE_BIN" "$GGUF_F16" "$GGUF_Q5" Q5_K_M
+            echo "      GGUF Q5_K_M written to $GGUF_Q5"
+            rm -f "$GGUF_F16"  # remove intermediate F16 to save disk
+        else
+            echo "      WARN: llama-quantize binary not found after build."
+            echo "      TODO: quantize manually: llama-quantize $GGUF_F16 $GGUF_Q5 Q5_K_M"
+            echo "      The merged HF model at $MERGED_DIR is ready for manual GGUF conversion."
+        fi
+    fi
 else
     echo "[4/5] GGUF exists — skipping conversion."
 fi
@@ -162,10 +190,13 @@ if [ -d "$SFT_OUTPUT/lora-adapter" ] && [ ! -f "$SFT_OUTPUT/lora-adapter.tar.gz"
     tar -czf "$SFT_OUTPUT/lora-adapter.tar.gz" -C "$SFT_OUTPUT" lora-adapter
 fi
 
-# Tar GGUF
-GGUF_FILE=$(ls "$GGUF_OUTPUT"/*.gguf 2>/dev/null | head -1)
-if [ -n "$GGUF_FILE" ] && [ ! -f "$GGUF_OUTPUT/model.tar.gz" ]; then
-    tar -czf "$GGUF_OUTPUT/model.tar.gz" -C "$GGUF_OUTPUT" "$(basename $GGUF_FILE)"
+# Tar GGUF (Q5_K_M preferred; fall back to any .gguf present)
+GGUF_FILE="$GGUF_OUTPUT/model-q5_k_m.gguf"
+if [ ! -f "$GGUF_FILE" ]; then
+    GGUF_FILE=$(ls "$GGUF_OUTPUT"/*.gguf 2>/dev/null | head -1)
+fi
+if [ -n "$GGUF_FILE" ] && [ -f "$GGUF_FILE" ] && [ ! -f "$GGUF_OUTPUT/model.tar.gz" ]; then
+    tar -czf "$GGUF_OUTPUT/model.tar.gz" -C "$GGUF_OUTPUT" "$(basename "$GGUF_FILE")"
 fi
 
 # --- 5. Quick eval (refusal alignment spot-check) ---

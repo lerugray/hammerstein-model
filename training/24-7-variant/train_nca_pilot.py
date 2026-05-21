@@ -33,7 +33,11 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 DATASET_REPO = "Tejaskumar/Emergent-NCA-Sequences-5M"
-BASE_MODEL = "allenai/OLMo-1B"
+# allenai/OLMo-1B needs the external hf_olmo package (remote-code path).
+# The -hf variant is transformers-native (OlmoForCausalLM, in transformers
+# 4.40+) — no extra fragile dep. The pod's pinned transformers 4.46-4.50
+# supports it natively.
+BASE_MODEL = "allenai/OLMo-1B-hf"
 NCA_VOCAB_SIZE = 32           # symbolic tokens per NCA quantization
 TARGET_TOKENS = 100_000_000   # 100M token subset
 HIGH_ENTROPY_THRESHOLD = 0.6  # chaos score filter from dataset CSV metadata

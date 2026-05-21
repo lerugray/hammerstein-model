@@ -300,9 +300,11 @@ def run_training(args: argparse.Namespace) -> None:
         packing=False,
     )
 
+    # trl >=0.12 renamed the SFTTrainer tokenizer kwarg to processing_class
+    # (mirrors the transformers 4.46+ Trainer rename). The pod's trl is >=0.12.
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=train_ds,
         eval_dataset=eval_ds,
         args=sft_config,

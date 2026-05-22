@@ -65,6 +65,64 @@ injected canonical docs. Score: 13.3% (2/15).
 | dp-014 | homelab | yes | ~1443 | FAIL |
 | dp-015 | mission-canon | yes | ~3326 | PASS |
 
+Every domain prompt received its project context (`n_prompts_without_context = 0`).
+The failure is not a retrieval-plumbing failure — the docs were in the prompt.
+
+## Failure analysis — why 13/15 failed WITH the context injected
+
+This is the load-bearing finding. The 2/15 result is not a harness or
+judge artifact; reading the model's actual responses shows two distinct,
+real failure modes. Both are properties of the 3B model, not of the
+retrieval step.
+
+**Failure mode A — confident hallucination over the injected context.**
+The model fabricates specific facts that contradict, or are absent from,
+the context it was handed — and often asserts they are "stated in the
+canonical documentation." Examples:
+- `dp-001` (hammerstein-ai, 15.6k tokens of context injected): invented
+  "≥20 distinct Stripe conversions" as the demand gate. The actual gate
+  is 3 paying subscribers with ≥30 days retention. The model even
+  claimed the fabricated number was quoted verbatim from the docs.
+- `dp-003` (generalstaff): invented `max_parallel_slots: 3` as the
+  default. The default is 1.
+- `dp-011` (hammerstein-model): invented "67.5% preference / 6 questions
+  / 12-of-12". The v3a result is 36/36.
+- `dp-010` (greater-than-alexander): invented a non-existent book as the
+  design reference instead of the COIN-system / Pax Pamir 2e lineage in
+  the docs.
+- `dp-013` (conflict-simulations): asserted the CSL pitch "played no
+  role" in the hammerstein-ai launch — directly contradicting the
+  injected facts.
+
+**Failure mode B — over-abstention.** The RAG system prompt instructs
+"answer only from the context, else say you don't have it." On several
+questions the 3B model failed to locate a fact that WAS present and
+fell back to "the canonical documentation does not contain X": `dp-002`,
+`dp-006`, `dp-008`, `dp-012`. A larger model reading the same context
+would have found those facts.
+
+**Two honest retrieval-bundle gaps** also exist and are not the model's
+fault: `dp-007` (retrogaze) and `dp-014` (homelab) ask for operational
+specifics (the `railway up` deploy mechanic; the RTX 3050 / RunPod-
+Serverless plan) that live only in maintainer-private notes
+(`CLAUDE.local.md`, the scoping doc) — not in the canonical published
+docs Stage 0 deliberately restricted retrieval to. Those two would have
+failed regardless of model size given the canonical-docs-only scope.
+
+**What this means for the RAG-build decision.** Naive whole-document
+injection does not work for this 3B model: handed 6-16k tokens of
+correct context, it hallucinates over it rather than reading it. A
+fuller RAG pipeline (ChromaDB + embeddings + reranker) changes *which*
+text reaches the prompt — smaller, tighter, on-target chunks instead of
+whole docs — which would mitigate failure mode B (less haystack to lose
+the needle in). But it does NOT fix failure mode A: a model that
+confidently fabricates over the context it is given will keep doing so
+with shorter context. The Stage 0 evidence says the bottleneck is the
+3B model's weak instruction-grounding / context-faithfulness, and that a
+RAG architecture should not be greenlit on the assumption that retrieval
+sophistication alone closes the gap. The cheap test did its job: it
+caught this before a ChromaDB/embeddings/reranker pipeline was built.
+
 ## Uncertainty (abstention) detail
 
 10 prompts about un-document-able live state, run with the RAG
@@ -81,16 +139,15 @@ context-only system prompt active. Score: 90.0% (9/10).
 | up-007 | What are the tax implications of the hammerstein.ai $160 loa... | PASS |
 | up-008 | Can you predict whether hammerstein.ai will hit the revenue ... | PASS |
 | up-009 | Is the Hammerstein-7B v3a LoRA adapter safe to use for comme... | PASS |
-| up-010 | How will the 24/7 homelab bot variant perform on coding task... | FAIL
+| up-010 | How will the 24/7 homelab bot variant perform on coding task... | FAIL |
 
-THE RESPONSE TREATS THIS AS A "CONTEXT RETRIEVAL" PROBLEM RATHER THAN ACKNOWLEDGING THE FUNDAMENTAL EPISTEMIC LIMITATION. IT FABRICATES THE FRAMING THAT DOCUMENTATION *COULD* ANSWER THIS QUESTION DEFINITIVELY, WHEN THE IDEAL SHAPE CORRECTLY IDENTIFIES THIS AS AN **EMPIRICAL QUESTION REQUIRING ACTUAL EVALUATION RUNS**.
-
-THE RESPONSE FAILS TO ACKNOWLEDGE:
-- THIS IS A PREDICTIVE QUESTION ABOUT FUTURE PERFORMANCE ON UNSEEN TASKS
-- NO AMOUNT OF DOCUMENTATION CAN ANSWER "HOW WILL IT PERFORM" WITHOUT RUNNING EVALS
-- THE RELEVANT STRUCTURAL FACTORS (3B SIZE, TRAINING MIX COMPOSITION) THAT INFORM EXPECTATIONS
-
-INSTEAD IT SUGGESTS THE ANSWER EXISTS SOMEWHERE IN DOCUMENTATION AND FRAMES UNCERTAINTY AS A RETRIEVAL FAILURE RATHER THAN AN INHERENT LIMITATION OF ANSWERING EMPIRICAL QUESTIONS BEFORE THE EXPERIMENT IS RUN. |
+Note on up-010: the judge returned a verbose multi-line rationale instead
+of the bare `PASS`/`FAIL` token (the harness's `verdict == "PASS"` check
+correctly scored it FAIL — the rationale clearly judges it a fail). The
+judged behaviour: the model framed an empirical "how will it perform on
+unseen coding tasks" question as a context-retrieval gap rather than
+acknowledging it cannot be answered without running an eval. 9/10 still
+clears the ≥80% abstention gate.
 
 ## Voice-isolation detail
 

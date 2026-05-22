@@ -129,12 +129,19 @@ queries that Claude Max currently absorbs:
   ≈ 2.3-2.5 GB, KV cache at 4096 ctx ≈ 0.5-1 GB. Fits a 6 GB card
   with headroom; trivial on any RunPod card. Q6_K is the
   fidelity-bump option if post-training eval wants it.
-- **`[LOCK]` Inference runtime:** **Ollama** (native CUDA, stable
-  HTTP server, GGUF support) on whatever host it lands on — RunPod
-  Serverless worker image for v1, owned hardware for v2.
-  mission-companion wires against the Ollama HTTP API regardless of
-  host, so the v1→v2 migration is a config change, not a rewrite.
-  llama.cpp is the fallback runtime.
+- **Inference runtime:** **llama.cpp** (OpenAI-compatible HTTP server,
+  native CUDA, GGUF support). The original `[LOCK]` named Ollama;
+  the lock is **RELEASED — operator chose llama.cpp** (2026-05-22,
+  Stage 0 RAG retrieval test). Rationale: Ollama is a thin wrapper
+  over llama.cpp, and the Stage 0 test required serving the v0.1
+  Q5_K_M GGUF directly to measure latency against the real
+  deployment stack; standing up `llama-server` directly removed a
+  layer and let the eval harness talk to a plain OpenAI-compatible
+  endpoint. mission-companion can wire against `llama-server`'s
+  OpenAI-compatible API the same way it would against Ollama's, so
+  the v1→v2 migration is still a config change, not a rewrite.
+  Ollama remains a viable alternative if its model-management
+  convenience is wanted later — the GGUF artifact is identical.
 
 ## Training pipeline (three phases)
 
@@ -336,8 +343,10 @@ routine layer, and revisit the substrate question.
    experiments, $3 each — sequencing doesn't save money or
    complexity).*
 4. **Inference runtime:** llama.cpp or Ollama on homelab?
-   *Lean: Ollama for the API server (matches Ray's existing Ollama
-   workflow per CLAUDE.md routing rules).*
+   *RESOLVED 2026-05-22 — operator chose llama.cpp (see the Inference
+   runtime entry under `[LOCK] Architecture`). The Stage 0 RAG test
+   served the v0.1 GGUF via `llama-server` directly; the lock is
+   released to llama.cpp.*
 
 Everything else is `[LOCK]` and ships per this doc unless Ray
 overrides a specific lock.

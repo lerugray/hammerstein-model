@@ -28,8 +28,21 @@ Merged model path: training/24-7-variant/output/qwen3b-homelab-lora/merged/
 Usage:
   python training/24-7-variant/eval_24-7_variant.py [--output OUTPUT] [--dry-run]
 
-  --output   Base directory for output files (default: training/24-7-variant/output)
-  --dry-run  Validate prompt files + env, print plan, skip model loading and judge calls.
+  --output      Directory for output files (default: training/24-7-variant/eval)
+  --dry-run     Validate prompt files + env, print plan, skip model + judge calls.
+
+Stage 0 RAG retrieval test (--rag):
+  python training/24-7-variant/eval_24-7_variant.py --rag [--server-url URL]
+
+  Before building a full RAG pipeline (ChromaDB / embeddings / reranker), the
+  --rag mode asks the cheapest gating question: if you inject the relevant
+  project's canonical docs straight into the prompt, does the v0.1 model answer
+  the domain questions? It infers via a llama.cpp server (the real Q5_K_M GGUF
+  deployment stack) and runs four measurements: domain coverage with injected
+  context (gate >=60%), uncertainty/abstention (gate >=80%), voice-isolation on
+  zero-domain-fact prompts (report-only), and long-response latency p50 on the
+  real stack (gate <8s). Requires training/24-7-variant/eval/rag-context.json
+  (build it with build_rag_context.py) and a running llama.cpp server.
 """
 
 from __future__ import annotations
@@ -56,6 +69,31 @@ VOICE_PROMPTS_FILE = EVAL_DIR / "voice-prompts.jsonl"
 DOMAIN_PROMPTS_FILE = EVAL_DIR / "domain-prompts.jsonl"
 REFUSAL_PROMPTS_FILE = EVAL_DIR / "refusal-prompts.jsonl"
 UNCERTAINTY_PROMPTS_FILE = EVAL_DIR / "uncertainty-prompts.jsonl"
+
+# --- Stage 0 RAG mode files ---
+# Per-project canonical-doc context bundle, built by build_rag_context.py on a
+# machine that has the project repos + generalstaff-private checked out.
+RAG_CONTEXT_FILE = EVAL_DIR / "rag-context.json"
+# Voice-isolation set: advisory/reasoning prompts that need ZERO project facts,
+# so the voice-alignment register can be measured without a domain confound.
+VOICE_ISOLATION_PROMPTS_FILE = EVAL_DIR / "voice-isolation-prompts.jsonl"
+
+# llama.cpp server default. The Stage 0 run measures latency against the REAL
+# deployment stack — a Q5_K_M GGUF served by llama.cpp — so RAG mode talks to
+# llama-server's OpenAI-compatible endpoint rather than loading a HF model.
+LLAMACPP_DEFAULT_URL = "http://127.0.0.1:8080/v1/chat/completions"
+
+# System prompt for RAG domain questions: answer ONLY from injected context,
+# else admit the gap. This is the retrieval-grounding instruction Stage 0 tests.
+RAG_DOMAIN_SYSTEM = (
+    "You are Ray's homelab advisor. You have been given excerpts from the "
+    "canonical documentation of one of Ray's projects below, under CONTEXT. "
+    "Answer the user's question about that project using ONLY facts stated in "
+    "the CONTEXT. Be specific: name the exact entities, IDs, decisions, and "
+    "numbers the CONTEXT gives. If the CONTEXT does not contain the answer, "
+    "say plainly that you don't have that information rather than guessing. "
+    "Do not invent project facts that are not in the CONTEXT."
+)
 
 # Judge model: Claude Sonnet 4.5 via OpenRouter
 # Rationale: best-available voice-aware judge within the OR cost envelope;
@@ -195,6 +233,332 @@ def generate_response(
         skip_special_tokens=True,
     ).strip()
     return response, elapsed
+
+
+# ---------------------------------------------------------------------------
+# RAG mode: llama.cpp HTTP inference + per-project context injection
+# ---------------------------------------------------------------------------
+
+def llamacpp_generate(
+    server_url: str,
+    user_prompt: str,
+    system_prompt: str | None = None,
+    max_tokens: int = 512,
+) -> tuple[str, float]:
+    """Generate via a llama.cpp server (OpenAI-compatible endpoint).
+
+    Stage 0 measures latency on the actual deployment stack — a Q5_K_M GGUF
+    served by llama.cpp — so RAG-mode inference goes through this rather than
+    transformers. Returns (response_text, elapsed_seconds). elapsed is wall
+    time of the HTTP round trip, i.e. the real end-to-end latency a homelab
+    caller would see.
+    """
+    import urllib.request
+
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": user_prompt})
+
+    payload = json.dumps({
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": 0.0,
+        "stream": False,
+        # cache_prompt lets llama.cpp reuse the KV cache for a shared system
+        # prefix; harmless here, and closer to how a real server would run.
+        "cache_prompt": True,
+    }).encode()
+
+    req = urllib.request.Request(
+        server_url,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    t0 = time.monotonic()
+    with urllib.request.urlopen(req, timeout=300) as resp:
+        data = json.loads(resp.read())
+    elapsed = time.monotonic() - t0
+
+    text = data["choices"][0]["message"]["content"].strip()
+    return text, elapsed
+
+
+def load_rag_context(path: Path) -> dict:
+    """Load the per-project context bundle built by build_rag_context.py."""
+    if not path.exists():
+        print(f"ERROR: RAG context bundle not found: {path}")
+        print("  Build it first: python training/24-7-variant/build_rag_context.py")
+        sys.exit(1)
+    return json.loads(path.read_text())
+
+
+def build_rag_prompt(question: str, project: str, rag_context: dict) -> tuple[str, bool]:
+    """Augment a domain question with the injected project context.
+
+    Returns (augmented_user_prompt, context_found). context_found is False if
+    the bundle has no entry for the project — the question still runs, but
+    ungrounded, which the results record honestly.
+    """
+    entry = rag_context.get(project)
+    if not entry or not entry.get("context"):
+        return question, False
+    context_block = entry["context"]
+    augmented = (
+        f"CONTEXT (canonical documentation for the project '{project}'):\n"
+        f"------------------------------------------------------------\n"
+        f"{context_block}\n"
+        f"------------------------------------------------------------\n\n"
+        f"QUESTION: {question}"
+    )
+    return augmented, True
+
+
+def eval_domain_coverage_rag(
+    server_url: str,
+    prompts: list[dict],
+    rag_context: dict,
+    api_key: str,
+    verbose: bool = False,
+) -> dict:
+    """Axis 2 in RAG mode: each prompt augmented with injected project docs.
+
+    Returns the same shape as eval_domain_coverage plus per-item context
+    diagnostics (context_found, context_tokens, prompt_chars).
+    """
+    n_pass = 0
+    details = []
+    max_ctx_tokens = 0
+    n_no_context = 0
+
+    for item in prompts:
+        question = item["prompt"]
+        rubric = item.get("rubric", "")
+        project = item.get("project", "unknown")
+
+        augmented, found = build_rag_prompt(question, project, rag_context)
+        if not found:
+            n_no_context += 1
+        ctx_tokens = rag_context.get(project, {}).get("approx_tokens", 0)
+        max_ctx_tokens = max(max_ctx_tokens, ctx_tokens)
+
+        response, _ = llamacpp_generate(
+            server_url, augmented, system_prompt=RAG_DOMAIN_SYSTEM
+        )
+
+        judge_user = (
+            f"PROJECT CONTEXT: {project}\n"
+            f"RUBRIC: {rubric}\n\n"
+            f"PROMPT: {question}\n\n"
+            f"RESPONSE:\n{response}"
+        )
+        verdict = judge_call(api_key, DOMAIN_JUDGE_SYSTEM, judge_user).strip().upper()
+        passed = verdict == "PASS"
+        if passed:
+            n_pass += 1
+
+        details.append({
+            "id": item.get("id"),
+            "project": project,
+            "prompt": question,
+            "response": response,
+            "verdict": verdict,
+            "passed": passed,
+            "context_found": found,
+            "context_approx_tokens": ctx_tokens,
+            "augmented_prompt_chars": len(augmented),
+        })
+        if verbose:
+            status = "PASS" if passed else "FAIL"
+            ctxf = "" if found else " (NO CONTEXT)"
+            print(f"    [{item.get('id')}] [{project}] {status}{ctxf}")
+
+    n_total = len(prompts)
+    score = n_pass / n_total if n_total > 0 else 0.0
+    return {
+        "score": score,
+        "n_pass": n_pass,
+        "n_total": n_total,
+        "details": details,
+        "rag_mode": True,
+        "max_context_approx_tokens": max_ctx_tokens,
+        "n_prompts_without_context": n_no_context,
+    }
+
+
+def eval_uncertainty_honest_rag(
+    server_url: str,
+    prompts: list[dict],
+    api_key: str,
+    verbose: bool = False,
+) -> dict:
+    """Axis 4 in RAG mode. Uncertainty prompts get NO injected context — they
+    ask about live state the docs cannot contain (Stripe counts, run results).
+    The RAG_DOMAIN_SYSTEM grounding instruction still applies, which is the
+    point: a system prompt that says 'only answer from context' should make
+    the model MORE willing to abstain, not less. This axis confirms abstention
+    does not regress below 80% with context-grounding active."""
+    n_pass = 0
+    details = []
+
+    for item in prompts:
+        question = item["prompt"]
+        ideal_shape = item.get("ideal_shape", "")
+
+        # No CONTEXT block: these questions are about un-document-able live
+        # state. System prompt still instructs context-only answering.
+        response, _ = llamacpp_generate(
+            server_url, question, system_prompt=RAG_DOMAIN_SYSTEM
+        )
+
+        judge_user = (
+            f"IDEAL SHAPE: {ideal_shape}\n\n"
+            f"PROMPT: {question}\n\n"
+            f"RESPONSE:\n{response}"
+        )
+        verdict = judge_call(api_key, UNCERTAINTY_JUDGE_SYSTEM, judge_user).strip().upper()
+        passed = verdict == "PASS"
+        if passed:
+            n_pass += 1
+
+        details.append({
+            "id": item.get("id"),
+            "prompt": question,
+            "response": response,
+            "verdict": verdict,
+            "passed": passed,
+        })
+        if verbose:
+            print(f"    [{item.get('id')}] {'PASS' if passed else 'FAIL'}")
+
+    n_total = len(prompts)
+    score = n_pass / n_total if n_total > 0 else 0.0
+    return {
+        "score": score, "n_pass": n_pass, "n_total": n_total,
+        "details": details, "rag_mode": True,
+    }
+
+
+# Judge for voice-isolation: scores a single response for Hammerstein register
+# (no pairwise base comparison — these prompts need zero project facts, so the
+# question is purely "does this response carry the register").
+VOICE_ISOLATION_JUDGE_SYSTEM = """You are judging whether a single AI response embodies the Hammerstein advisory register.
+
+The Hammerstein register is:
+- Direct, confident, structurally precise — names failure modes explicitly.
+- Uses the clever-lazy / stupid-industrious / clever-industrious taxonomy where relevant.
+- Surfaces uncertainty honestly rather than papering over it.
+- Gives actionable next steps and gates, not vague encouragement.
+- Focuses on the specific bottleneck / structural problem, not generic best practices.
+
+These prompts require NO project-specific knowledge — judge ONLY the register and reasoning quality.
+
+Output ONLY "PASS" or "FAIL". PASS = the response clearly carries the Hammerstein register (direct, names the failure mode or structural problem, gives a concrete next step). FAIL = generic advice, hedged encouragement, or a vague non-answer. No explanation."""
+
+
+def eval_voice_isolation_rag(
+    server_url: str,
+    prompts: list[dict],
+    api_key: str,
+    verbose: bool = False,
+) -> dict:
+    """Voice-isolation: run the voice eval on prompts needing ZERO domain facts.
+
+    Single-response register judgment (not pairwise) — there is no domain
+    confound to control for, so the question is simply whether the response
+    carries the Hammerstein register."""
+    n_pass = 0
+    details = []
+
+    for item in prompts:
+        question = item["prompt"]
+        response, _ = llamacpp_generate(server_url, question)
+
+        judge_user = f"PROMPT: {question}\n\nRESPONSE:\n{response}"
+        verdict = judge_call(
+            api_key, VOICE_ISOLATION_JUDGE_SYSTEM, judge_user
+        ).strip().upper()
+        passed = verdict == "PASS"
+        if passed:
+            n_pass += 1
+
+        details.append({
+            "id": item.get("id"),
+            "prompt": question,
+            "response": response,
+            "verdict": verdict,
+            "passed": passed,
+        })
+        if verbose:
+            print(f"    [{item.get('id')}] {'PASS' if passed else 'FAIL'}")
+
+    n_total = len(prompts)
+    score = n_pass / n_total if n_total > 0 else 0.0
+    return {
+        "score": score, "n_pass": n_pass, "n_total": n_total,
+        "details": details, "rag_mode": True,
+    }
+
+
+def eval_latency_rag(
+    server_url: str,
+    domain_prompts: list[dict],
+    rag_context: dict,
+    verbose: bool = False,
+) -> dict:
+    """Latency in RAG mode — long-response p50 on the real Q5_K_M / llama.cpp
+    stack, measured on the augmented domain prompts (the heaviest, most
+    realistic payload: full project context injected + a substantive answer).
+
+    Stage 0 gates long-response p50 < 8s. We sample all 15 domain prompts; the
+    augmented prompt is the genuine deployment-grade workload."""
+    latencies = []
+    details = []
+
+    for item in domain_prompts:
+        question = item["prompt"]
+        project = item.get("project", "unknown")
+        augmented, _ = build_rag_prompt(question, project, rag_context)
+
+        response, elapsed = llamacpp_generate(
+            server_url, augmented, system_prompt=RAG_DOMAIN_SYSTEM, max_tokens=512
+        )
+        word_count = len(response.split())
+        bucket = "short" if word_count <= SHORT_RESPONSE_WORD_THRESHOLD else "long"
+
+        latencies.append({"bucket": bucket, "elapsed_s": elapsed})
+        details.append({
+            "id": item.get("id"),
+            "project": project,
+            "bucket": bucket,
+            "elapsed_s": round(elapsed, 2),
+            "word_count": word_count,
+        })
+        if verbose:
+            print(f"    [{item.get('id')}] {bucket} | {elapsed:.2f}s | {word_count} words")
+
+    short_lat = sorted(x["elapsed_s"] for x in latencies if x["bucket"] == "short")
+    long_lat = sorted(x["elapsed_s"] for x in latencies if x["bucket"] == "long")
+    short_p50 = short_lat[len(short_lat) // 2] if short_lat else None
+    long_p50 = long_lat[len(long_lat) // 2] if long_lat else None
+
+    short_pass = (short_p50 is None) or (short_p50 <= SHIP_GATE["latency_short_s"])
+    long_pass = (long_p50 is None) or (long_p50 <= SHIP_GATE["latency_long_s"])
+
+    return {
+        "passed": short_pass and long_pass,
+        "short_p50_s": round(short_p50, 2) if short_p50 is not None else None,
+        "long_p50_s": round(long_p50, 2) if long_p50 is not None else None,
+        "short_gate_s": SHIP_GATE["latency_short_s"],
+        "long_gate_s": SHIP_GATE["latency_long_s"],
+        "short_pass": short_pass,
+        "long_pass": long_pass,
+        "n_short": len(short_lat),
+        "n_long": len(long_lat),
+        "details": details,
+        "rag_mode": True,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -707,6 +1071,280 @@ def write_results(
 
 
 # ---------------------------------------------------------------------------
+# Stage 0 RAG results report
+# ---------------------------------------------------------------------------
+
+def write_rag_results(
+    output_dir: Path,
+    domain: dict,
+    uncertainty: dict,
+    voice_iso: dict,
+    latency: dict,
+    server_url: str,
+) -> Path:
+    """Write RESULTS-stage0-rag-<date>.md. Returns the path.
+
+    Stage 0 reports four numbers vs gates and a PASS/FAIL on the domain >=60%
+    gate — the gate that decides whether a RAG architecture gets built."""
+    today = date.today().strftime("%Y-%m-%d")
+    out_path = output_dir / f"RESULTS-stage0-rag-{today}.md"
+
+    def pct(s: float) -> str:
+        return f"{s * 100:.1f}%"
+
+    def gs(passed: bool) -> str:
+        return "PASS" if passed else "FAIL"
+
+    domain_pass = domain["score"] >= SHIP_GATE["domain_coverage"]
+    unc_pass = uncertainty["score"] >= SHIP_GATE["uncertainty_honest"]
+    long_pass = latency["long_pass"]
+
+    domain_verdict = (
+        "STAGE 0 PASS — cheap doc-injection clears the 60% domain gate. "
+        "A RAG pipeline (ChromaDB / embeddings / reranker) is worth building."
+        if domain_pass else
+        "STAGE 0 FAIL — cheap doc-injection does NOT clear the 60% domain "
+        "gate. Injecting canonical docs into the prompt is not sufficient; "
+        "a fuller RAG build would need to clear this bar first or the "
+        "approach needs rethinking."
+    )
+
+    lines = [
+        f"# Stage 0 — RAG Retrieval Test Results — {today}",
+        "",
+        "**What this is:** the cheapest question that gates a RAG build for the",
+        "24/7 homelab bot variant. v0.1's 5-axis eval failed domain coverage",
+        "0/15 — the SFT model has no project facts. Before building a RAG",
+        "pipeline (ChromaDB / embeddings / reranker), Stage 0 asks: if you just",
+        "inject the relevant project's canonical docs into the prompt, does the",
+        "v0.1 model answer the domain questions?",
+        "",
+        "**Scoping doc:** `docs/research/24-7-homelab-bot-variant-scope-2026-05-21.md`",
+        f"**Model:** v0.1 = Qwen2.5-3B-Instruct + homelab QLoRA adapter, Q5_K_M GGUF",
+        f"**Inference stack:** llama.cpp server (`{server_url}`) — the real",
+        "deployment-grade stack, so latency is measured honestly.",
+        f"**Judge model:** `{JUDGE_MODEL}` (via OpenRouter)",
+        "**Retrieval:** per-project canonical docs only (README.md, MISSION.md,",
+        "compacted tasks.json, INDEX.md entry). Session notes excluded as noise.",
+        "",
+        "## Stage 0 verdict",
+        "",
+        f"**{domain_verdict}**",
+        "",
+        "## The four numbers vs their gates",
+        "",
+        "| Measurement | Result | Gate | Status |",
+        "|-------------|--------|------|--------|",
+        f"| Domain coverage (--rag) | {pct(domain['score'])} ({domain['n_pass']}/{domain['n_total']}) | ≥60% (9/15) | {gs(domain_pass)} |",
+        f"| Uncertainty (abstention) | {pct(uncertainty['score'])} ({uncertainty['n_pass']}/{uncertainty['n_total']}) | ≥80% | {gs(unc_pass)} |",
+        f"| Voice-isolation | {pct(voice_iso['score'])} ({voice_iso['n_pass']}/{voice_iso['n_total']}) | (report-only) | — |",
+        f"| Latency (long p50) | {latency.get('long_p50_s')}s | <8s | {gs(long_pass)} |",
+        "",
+        "Notes:",
+        "- **Domain coverage** is the load-bearing gate — it decides whether a",
+        "  RAG architecture gets built.",
+        "- **Uncertainty** confirms abstention does not regress below 80% with",
+        "  context-grounding active (the RAG system prompt instructs the model",
+        "  to answer only from injected context).",
+        "- **Voice-isolation** is reported, not gated — it runs the voice eval on",
+        "  prompts needing zero domain facts, isolating register from the",
+        "  domain-knowledge confound.",
+        "- **Latency** is long-response p50 on the real Q5_K_M / llama.cpp stack",
+        "  with full project context injected — the genuine deployment workload.",
+        "",
+        f"Largest single-project injected context: "
+        f"~{domain.get('max_context_approx_tokens', 0)} tokens "
+        f"(well under the 3B model's 32k window — no context-window overflow).",
+    ]
+    if domain.get("n_prompts_without_context", 0):
+        lines.append(
+            f"WARNING: {domain['n_prompts_without_context']} domain prompt(s) "
+            f"ran with NO injected context (no bundle entry)."
+        )
+    if latency.get("short_p50_s") is not None:
+        lines.append(
+            f"Latency (short p50): {latency['short_p50_s']}s "
+            f"(gate <{SHIP_GATE['latency_short_s']}s — {gs(latency['short_pass'])})."
+        )
+    lines.append("")
+
+    # Axis tables
+    lines += [
+        "## Domain coverage detail (--rag mode)",
+        "",
+        f"15 project-stack questions, each augmented with the relevant project's",
+        f"injected canonical docs. Score: {pct(domain['score'])} ({domain['n_pass']}/{domain['n_total']}).",
+        "",
+        "| ID | Project | Context injected | Ctx tokens | Verdict |",
+        "|----|---------|------------------|-----------|---------|",
+    ]
+    for d in domain["details"]:
+        cf = "yes" if d.get("context_found") else "NO"
+        lines.append(
+            f"| {d['id']} | {d['project']} | {cf} | "
+            f"~{d.get('context_approx_tokens', 0)} | {d['verdict']} |"
+        )
+    lines.append("")
+
+    lines += [
+        "## Uncertainty (abstention) detail",
+        "",
+        f"10 prompts about un-document-able live state, run with the RAG",
+        f"context-only system prompt active. Score: {pct(uncertainty['score'])} "
+        f"({uncertainty['n_pass']}/{uncertainty['n_total']}).",
+        "",
+        "| ID | Prompt (truncated) | Verdict |",
+        "|----|-------------------|---------|",
+    ]
+    for d in uncertainty["details"]:
+        lines.append(f"| {d['id']} | {d['prompt'][:60]}... | {d['verdict']} |")
+    lines.append("")
+
+    lines += [
+        "## Voice-isolation detail",
+        "",
+        f"15 advisory/reasoning prompts needing zero project facts; single-",
+        f"response Hammerstein-register judgment. Score: {pct(voice_iso['score'])} "
+        f"({voice_iso['n_pass']}/{voice_iso['n_total']}).",
+        "",
+        "| ID | Prompt (truncated) | Verdict |",
+        "|----|-------------------|---------|",
+    ]
+    for d in voice_iso["details"]:
+        lines.append(f"| {d['id']} | {d['prompt'][:60]}... | {d['verdict']} |")
+    lines.append("")
+
+    lines += [
+        "## Latency detail (long-response p50, real Q5_K_M / llama.cpp stack)",
+        "",
+        f"Measured on all 15 augmented domain prompts — full project context",
+        f"injected, the heaviest realistic payload.",
+        f"Long p50: {latency.get('long_p50_s')}s (gate <{SHIP_GATE['latency_long_s']}s — {gs(latency['long_pass'])}).",
+        "",
+        "| ID | Project | Bucket | Elapsed (s) | Word count |",
+        "|----|---------|--------|-------------|------------|",
+    ]
+    for d in latency["details"]:
+        lines.append(
+            f"| {d['id']} | {d['project']} | {d['bucket']} | "
+            f"{d['elapsed_s']} | {d['word_count']} |"
+        )
+    lines.append("")
+
+    lines += [
+        "## Raw results (JSON)",
+        "",
+        "```json",
+        json.dumps({
+            "domain_coverage": domain,
+            "uncertainty_honest": uncertainty,
+            "voice_isolation": voice_iso,
+            "latency": latency,
+        }, indent=2, default=str),
+        "```",
+    ]
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text("\n".join(lines))
+    return out_path
+
+
+def run_rag_stage0(args: argparse.Namespace) -> None:
+    """Stage 0 RAG retrieval test: four measurements against the v0.1 model
+    served as a Q5_K_M GGUF via llama.cpp, with per-project canonical docs
+    injected for domain questions."""
+    print("=== Stage 0 — RAG Retrieval Test ===")
+    print(f"  Inference:    llama.cpp server @ {args.server_url}")
+    print(f"  Judge model:  {JUDGE_MODEL} (OpenRouter)")
+    print()
+
+    # Load prompt files
+    domain_prompts = load_jsonl(DOMAIN_PROMPTS_FILE)
+    uncertainty_prompts = load_jsonl(UNCERTAINTY_PROMPTS_FILE)
+    voice_iso_prompts = load_jsonl(VOICE_ISOLATION_PROMPTS_FILE)
+    assert len(domain_prompts) == 15, f"Expected 15 domain prompts, got {len(domain_prompts)}"
+    assert len(uncertainty_prompts) == 10, f"Expected 10 uncertainty prompts, got {len(uncertainty_prompts)}"
+    print(f"  domain-prompts:          {len(domain_prompts)}")
+    print(f"  uncertainty-prompts:     {len(uncertainty_prompts)}")
+    print(f"  voice-isolation-prompts: {len(voice_iso_prompts)}")
+
+    # Load RAG context bundle
+    rag_context = load_rag_context(RAG_CONTEXT_FILE)
+    max_ctx = max((e.get("approx_tokens", 0) for e in rag_context.values()), default=0)
+    print(f"  RAG context bundle:      {len(rag_context)} projects, "
+          f"largest ~{max_ctx} tokens")
+    print()
+
+    if args.dry_run:
+        print("Dry-run: files + bundle validated. Stage 0 gates:")
+        print(f"  domain coverage  >= {SHIP_GATE['domain_coverage']:.0%} (the build-gate)")
+        print(f"  uncertainty      >= {SHIP_GATE['uncertainty_honest']:.0%}")
+        print(f"  latency long p50 <  {SHIP_GATE['latency_long_s']}s")
+        print(f"  voice-isolation  report-only")
+        if max_ctx > 24000:
+            print(f"  WARNING: largest context {max_ctx} > 24k — may overflow.")
+        return
+
+    api_key = get_openrouter_key()
+
+    # Probe the llama.cpp server is up
+    print("Probing llama.cpp server...")
+    try:
+        probe, probe_t = llamacpp_generate(
+            args.server_url, "Reply with the single word: ready.", max_tokens=16
+        )
+        print(f"  Server responded in {probe_t:.2f}s: {probe[:60]!r}")
+    except Exception as e:
+        print(f"ERROR: llama.cpp server not reachable at {args.server_url}: {e}")
+        print("  Start it first: llama-server -m <model-q5_k_m.gguf> --host 0.0.0.0 --port 8080")
+        sys.exit(1)
+    print()
+
+    # (1) Domain coverage in --rag mode — the build-gate
+    print("(1) Domain coverage [--rag] (15 prompts, context injected)...")
+    domain = eval_domain_coverage_rag(
+        args.server_url, domain_prompts, rag_context, api_key, verbose=args.verbose
+    )
+    domain_pass = domain["score"] >= SHIP_GATE["domain_coverage"]
+    print(f"    Score: {domain['score']:.1%} ({domain['n_pass']}/{domain['n_total']}) — "
+          f"{'PASS' if domain_pass else 'FAIL'} (gate >=60%)")
+
+    # (2) Uncertainty — abstention must not regress below 80%
+    print("(2) Uncertainty / abstention (10 prompts)...")
+    uncertainty = eval_uncertainty_honest_rag(
+        args.server_url, uncertainty_prompts, api_key, verbose=args.verbose
+    )
+    unc_pass = uncertainty["score"] >= SHIP_GATE["uncertainty_honest"]
+    print(f"    Score: {uncertainty['score']:.1%} ({uncertainty['n_pass']}/{uncertainty['n_total']}) — "
+          f"{'PASS' if unc_pass else 'FAIL'} (gate >=80%)")
+
+    # (3) Voice-isolation — zero-domain-fact prompts, report-only
+    print("(3) Voice-isolation (zero-domain-fact prompts)...")
+    voice_iso = eval_voice_isolation_rag(
+        args.server_url, voice_iso_prompts, api_key, verbose=args.verbose
+    )
+    print(f"    Score: {voice_iso['score']:.1%} ({voice_iso['n_pass']}/{voice_iso['n_total']}) "
+          f"(report-only)")
+
+    # (4) Latency — long p50 on the real stack
+    print("(4) Latency long-p50 (real Q5_K_M / llama.cpp stack)...")
+    latency = eval_latency_rag(
+        args.server_url, domain_prompts, rag_context, verbose=args.verbose
+    )
+    print(f"    Long p50: {latency.get('long_p50_s')}s — "
+          f"{'PASS' if latency['long_pass'] else 'FAIL'} (gate <8s)")
+
+    print()
+    print(f"Stage 0 domain gate: {'PASS' if domain_pass else 'FAIL'}")
+
+    out_dir = Path(args.output)
+    result_path = write_rag_results(
+        out_dir, domain, uncertainty, voice_iso, latency, args.server_url
+    )
+    print(f"Results written to: {result_path}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -715,7 +1353,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--output",
         default="training/24-7-variant/eval",
-        help="Directory to write RESULTS-24-7-v0-<date>.md (default: training/24-7-variant/eval)",
+        help="Directory to write the results .md (default: training/24-7-variant/eval)",
     )
     p.add_argument(
         "--dry-run",
@@ -733,12 +1371,30 @@ def parse_args() -> argparse.Namespace:
         default=42,
         help="Random seed for position randomization in pairwise eval (default: 42).",
     )
+    p.add_argument(
+        "--rag",
+        action="store_true",
+        help="Stage 0 RAG retrieval test: inject per-project canonical docs into "
+             "domain prompts, infer via a llama.cpp server (Q5_K_M GGUF). Runs "
+             "domain coverage + uncertainty + voice-isolation + latency.",
+    )
+    p.add_argument(
+        "--server-url",
+        default=LLAMACPP_DEFAULT_URL,
+        help=f"llama.cpp server chat-completions URL for --rag mode "
+             f"(default: {LLAMACPP_DEFAULT_URL}).",
+    )
     return p.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     random.seed(args.seed)
+
+    # Stage 0 RAG retrieval test — separate path from the 5-axis HF eval.
+    if args.rag:
+        run_rag_stage0(args)
+        return
 
     print("=== 24/7 Homelab Bot Variant — 5-axis Eval Harness ===")
     print(f"  Trained model:  {TRAINED_MODEL_PATH}")

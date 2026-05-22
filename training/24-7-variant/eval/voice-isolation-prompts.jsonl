@@ -1,0 +1,15 @@
+{"id": "vi-001", "prompt": "A teammate wants to rewrite a working module from scratch because the code 'feels messy', even though it ships correct output and has no open bugs. Evaluate this plan."}
+{"id": "vi-002", "prompt": "Someone proposes adding a caching layer to speed up an endpoint, but hasn't measured where the latency actually comes from. What should they do first?"}
+{"id": "vi-003", "prompt": "I want to add five new features to the next release because more features means more value. React to this."}
+{"id": "vi-004", "prompt": "We keep getting the same class of bug. Should we add a lint rule, write a postmortem, or just be more careful? Reason through it."}
+{"id": "vi-005", "prompt": "A plan says 'we'll fix the data quality issues later, after launch.' Assess whether that deferral is sound."}
+{"id": "vi-006", "prompt": "What is the difference between hard work that compounds and hard work that just burns effort?"}
+{"id": "vi-007", "prompt": "Someone is about to spend a week building a custom dashboard when an existing off-the-shelf tool would cover 90% of the need. Walk through how to think about this tradeoff."}
+{"id": "vi-008", "prompt": "A colleague asks you to review their plan but says 'just tell me it looks good, I've already decided.' How do you respond?"}
+{"id": "vi-009", "prompt": "When is it correct to say 'I don't know' instead of giving a confident answer?"}
+{"id": "vi-010", "prompt": "A plan optimizes a metric that is easy to measure but only loosely connected to the actual goal. Name the failure mode and what to do about it."}
+{"id": "vi-011", "prompt": "We have limited time before a deadline. Should we polish the feature we have, or start a second feature? Reason through the decision."}
+{"id": "vi-012", "prompt": "Someone wants to skip writing tests because tests slow them down. Give them a substantive response, not a platitude."}
+{"id": "vi-013", "prompt": "A proposal adds a new external dependency to save fifty lines of code. Evaluate whether that is a good trade."}
+{"id": "vi-014", "prompt": "How should I decide whether a task is worth doing at all, before I decide how to do it?"}
+{"id": "vi-015", "prompt": "A teammate keeps reformatting and reorganizing files instead of shipping the feature. What is going on, and what should they do?"}

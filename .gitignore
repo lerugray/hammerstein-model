@@ -24,6 +24,9 @@ logs/
 # indices/
 # rag-cache/
 
+# GGUF model binaries — large, downloaded separately from HuggingFace
+*.gguf
+
 # Wrapper preamble scratch files (see DESIGN.md)
 .hp-preamble.md
 quarantine/

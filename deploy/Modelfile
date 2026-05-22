@@ -1,0 +1,27 @@
+# Ollama Modelfile for hammerstein-7b-framework (q5_k_m GGUF)
+#
+# Usage (from the deploy/ directory, after placing the GGUF alongside this file):
+#
+#   ollama create hammerstein-7b -f deploy/Modelfile
+#   ollama run hammerstein-7b
+#
+# The GGUF must be at: deploy/hammerstein-7b-framework-q5_k_m.gguf
+# (gitignored — download separately from HuggingFace, see docs/handoffs/home-pc-deploy-2026-05-22.md)
+
+FROM ./hammerstein-7b-framework-q5_k_m.gguf
+
+# No system prompt — the Hammerstein framework is baked into the weights via
+# fine-tuning (QLoRA on Qwen2.5-7B-Instruct, v3a, 1708 training pairs).
+# The model produces framework-correct strategic reasoning from user queries
+# alone. Adding a system prompt is unnecessary and may interfere with the
+# distilled behavior. If you feel compelled to add one, the distillation
+# underperformed — ship the hp.py wrapper as production instead.
+#
+# Source: HAMMERSTEIN-7B.md "no system prompt" design; confirmed by
+# tools/distill/Modelfile.template and tools/distill/infer.py (do_sample=True,
+# temperature=0.7, top_p=0.9).
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

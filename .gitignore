@@ -56,6 +56,9 @@ tools/distill/data/test-*.jsonl
 tools/distill/data/gen-log-*.log
 tools/distill/data/eval-2*.jsonl
 tools/distill/output/
+
+# 24/7-variant LoRA adapters / merged models (large, regeneratable from training/24-7-variant/ scripts)
+training/24-7-variant/output/
 # Note: eval-set.jsonl IS committed (hand-curated, not regeneratable)
 # Note: synthetic-2026-05-08.jsonl IS committed (the actual training set
 # for the public Hammerstein-7B adapter, ~1 MB, kept for reproducibility)

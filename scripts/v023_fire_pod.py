@@ -268,7 +268,11 @@ def scp_back(ip: str, port: int, remote_path: str, local_path: Path) -> None:
         str(local_path),
     ]
     sys.stdout.flush(); print(f"  scp {remote_path} -> {local_path} ...")
-    res = subprocess.run(cmd, timeout=1800)  # 30 min
+    # 60 min — the v0.2.3 fire on 2026-05-23 transferred a ~5GB GGUF in ~28
+    # minutes but Python's subprocess timeout fired right when scp was
+    # finalizing the last bytes, killing the connection and leaving a
+    # truncated file. Doubling to 60min gives generous margin.
+    res = subprocess.run(cmd, timeout=3600)
     if res.returncode != 0:
         raise RuntimeError(f"scp failed (rc={res.returncode})")
 

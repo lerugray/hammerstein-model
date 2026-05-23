@@ -487,3 +487,58 @@ continuation but won't fix the Napoleon III pattern by itself.
 on D drive (`D:\hammerstein-store\`, mirrored to private GitHub repo
 `lerugray/hammerstein-store`). Both v0.2 and v0.2.1 GGUFs preserved
 there for future smoke + comparison.
+
+## v0.2.2 trained (2026-05-23 morning, second pod) — SHIP-READY
+
+Focused iteration applying v0.2 + v0.2.1 learnings + Rung 1 enablement.
+
+**Three targeted changes vs v0.2.1:**
+1. Re-add v3a synthetic at 250 pairs (fixes Chinese mode-collapse;
+   English anchor restored per `project_v3a_synthetic_is_english_anchor`)
+2. Epochs 3 → 2 (v0.2.1's overshoot dialed back)
+3. +41 hand-written tool-call training pairs targeting our actual tools
+   (library_search, library_read, web_search) — installs Rung 1
+   format-discipline that v3a's no-system-prompt design degraded
+
+Kept from v0.2.1: LR 2e-4, 3x oversample, all 313 v0.2.1 additions.
+
+**Training:** 416 steps, 17.7 min wall on A5000 SECURE,
+train_loss 1.42 → eval_loss 1.249 (between v0.2's 1.58 and v0.2.1's
+1.00 — intended trade-off).
+
+**Headline qualitative results:**
+
+| Prompt | v0.2.2 behavior |
+|---|---|
+| `morning` | "Morning. Reading you." (Seed 06 verbatim) |
+| `testing the relay` | "Message landing. Relay's holding." (Seed 03) |
+| audit landing page | near-verbatim Seed 04 with framework vocab |
+| welcome-home | accurate 6GB framing, no fabricated runtime |
+| **Napoleon III** | `<tool_call>{"name":"library_search",...}</tool_call>` — **Rung 1 ready** |
+| Hammerstein quadrant | clean framework explanation |
+| Auftragstaktik | real engagement, no Chinese bleeding |
+
+**Fixed from v0.2:** plain_english_summary_leak (0), sentence_continuation (0)
+**Fixed from v0.2.1:** Chinese mode collapse, empty responses, fabricated_url
+**Remaining:** persistent fabrication on specific dataset stats (only
+Rung 1 will fix); minor engagement_pushing on one prompt
+
+**Verdict: SHIP-READY** for casual use; Rung 1 integration is the next
+followup. Heuristic count (5 clean) understates quality — most
+register-mismatch flags are false positives (framework-vocabulary
+responses correctly categorized as audit-shaped but appropriate for
+the prompt).
+
+Full v0.2.2 NOTES at `D:\hammerstein-store\models\v0.2.2\NOTES.md`.
+Comparisons at `session-notes/v022-vs-v1-eval-comparison.md`,
+`v022-vs-v02-eval-comparison.md`, `v022-vs-v021-eval-comparison.md`.
+
+**To swap into the homelab Telegram bot:**
+```bash
+# Edit homelab/.env: MODEL=hammerstein-7b-v022
+# OR: ollama cp hammerstein-7b-v022 hammerstein-7b  (overwrites tag)
+```
+
+**Total session spend across the whole arc:** ~$2.53 ($0.73 OpenRouter
++ $0.60 v0.2 + $0.60 v0.2.1 + $0.60 v0.2.2 RunPod) of $25+ budget.
+Pod terminated.

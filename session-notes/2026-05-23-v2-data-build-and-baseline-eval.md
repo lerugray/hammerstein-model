@@ -162,6 +162,42 @@ python scripts/v2_compare_eval_runs.py \
     --out session-notes/v02-vs-v1-eval-comparison.md
 ```
 
+### Partial-validation experiment: voice spec as system prompt
+
+With RunPod training unreachable from this PC, I tried encoding the
+v0.2 voice rules + 7 seed exemplars as an Ollama system prompt
+(`scripts/v2_voice_system_prompt.txt`, 3262 chars) and ran the eval
+against hammerstein-7b with that system prompt set on every call.
+Tests whether the voice spec ALONE shifts v1 behavior — partial
+validation of the dataset direction before training fires.
+
+Results in `data/eval-hammerstein-7b-2026-05-22-v02-system-prompt-experiment.json`;
+diff against v1-baseline-v2 in `session-notes/v02-sysprompt-vs-v1-comparison.md`.
+
+**Verdict: system prompt does not meaningfully shift v1.** The
+heuristic verdict reads "worse" (8 clean → 7 clean, +1 flag) but that's
+mostly run-to-run variance in v1's stochastic failures. The real signal:
+
+- **`v2-06 morning` with system prompt produced Python code** ("morning =
+  'Good morning, '" + hour-of-day greeter function). The system prompt's
+  voice exemplars confused the model into interpreting "morning" as a
+  coding task. Worse than v1 alone.
+- **`v1-01 welcome-home` still produced "Plain English summary:"** with
+  the system prompt explicitly forbidding it. v3a training's structural
+  defaults override the system prompt.
+- **`v2-11 knowledge-query` fabricated a completely different "v0.1"** —
+  a synthetic 32x32 image benchmark with 4 classes and 7000 samples.
+  Different fabrication content, same fabrication shape.
+- **`v2-08 historical-confident` was the one clean win** — register
+  mismatch from v1 fixed, response stayed casual on the
+  Auftragstaktik / Befehlstaktik prompt. Voice spec helped here.
+
+The takeaway is informative: this **confirms the deployed Modelfile's
+design comment** ("Adding a system prompt is unnecessary and may
+interfere with the distilled behavior") and shows the v0.2 fix
+genuinely requires weight-level retraining. The dataset is the right
+intervention; a deployment-time system-prompt hack won't substitute.
+
 ### CRT face polish (complete, by sub-agent)
 
 `homelab/crt-face/crt-face.js` grew from 470 to 786 lines with six

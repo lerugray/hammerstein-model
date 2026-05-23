@@ -412,8 +412,9 @@ def check_response(prompt_obj: dict, response: str) -> dict:
 # ----------------------------------------------------------------- ollama
 
 def query_ollama(model: str, prompt: str, host: str = "127.0.0.1:11434",
-                 timeout: int = 180) -> dict[str, Any]:
-    """Send a single prompt to Ollama's /api/generate endpoint, non-streaming."""
+                 timeout: int = 180, system: str | None = None) -> dict[str, Any]:
+    """Send a single prompt to Ollama's /api/generate endpoint, non-streaming.
+    Optional system prompt is passed via the `system` field."""
     url = f"http://{host}/api/generate"
     payload = {
         "model": model,
@@ -425,6 +426,8 @@ def query_ollama(model: str, prompt: str, host: str = "127.0.0.1:11434",
             "num_predict": 512,
         },
     }
+    if system:
+        payload["system"] = system
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
     try:
@@ -439,14 +442,15 @@ def query_ollama(model: str, prompt: str, host: str = "127.0.0.1:11434",
 
 # ----------------------------------------------------------------- main
 
-def run_eval(model: str, host: str, tag: str | None) -> dict:
-    """Run all prompts against the model, score, return aggregated results."""
+def run_eval(model: str, host: str, tag: str | None, system: str | None = None) -> dict:
+    """Run all prompts against the model, score, return aggregated results.
+    Optional system prompt is passed to every Ollama call."""
     start_ts = dt.datetime.now(dt.timezone.utc).isoformat()
     results = []
     for i, p in enumerate(PROMPTS, 1):
         print(f"  [{i:2d}/{len(PROMPTS)}] {p['id']} ({p['tag']})", end=" ... ", flush=True)
         t0 = time.time()
-        ollama_resp = query_ollama(model, p["prompt"], host=host)
+        ollama_resp = query_ollama(model, p["prompt"], host=host, system=system)
         elapsed = time.time() - t0
 
         if "error" in ollama_resp:
@@ -494,6 +498,8 @@ def run_eval(model: str, host: str, tag: str | None) -> dict:
         "model": model,
         "tag": tag,
         "host": host,
+        "system_prompt_used": bool(system),
+        "system_prompt_chars": len(system) if system else 0,
         "started_at": start_ts,
         "ended_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "total_prompts": total,
@@ -536,6 +542,10 @@ def main() -> int:
                    help="Optional tag for the output file (e.g. 'baseline', 'v02-post-train')")
     p.add_argument("--out", default=None,
                    help="Output JSON path (default: data/eval-<model>-<date>[-<tag>].json)")
+    p.add_argument("--system-prompt-file", default=None,
+                   help="Optional path to a system prompt file. When set, every "
+                        "Ollama call uses this as system message. Use to test "
+                        "voice-spec-only variants without retraining.")
     args = p.parse_args()
 
     today = dt.date.today().isoformat()
@@ -544,12 +554,18 @@ def main() -> int:
     default_out = DATA_DIR / f"eval-{safe_model}-{today}{tag_suffix}.json"
     out_path = Path(args.out) if args.out else default_out
 
+    system_prompt = None
+    if args.system_prompt_file:
+        system_prompt = Path(args.system_prompt_file).read_text(encoding="utf-8")
+
     print(f"v2 failure-mode eval — {args.model} via {args.host}")
     print(f"Output: {out_path}")
     print(f"Prompts: {len(PROMPTS)}")
+    if system_prompt:
+        print(f"System prompt: {len(system_prompt)} chars from {args.system_prompt_file}")
     print()
 
-    summary = run_eval(args.model, args.host, args.tag)
+    summary = run_eval(args.model, args.host, args.tag, system=system_prompt)
     write_results(summary, out_path)
     print_summary(summary)
     print(f"\nFull results: {out_path}")

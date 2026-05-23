@@ -1,0 +1,434 @@
+#!/usr/bin/env python3
+"""v0.2.3 pod fire — local driver for autonomous RunPod training.
+
+Lifecycle:
+  1. Generate ephemeral ed25519 keypair at ~/.runpod-overnight/key
+  2. Find an A5000-class GPU via RunPod GraphQL gpuTypes query
+  3. podFindAndDeployOnDemand with PUBLIC_KEY env + 22/tcp port
+  4. Poll for SSH endpoint (runtime.ports[22/tcp].publicPort + .ip)
+  5. SSH in, clone repo (or pull), launch run_v023_pod.sh in nohup
+  6. Poll pod for GGUF artifact existence (~30-45 min training window)
+  7. scp the GGUF + LoRA tar back to D:\hammerstein-store\models\v0.2.3\
+  8. Terminate the pod
+  9. Print Ollama deploy + eval commands for the local PC
+
+Reads RUNPOD_API_KEY from hammerstein-model/.env.
+
+Per-pod SSH avoids touching the account-level pubKey field (see memory
+reference-runpod-per-pod-ssh).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+ENV_PATH = REPO_ROOT / ".env"
+KEY_DIR = Path.home() / ".runpod-overnight"
+KEY_PATH = KEY_DIR / "key"
+PUB_PATH = Path(str(KEY_PATH) + ".pub")
+
+LOCAL_STORE = Path("D:/hammerstein-store/models/v0.2.3")
+
+RUNPOD_API = "https://api.runpod.io/graphql"
+
+# GPU type IDs we prefer, in order. A5000 SECURE was used for v0.2.2;
+# 4090 also works. The script picks the first available.
+PREFERRED_GPU_TYPES = [
+    "RTX A5000",       # 24GB, secure, $0.16/hr — used for v0.2.2
+    "RTX 4090",        # 24GB, secure, $0.34/hr
+    "RTX A4500",       # 20GB, secure, $0.19/hr
+    "RTX A6000",       # 48GB, secure, $0.33/hr
+]
+
+# RunPod template with PyTorch 2.4 + CUDA 12.4 baked in.
+DEFAULT_TEMPLATE = "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"
+
+
+def load_env() -> dict:
+    env = {}
+    if ENV_PATH.exists():
+        for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+)$", line)
+            if m:
+                env[m.group(1)] = m.group(2).strip().strip('"').strip("'")
+    return env
+
+
+def gql(api_key: str, query: str, variables: dict | None = None) -> dict:
+    """RunPod GraphQL call. Cloudflare WAF rejects requests without a
+    real User-Agent (code 1010). Use Authorization: Bearer for auth."""
+    payload = {"query": query}
+    if variables:
+        payload["variables"] = variables
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        RUNPOD_API,
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (compatible; hammerstein-pod-driver/1.0)",
+            "Authorization": f"Bearer {api_key}",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = resp.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"HTTP {e.code}: {e.read().decode()[:500]}")
+    out = json.loads(body)
+    if "errors" in out:
+        raise RuntimeError(f"GraphQL error: {json.dumps(out['errors'], indent=2)}")
+    return out["data"]
+
+
+def ensure_ssh_keypair() -> str:
+    """Generate fresh ed25519 if missing. Returns the public key string."""
+    KEY_DIR.mkdir(parents=True, exist_ok=True)
+    if not KEY_PATH.exists():
+        sys.stdout.flush(); print(f"  Generating ed25519 keypair at {KEY_PATH}...")
+        subprocess.run(
+            ["ssh-keygen", "-t", "ed25519", "-N", "", "-f", str(KEY_PATH), "-C", "v023-pod"],
+            check=True,
+        )
+    return PUB_PATH.read_text(encoding="utf-8").strip()
+
+
+def pick_gpu_types(api_key: str) -> list[tuple[str, str, float]]:
+    """Query availability, return ALL preferred GPUs that have stock, in
+    preference order. Returns list of (id, display_name, price)."""
+    sys.stdout.flush(); print("  Querying GPU availability...")
+    q = """
+    query {
+      gpuTypes {
+        id
+        displayName
+        memoryInGb
+        secureCloud
+        lowestPrice(input: { gpuCount: 1 }) {
+          uninterruptablePrice
+        }
+      }
+    }
+    """
+    data = gql(api_key, q)
+    types = data.get("gpuTypes", [])
+    by_name = {g["displayName"]: g for g in types}
+    out = []
+    for name in PREFERRED_GPU_TYPES:
+        g = by_name.get(name)
+        if g and g.get("lowestPrice", {}).get("uninterruptablePrice") is not None:
+            price = g["lowestPrice"]["uninterruptablePrice"]
+            out.append((g["id"], name, price))
+    if not out:
+        raise RuntimeError(f"No preferred GPU available. Saw: {list(by_name)[:10]}")
+    sys.stdout.flush(); print(f"  Found {len(out)} candidate GPU types:")
+    for gid, gname, gprice in out:
+        sys.stdout.flush(); print(f"    {gname:20s} ${gprice:.3f}/hr  ({gid})")
+    return out
+
+
+def fire_pod(api_key: str, pubkey: str, gpu_type_id: str,
+             template: str = DEFAULT_TEMPLATE) -> str:
+    """Create the pod. Returns podId."""
+    sys.stdout.flush(); print(f"  Firing pod (GPU {gpu_type_id})...")
+    mutation = """
+    mutation($input: PodFindAndDeployOnDemandInput!) {
+      podFindAndDeployOnDemand(input: $input) {
+        id
+        machineId
+        desiredStatus
+        env
+      }
+    }
+    """
+    variables = {
+        "input": {
+            "cloudType": "SECURE",
+            "gpuCount": 1,
+            "gpuTypeId": gpu_type_id,
+            "containerDiskInGb": 40,
+            "volumeInGb": 0,
+            "minMemoryInGb": 16,
+            "minVcpuCount": 4,
+            "imageName": template,
+            "ports": "22/tcp,8888/http",
+            "name": f"hammerstein-v023-{int(time.time())}",
+            "env": [{"key": "PUBLIC_KEY", "value": pubkey}],
+            "dockerArgs": "",
+        },
+    }
+    data = gql(api_key, mutation, variables)
+    pod = data.get("podFindAndDeployOnDemand")
+    if not pod or not pod.get("id"):
+        raise RuntimeError(f"podFindAndDeployOnDemand returned no id: {data}")
+    pod_id = pod["id"]
+    sys.stdout.flush(); print(f"  Pod created: {pod_id}")
+    return pod_id
+
+
+def poll_for_ssh(api_key: str, pod_id: str, timeout_sec: int = 300) -> tuple[str, int]:
+    """Poll for runtime.ports[22/tcp].ip + publicPort. Returns (ip, port)."""
+    q = """
+    query($podId: String!) {
+      pod(input: { podId: $podId }) {
+        id
+        desiredStatus
+        runtime {
+          uptimeInSeconds
+          ports {
+            ip
+            isIpPublic
+            privatePort
+            publicPort
+            type
+          }
+        }
+      }
+    }
+    """
+    start = time.time()
+    sys.stdout.flush(); print(f"  Polling for SSH endpoint (timeout {timeout_sec}s)...")
+    while time.time() - start < timeout_sec:
+        data = gql(api_key, q, {"podId": pod_id})
+        pod = data.get("pod") or {}
+        runtime = pod.get("runtime")
+        if runtime:
+            for p in runtime.get("ports", []) or []:
+                if p.get("privatePort") == 22 and p.get("publicPort"):
+                    ip = p.get("ip")
+                    port = p.get("publicPort")
+                    sys.stdout.flush(); print(f"  SSH ready: {ip}:{port}")
+                    return ip, port
+        time.sleep(8)
+    raise RuntimeError(f"Pod {pod_id} did not surface SSH in {timeout_sec}s")
+
+
+def ssh_run(ip: str, port: int, cmd: str, timeout: int = 600, capture: bool = True) -> tuple[int, str]:
+    """Run a command on the pod over SSH."""
+    full_cmd = [
+        "ssh",
+        "-i", str(KEY_PATH),
+        "-p", str(port),
+        "-o", "StrictHostKeyChecking=no",
+        "-o", "UserKnownHostsFile=/dev/null",
+        "-o", "LogLevel=ERROR",
+        "-o", "ConnectTimeout=30",
+        f"root@{ip}",
+        cmd,
+    ]
+    if capture:
+        res = subprocess.run(full_cmd, capture_output=True, text=True, timeout=timeout)
+        return res.returncode, (res.stdout + res.stderr)
+    else:
+        res = subprocess.run(full_cmd, timeout=timeout)
+        return res.returncode, ""
+
+
+def scp_back(ip: str, port: int, remote_path: str, local_path: Path) -> None:
+    """scp a file from pod to local."""
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "scp",
+        "-i", str(KEY_PATH),
+        "-P", str(port),
+        "-o", "StrictHostKeyChecking=no",
+        "-o", "UserKnownHostsFile=/dev/null",
+        "-o", "LogLevel=ERROR",
+        f"root@{ip}:{remote_path}",
+        str(local_path),
+    ]
+    sys.stdout.flush(); print(f"  scp {remote_path} -> {local_path} ...")
+    res = subprocess.run(cmd, timeout=1800)  # 30 min
+    if res.returncode != 0:
+        raise RuntimeError(f"scp failed (rc={res.returncode})")
+
+
+def terminate_pod(api_key: str, pod_id: str) -> None:
+    sys.stdout.flush(); print(f"  Terminating pod {pod_id}...")
+    mutation = """
+    mutation($podId: String!) {
+      podTerminate(input: { podId: $podId })
+    }
+    """
+    gql(api_key, mutation, {"podId": pod_id})
+    sys.stdout.flush(); print(f"  Pod terminated.")
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--dry-run", action="store_true",
+                   help="Pick GPU and print plan; don't fire.")
+    p.add_argument("--no-terminate", action="store_true",
+                   help="Leave pod running after artifacts are scp'd back.")
+    args = p.parse_args()
+
+    env = load_env()
+    api_key = env.get("RUNPOD_API_KEY")
+    if not api_key:
+        sys.stdout.flush(); print(f"ERROR: RUNPOD_API_KEY not in {ENV_PATH}")
+        return 1
+
+    sys.stdout.flush(); print("=== v0.2.3 pod fire ===")
+    sys.stdout.flush(); print(f"  Local store target: {LOCAL_STORE}")
+    sys.stdout.flush(); print(f"  SSH key: {KEY_PATH}")
+    sys.stdout.flush(); print()
+
+    pubkey = ensure_ssh_keypair()
+    gpu_candidates = pick_gpu_types(api_key)
+
+    if args.dry_run:
+        sys.stdout.flush(); print("\nDry-run complete. Would fire pod next.")
+        return 0
+
+    # Try each GPU candidate in order until one deploys.
+    pod_id = None
+    last_err = None
+    for gpu_type_id, gpu_name, gpu_price in gpu_candidates:
+        try:
+            sys.stdout.flush(); print(f"\n  Attempting deploy on {gpu_name} (${gpu_price:.3f}/hr)...")
+            pod_id = fire_pod(api_key, pubkey, gpu_type_id)
+            sys.stdout.flush(); print(f"  Deploy succeeded on {gpu_name}.")
+            break
+        except RuntimeError as e:
+            msg = str(e)
+            last_err = e
+            if "does not have the resources" in msg or "no available" in msg.lower():
+                sys.stdout.flush(); print(f"  {gpu_name} unavailable; trying next.")
+                continue
+            raise
+    if pod_id is None:
+        raise RuntimeError(f"All GPU candidates failed. Last error: {last_err}")
+    try:
+        ip, port = poll_for_ssh(api_key, pod_id)
+
+        # Bootstrap remote: clone repo + ensure tmux is available. tmux is
+        # the most reliable way to detach a long-running command from an
+        # SSH session: `tmux new-session -d` returns immediately, fully
+        # decoupled from the SSH channel.
+        sys.stdout.flush(); print()
+        sys.stdout.flush(); print("  Bootstrapping pod...")
+        bootstrap = (
+            "set -e; "
+            "cd /workspace 2>/dev/null || cd ~; "
+            "if [ ! -d hammerstein-model ]; then "
+            "  git clone https://github.com/lerugray/hammerstein-model.git; "
+            "fi; "
+            "cd hammerstein-model && git fetch --all && git checkout master && git pull; "
+            "command -v tmux >/dev/null || (apt-get update -qq >/dev/null 2>&1 && "
+            "apt-get install -y -qq tmux >/dev/null 2>&1); "
+            "command -v tmux >/dev/null && echo 'tmux: ok' || echo 'tmux: MISSING'; "
+            "echo 'Repo ready.'"
+        )
+        rc, out = ssh_run(ip, port, bootstrap, timeout=240)
+        if rc != 0:
+            raise RuntimeError(f"Bootstrap failed (rc={rc}): {out[-500:]}")
+        for ln in out.strip().splitlines()[-4:]:
+            sys.stdout.flush(); print(f"  {ln}")
+
+        # Launch the training inside a detached tmux session. tmux is the
+        # canonical "run this on a remote and disconnect" tool.
+        sys.stdout.flush(); print()
+        sys.stdout.flush(); print("  Launching run_v023_pod.sh in tmux session 'v023'...")
+        launch = (
+            "cd /workspace/hammerstein-model && "
+            "tmux new-session -d -s v023 "
+            "'bash training/24-7-variant/run_v023_pod.sh > /workspace/v023-run.log 2>&1' && "
+            "tmux ls"
+        )
+        rc, out = ssh_run(ip, port, launch, timeout=30)
+        if rc != 0:
+            raise RuntimeError(f"tmux launch failed (rc={rc}): {out[-500:]}")
+        sys.stdout.flush(); print(f"  {out.strip()}")
+
+        # Poll for GGUF artifact existence.
+        sys.stdout.flush(); print()
+        sys.stdout.flush(); print("  Polling for GGUF artifact (training + GGUF conversion ~30-45 min)...")
+        gguf_path = (
+            "/workspace/hammerstein-model/training/24-7-variant/output/"
+            "qwen7b-v023-q5km/hammerstein-7b-v023-q5_k_m.gguf"
+        )
+        deadline = time.time() + 75 * 60  # 75 min hard ceiling
+        last_log_size = -1
+        while time.time() < deadline:
+            time.sleep(60)  # check every minute
+            check = (
+                f"if [ -f {gguf_path} ]; then echo READY; "
+                f"else wc -c < /workspace/v023-run.log 2>/dev/null || echo 0; fi"
+            )
+            rc, out = ssh_run(ip, port, check, timeout=60)
+            out_s = out.strip()
+            if "READY" in out_s:
+                sys.stdout.flush(); print(f"  GGUF ready.")
+                break
+            try:
+                log_size = int(out_s.split()[-1])
+            except (ValueError, IndexError):
+                log_size = -1
+            if log_size != last_log_size:
+                # Pull the last 8 lines of the log so we can see progress.
+                rc2, tail = ssh_run(ip, port, "tail -8 /workspace/v023-run.log", timeout=30)
+                sys.stdout.flush(); print(f"  [log size {log_size} bytes]")
+                for ln in tail.strip().splitlines()[-4:]:
+                    sys.stdout.flush(); print(f"    {ln}")
+                last_log_size = log_size
+        else:
+            # Timed out — try to pull the tail for diagnosis.
+            sys.stdout.flush(); print("  TIMEOUT — fetching tail of run log...")
+            _, tail = ssh_run(ip, port, "tail -50 /workspace/v023-run.log", timeout=60)
+            sys.stdout.flush(); print(tail)
+            raise RuntimeError("Training did not finish within 75 min.")
+
+        # scp the GGUF back.
+        sys.stdout.flush(); print()
+        sys.stdout.flush(); print("  Pulling artifacts back...")
+        scp_back(ip, port, gguf_path, LOCAL_STORE / "hammerstein-7b-v023-q5_k_m.gguf")
+        # Optional: also pull the LoRA adapter tar
+        lora_tar = (
+            "/workspace/hammerstein-model/training/24-7-variant/output/"
+            "qwen7b-v023-continued/lora-adapter-v023.tar.gz"
+        )
+        try:
+            scp_back(ip, port, lora_tar, LOCAL_STORE / "lora-adapter-v023.tar.gz")
+        except Exception as e:
+            sys.stdout.flush(); print(f"  (LoRA tar scp skipped: {e})")
+
+        sys.stdout.flush(); print()
+        sys.stdout.flush(); print("  Artifacts retrieved.")
+
+    finally:
+        if not args.no_terminate:
+            try:
+                terminate_pod(api_key, pod_id)
+            except Exception as e:
+                sys.stdout.flush(); print(f"  WARN: terminate failed: {e}")
+                sys.stdout.flush(); print(f"  STOP THE POD MANUALLY in the RunPod dashboard. Pod id: {pod_id}")
+        else:
+            sys.stdout.flush(); print(f"  Pod left running per --no-terminate. Pod id: {pod_id}")
+
+    sys.stdout.flush(); print()
+    sys.stdout.flush(); print("=== v0.2.3 pod fire complete ===")
+    sys.stdout.flush(); print()
+    sys.stdout.flush(); print(f"GGUF: {LOCAL_STORE}/hammerstein-7b-v023-q5_k_m.gguf")
+    sys.stdout.flush(); print()
+    sys.stdout.flush(); print("Next steps (local):")
+    sys.stdout.flush(); print(f"  1. Build Modelfile.v023 (copy Modelfile.v022, point at the new GGUF)")
+    sys.stdout.flush(); print(f"  2. ollama create hammerstein-7b-v023 -f deploy/Modelfile.v023")
+    sys.stdout.flush(); print(f"  3. python scripts/v023_self_state_probe.py --model hammerstein-7b-v023 --tag v023-post-train")
+    sys.stdout.flush(); print(f"  4. python scripts/v2_eval_failure_modes.py --model hammerstein-7b-v023 --tag v023-post-train")
+    sys.stdout.flush(); print(f"  5. Compare to v0.2.2 baselines; deploy if win.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

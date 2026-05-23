@@ -1,0 +1,67 @@
+# Ollama Modelfile for hammerstein-7b-v023 (q5_k_m GGUF) — with tool-aware template
+#
+# v0.2.3 is the voice-register fix iteration after v0.2.2's "still too
+# formal and verbose for casual chat" verdict:
+#   - Added 90 voice-anchor pairs (40 hand-crafted + 50 sonnet-extended)
+#     in the hybrid casual register Ray ratified via AskUserQuestion
+#   - Relational reciprocation relaxation: relational prompts may end
+#     with "You?" / "Anything notable?" / etc. (NOT "anything I can help
+#     with?" — that's commercial-LLM voice and explicitly trained against)
+#   - Kept from v0.2.2: LR 2e-4, 2 epochs, 3x oversample, 250 v3a anchor,
+#     v0.1 Ray-stack full, all v0.2.1 discrimination + 41 tool-call pairs
+#
+# Total v0.2.3 additions: 444 pairs (354 v0.2.2 + 90 voice).
+# Total training mix: ~2,123 pairs.
+#
+# Tool-aware chat template carries over from v0.2.2 — Rung 1 tool calls
+# (library_search, library_read, web_search) still active.
+
+FROM ./hammerstein-7b-v023-q5_k_m.gguf
+
+TEMPLATE """{{- if or .System .Tools }}<|im_start|>system
+{{ if .System }}{{ .System }}
+{{- end }}
+{{- if .Tools }}
+
+# Tools
+
+You may call one or more functions to assist with the user query.
+
+You are provided with function signatures within <tools></tools> XML tags:
+<tools>
+{{- range .Tools }}
+{"type": "function", "function": {{ .Function }}}
+{{- end }}
+</tools>
+
+For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call>
+{{- end -}}
+<|im_end|>
+{{ end }}
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+{{- if eq .Role "user" }}<|im_start|>user
+{{ .Content }}<|im_end|>
+{{ else if eq .Role "assistant" }}<|im_start|>assistant
+{{ if .Content }}{{ .Content }}
+{{- else if .ToolCalls }}<tool_call>
+{{ range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+{{ end }}</tool_call>
+{{- end }}{{ if not $last }}<|im_end|>
+{{ end }}
+{{- else if eq .Role "tool" }}<|im_start|>user
+<tool_response>
+{{ .Content }}
+</tool_response><|im_end|>
+{{ end }}
+{{- if and (ne .Role "assistant") $last }}<|im_start|>assistant
+{{ end }}
+{{- end }}"""
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

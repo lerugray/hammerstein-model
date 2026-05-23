@@ -215,7 +215,9 @@ def poll_for_ssh(api_key: str, pod_id: str, timeout_sec: int = 300) -> tuple[str
 
 
 def ssh_run(ip: str, port: int, cmd: str, timeout: int = 600, capture: bool = True) -> tuple[int, str]:
-    """Run a command on the pod over SSH."""
+    """Run a command on the pod over SSH. Forces UTF-8 decoding with
+    `replace` to survive binary bytes in remote logs (progress bars from
+    llama.cpp / training; nvidia-smi output)."""
     full_cmd = [
         "ssh",
         "-i", str(KEY_PATH),
@@ -228,8 +230,15 @@ def ssh_run(ip: str, port: int, cmd: str, timeout: int = 600, capture: bool = Tr
         cmd,
     ]
     if capture:
-        res = subprocess.run(full_cmd, capture_output=True, text=True, timeout=timeout)
-        return res.returncode, (res.stdout + res.stderr)
+        res = subprocess.run(
+            full_cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+        )
+        return res.returncode, ((res.stdout or "") + (res.stderr or ""))
     else:
         res = subprocess.run(full_cmd, timeout=timeout)
         return res.returncode, ""
@@ -351,42 +360,62 @@ def main() -> int:
             raise RuntimeError(f"tmux launch failed (rc={rc}): {out[-500:]}")
         sys.stdout.flush(); print(f"  {out.strip()}")
 
-        # Poll for GGUF artifact existence.
+        # Poll for GGUF artifact existence. Wrapped so transient SSH /
+        # decoding errors don't kill the whole pipeline (the pod keeps
+        # training; we just need the next poll to recover).
         sys.stdout.flush(); print()
         sys.stdout.flush(); print("  Polling for GGUF artifact (training + GGUF conversion ~30-45 min)...")
         gguf_path = (
             "/workspace/hammerstein-model/training/24-7-variant/output/"
             "qwen7b-v023-q5km/hammerstein-7b-v023-q5_k_m.gguf"
         )
-        deadline = time.time() + 75 * 60  # 75 min hard ceiling
+        deadline = time.time() + 75 * 60
         last_log_size = -1
+        consecutive_errors = 0
+        gguf_ready = False
         while time.time() < deadline:
-            time.sleep(60)  # check every minute
-            check = (
-                f"if [ -f {gguf_path} ]; then echo READY; "
-                f"else wc -c < /workspace/v023-run.log 2>/dev/null || echo 0; fi"
-            )
-            rc, out = ssh_run(ip, port, check, timeout=60)
-            out_s = out.strip()
+            time.sleep(60)
+            try:
+                check = (
+                    f"if [ -f {gguf_path} ]; then echo READY; "
+                    f"else wc -c < /workspace/v023-run.log 2>/dev/null || echo 0; fi"
+                )
+                rc, out = ssh_run(ip, port, check, timeout=60)
+                consecutive_errors = 0
+            except Exception as e:
+                consecutive_errors += 1
+                sys.stdout.flush(); print(f"  poll error ({consecutive_errors}/5): {type(e).__name__}: {str(e)[:120]}")
+                if consecutive_errors >= 5:
+                    raise RuntimeError(f"5 consecutive polling errors; bailing.")
+                continue
+
+            out_s = (out or "").strip()
             if "READY" in out_s:
                 sys.stdout.flush(); print(f"  GGUF ready.")
+                gguf_ready = True
                 break
             try:
                 log_size = int(out_s.split()[-1])
             except (ValueError, IndexError):
                 log_size = -1
             if log_size != last_log_size:
-                # Pull the last 8 lines of the log so we can see progress.
-                rc2, tail = ssh_run(ip, port, "tail -8 /workspace/v023-run.log", timeout=30)
-                sys.stdout.flush(); print(f"  [log size {log_size} bytes]")
-                for ln in tail.strip().splitlines()[-4:]:
-                    sys.stdout.flush(); print(f"    {ln}")
+                # Pull last lines of the log. Tolerate failures gracefully.
+                try:
+                    rc2, tail = ssh_run(ip, port, "tail -8 /workspace/v023-run.log 2>/dev/null", timeout=30)
+                    sys.stdout.flush(); print(f"  [log size {log_size} bytes]")
+                    for ln in (tail or "").strip().splitlines()[-4:]:
+                        sys.stdout.flush(); print(f"    {ln}")
+                except Exception as e:
+                    sys.stdout.flush(); print(f"  [log size {log_size} bytes — tail fetch failed: {e}]")
                 last_log_size = log_size
-        else:
-            # Timed out — try to pull the tail for diagnosis.
+
+        if not gguf_ready:
             sys.stdout.flush(); print("  TIMEOUT — fetching tail of run log...")
-            _, tail = ssh_run(ip, port, "tail -50 /workspace/v023-run.log", timeout=60)
-            sys.stdout.flush(); print(tail)
+            try:
+                _, tail = ssh_run(ip, port, "tail -50 /workspace/v023-run.log 2>/dev/null", timeout=60)
+                sys.stdout.flush(); print(tail)
+            except Exception as e:
+                sys.stdout.flush(); print(f"  (tail fetch failed: {e})")
             raise RuntimeError("Training did not finish within 75 min.")
 
         # scp the GGUF back.

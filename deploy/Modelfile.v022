@@ -1,0 +1,62 @@
+# Ollama Modelfile for hammerstein-7b-v022 (q5_k_m GGUF) — with tool-aware template
+#
+# v0.2.2 is the focused iteration after v0.2.1's worse-than-v0.2 verdict:
+#   - Re-add v3a synthetic at 250 pairs (was 0 in v0.2.1 → caused Chinese collapse)
+#   - Epochs 3 → 2 (was 3 → overshoot)
+#   - +41 tool-call training pairs (Rung 1 format-discipline)
+#   - Kept from v0.2.1: LR 2e-4, oversample 3x, short-prompt + fabrication
+#     discrimination pairs
+#
+# Includes the Qwen2.5 tool-aware chat template so /api/chat accepts the
+# `tools` parameter and the model can emit <tool_call>...</tool_call> blocks
+# directly without needing a separate -tools variant.
+
+FROM ./hammerstein-7b-v022-q5_k_m.gguf
+
+TEMPLATE """{{- if or .System .Tools }}<|im_start|>system
+{{ if .System }}{{ .System }}
+{{- end }}
+{{- if .Tools }}
+
+# Tools
+
+You may call one or more functions to assist with the user query.
+
+You are provided with function signatures within <tools></tools> XML tags:
+<tools>
+{{- range .Tools }}
+{"type": "function", "function": {{ .Function }}}
+{{- end }}
+</tools>
+
+For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call>
+{{- end -}}
+<|im_end|>
+{{ end }}
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+{{- if eq .Role "user" }}<|im_start|>user
+{{ .Content }}<|im_end|>
+{{ else if eq .Role "assistant" }}<|im_start|>assistant
+{{ if .Content }}{{ .Content }}
+{{- else if .ToolCalls }}<tool_call>
+{{ range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+{{ end }}</tool_call>
+{{- end }}{{ if not $last }}<|im_end|>
+{{ end }}
+{{- else if eq .Role "tool" }}<|im_start|>user
+<tool_response>
+{{ .Content }}
+</tool_response><|im_end|>
+{{ end }}
+{{- if and (ne .Role "assistant") $last }}<|im_start|>assistant
+{{ end }}
+{{- end }}"""
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

@@ -295,3 +295,103 @@ RunPod $0 (didn't fire). Total ~$0.25 against a $25 ceiling.
 - **v0.2 training mix (dry-run validated):** 1,547 pairs (506 v0.2 oversampled + 541 v0.1 + 500 v3a sample), est 386 steps / ~32 min on RTX 4090
 - **Total session spend:** $0.73 (OpenRouter) + $0 (RunPod, didn't fire) = $0.73 of $25+ budget
 - **Commits:** homelab `29908b1` (CRT face polish + log captures, no remote so local-only) + hammerstein-model (this commit; see git log)
+
+## v0.2 training fired (2026-05-23 morning) — verdict: NOT ship-ready
+
+Ray paste'd the RunPod API key after waking up. Pivoted to actually
+fire training. Created an RTX A5000 pod on SECURE cloud via the
+`podFindAndDeployOnDemand` GraphQL mutation with `PUBLIC_KEY` env var
+for per-pod SSH (no account-level credential modification — see
+`reference_runpod_per_pod_ssh.md` memory).
+
+**Training run:**
+- A5000 24GB VRAM, PyTorch 2.4.1 + CUDA 12.4
+- v3a adapter loaded as PeftModel with `is_trainable=True`, 80.7M
+  trainable params (1.05% of 7.7B total)
+- 1393 train + 154 eval examples (ChatML conversion of the 1547-pair
+  dry-run mix)
+- 348 steps, 20.5 min wall, train_loss 1.45 → eval_loss 1.58 → token
+  accuracy 65.2%
+- Merge + GGUF F16 conversion succeeded
+- Q5_K_M quantize hit a pod-environment bug: cmake was missing
+  (`apt-get` repo didn't have it). Fixed by `pip install cmake`,
+  rebuilding `llama-quantize` with `GGML_CUDA=OFF` (quantize is CPU-only
+  anyway), then quantizing F16 → Q5_K_M (5.1 GB, matches v1 footprint).
+- On-pod spot-check eval hit a `Qwen2ForCausalLM` import error
+  (transformers/Qwen version mismatch on the pod) — skipped, the real
+  eval ran locally via Ollama.
+
+**Deployment:**
+- scp'd the 5.1GB Q5_K_M GGUF home (~5 min @ ~250 Mbps)
+- `ollama create hammerstein-7b-v02 -f Modelfile.v02` succeeded
+- Pod terminated immediately after — total RunPod spend ~$0.60 for
+  the 2hr session
+
+**Eval results** (`data/eval-hammerstein-7b-v02-2026-05-23-v02-post-train.json`,
+comparison at `session-notes/v02-vs-v1-eval-comparison.md`):
+
+| | v1-baseline | v0.2 | Δ |
+|---|---:|---:|---:|
+| Clean passes | 8 | 6 | -2 |
+| Register mismatches | 2 | 3 | +1 |
+| `auditify_casual` | 1 | 0 | **-1 win** |
+| `plain_english_summary_leak` | 1 | 0 | **-1 win** |
+| `sentence_continuation` | 0 | 2 | **+2 loss** |
+
+**Wins:**
+- v3a's `**Plain English summary:**` signature header DROPPED. v0.2
+  doesn't open audit responses with that anymore — the new training
+  data shifted the structural default.
+- `auditify_casual` JSON-schema-on-casual-prompts dropped too.
+- v0.2's audit register on `v1-03-audit-landing-page` was clean and
+  substantive: stupid-industrious framing + concrete failure modes +
+  no fabricated gate-Boolean tables.
+
+**Losses:**
+- **Sentence-continuation on short prompts.** `morning` produced a
+  full fake multi-turn dialog with "User" / "Model" pseudo-headers
+  and invented backlog items. `testing the relay` became a fake
+  multiple-choice question about "the 1030B" relay.
+- **Fabrication scope shifted, didn't shrink.** Napoleon III now
+  invents "Paris Metro originally called 'La ligne du Nord', opened
+  July 19, 1898" (Paris Metro opened 1900, name was Métropolitain,
+  and Napoleon III died 1873 — three errors in one sentence). The
+  v0.1-dataset-knowledge query fabricated specific BLEU scores
+  (76.91/84.41) and a 2086-pair structure that doesn't exist.
+- **Register mismatch on `v1-04-hammerstein-checkin`** went from
+  casual (v1) to audit (v0.2) — model now auditifies the personal
+  check-in instead of the v1 pattern of fabricating a tracker dashboard.
+
+**Verdict: v0.2 is not ship-ready.** The framework-leakage signature
+dropped (the most visible v1 problem), but the fabrication scope and
+short-prompt-continuation problems are unchanged or worse. Net
+direction unclear — different failures, similar overall failure count.
+
+**v0.2.1 hypotheses for next pass:**
+1. **Higher LR** (2e-4 like v3a, instead of 1e-4) — too conservative
+   continuation may have under-shifted the casual register.
+2. **More epochs** (3 like v3a, instead of 2).
+3. **Higher v0.2 oversample** (3x or 4x instead of 2x) — let the new
+   voice data dominate the training mix.
+4. **Drop v3a synthetic entirely** from the mix — the 500-pair
+   retention sample may be the source of the persistent fabrication
+   patterns (since v3a is itself the fabrication source per the v1
+   baseline analysis).
+5. **Add explicit short-prompt-no-continuation pairs** — anti-multi-
+   turn-fake-dialog discrimination. Maybe 10-20 pairs where prompt is
+   1-3 words and ideal response is brief acknowledgment that does NOT
+   manufacture a follow-up turn.
+6. **Add fabrication-discrimination set** (~30-50 pairs) covering the
+   broader v1 fabrication taxonomy: invented hardware specs, fake
+   bibliographies, misattributions, fabricated checkpoint IDs.
+
+Estimated v0.2.1 cost: ~$0.30-0.50 RunPod (same A5000 ~1.5h) + ~$0.10
+OpenRouter if expansion needs a refresh. Well within remaining budget
+(~$23 of $25 still available).
+
+**Current Ollama state:** hammerstein-7b (v1, framework-disposition,
+v3a-derived) is still the deployed model the Telegram bot uses.
+`hammerstein-7b-v02` is loaded but NOT wired into the bot — Ray can
+smoke it directly via `ollama run hammerstein-7b-v02` to confirm the
+eval verdict before deciding on v0.2.1 vs sticking with v1 vs other.
+GGUF at `C:\Users\rweis\Desktop\hammerstein-7b-v02-output\`.

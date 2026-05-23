@@ -1,0 +1,34 @@
+# Ollama Modelfile for hammerstein-7b-v02 (q5_k_m GGUF)
+#
+# v0.2 is the casual-register + audit-trigger-discrimination retrain layered
+# on top of v3a's framework adapter. Continued LoRA training from
+# lerugray/hammerstein-7b-lora (HF) with the v0.2 additions mix:
+#   - 30 voice-anchor seeds
+#   - 58-pair audit-trigger discrimination set
+#   - 166-pair OpenRouter Qwen3.6-plus restyled (no_robots + oasst2 + hh-rlhf)
+#   - 541 v0.1 Ray-stack pairs (first time seen by adapter)
+#   - 500-sample of v3a synthetic (framework retention)
+#
+# Usage (from the deploy/ directory, after placing the GGUF alongside this file):
+#
+#   ollama create hammerstein-7b-v02 -f deploy/Modelfile.v02
+#   ollama run hammerstein-7b-v02
+#
+# The GGUF must be at: deploy/hammerstein-7b-v02-q5_k_m.gguf
+
+FROM ./hammerstein-7b-v02-q5_k_m.gguf
+
+# No system prompt — voice rules + framework discipline baked into the
+# weights via continued LoRA training on the v0.2 mix. The v3a "no system
+# prompt" design comment carries over: a system prompt at deployment time
+# can interfere with the distilled behavior.
+#
+# Confirmed via the 2026-05-22 partial-validation experiment: a 3262-char
+# voice-spec system prompt added to v1's calls did not meaningfully shift
+# v1's failure modes (v3a's structural defaults override system prompts).
+# v0.2 fixes the failures via weight-level training, not deployment hacks.
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

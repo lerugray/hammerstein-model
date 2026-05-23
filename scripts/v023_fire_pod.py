@@ -21,6 +21,7 @@ reference-runpod-per-pod-ssh).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -41,6 +42,25 @@ PUB_PATH = Path(str(KEY_PATH) + ".pub")
 LOCAL_STORE = Path("D:/hammerstein-store/models/v0.2.3")
 
 RUNPOD_API = "https://api.runpod.io/graphql"
+
+# HuggingFace push-pull config. The pod pushes GGUF + LoRA tar to this
+# private repo; the local driver pulls from it via huggingface_hub.
+# Replaces scp after two consecutive Windows-side scp corruptions on
+# 2026-05-23. HF transfer is chunked, checksummed, retryable.
+HF_REPO_ID = "lerugray/hammerstein-7b-v023"
+HF_TOKEN_PATH = Path.home() / ".cache" / "huggingface" / "token"
+
+
+def load_hf_token() -> str:
+    """Read the HF token from the standard CLI cache location. Never
+    print or log the value. Returns empty string if unavailable so the
+    caller can produce a useful error."""
+    env = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
+    if env:
+        return env.strip()
+    if HF_TOKEN_PATH.exists():
+        return HF_TOKEN_PATH.read_text(encoding="utf-8").strip()
+    return ""
 
 # GPU type IDs we prefer, in order. A5000 SECURE was used for v0.2.2;
 # 4090 also works. The script picks the first available.
@@ -149,8 +169,10 @@ def pick_gpu_types(api_key: str) -> list[tuple[str, str, float]]:
 
 
 def fire_pod(api_key: str, pubkey: str, gpu_type_id: str,
+             hf_token: str = "",
              template: str = DEFAULT_TEMPLATE) -> str:
-    """Create the pod. Returns podId."""
+    """Create the pod. Returns podId. Passes HF_TOKEN as an env var so
+    the pod's run script can upload artifacts to the private HF repo."""
     sys.stdout.flush(); print(f"  Firing pod (GPU {gpu_type_id})...")
     mutation = """
     mutation($input: PodFindAndDeployOnDemandInput!) {
@@ -174,7 +196,11 @@ def fire_pod(api_key: str, pubkey: str, gpu_type_id: str,
             "imageName": template,
             "ports": "22/tcp,8888/http",
             "name": f"hammerstein-v023-{int(time.time())}",
-            "env": [{"key": "PUBLIC_KEY", "value": pubkey}],
+            "env": [
+                {"key": "PUBLIC_KEY", "value": pubkey},
+                {"key": "HF_TOKEN", "value": hf_token},
+                {"key": "HF_REPO_ID", "value": HF_REPO_ID},
+            ],
             "dockerArgs": "",
         },
     }
@@ -310,6 +336,15 @@ def main() -> int:
     pubkey = ensure_ssh_keypair()
     gpu_candidates = pick_gpu_types(api_key)
 
+    hf_token = load_hf_token()
+    if not hf_token:
+        raise RuntimeError(
+            "HF token not found. Expected at ~/.cache/huggingface/token "
+            "(login via `huggingface-cli login`) or HF_TOKEN env var. The "
+            "pod needs this to push the GGUF to the private HF repo."
+        )
+    sys.stdout.flush(); print(f"  HF token loaded (passing to pod as env var).")
+
     if args.dry_run:
         sys.stdout.flush(); print("\nDry-run complete. Would fire pod next.")
         return 0
@@ -320,7 +355,7 @@ def main() -> int:
     for gpu_type_id, gpu_name, gpu_price in gpu_candidates:
         try:
             sys.stdout.flush(); print(f"\n  Attempting deploy on {gpu_name} (${gpu_price:.3f}/hr)...")
-            pod_id = fire_pod(api_key, pubkey, gpu_type_id)
+            pod_id = fire_pod(api_key, pubkey, gpu_type_id, hf_token=hf_token)
             sys.stdout.flush(); print(f"  Deploy succeeded on {gpu_name}.")
             break
         except RuntimeError as e:
@@ -374,24 +409,23 @@ def main() -> int:
             raise RuntimeError(f"tmux launch failed (rc={rc}): {out[-500:]}")
         sys.stdout.flush(); print(f"  {out.strip()}")
 
-        # Poll for GGUF artifact existence. Wrapped so transient SSH /
-        # decoding errors don't kill the whole pipeline (the pod keeps
-        # training; we just need the next poll to recover).
+        # Poll for HF upload sentinel — the pod's run script uploads the
+        # GGUF + LoRA tar to a private HF repo and writes
+        # /workspace/v023-hf-upload-done when both are uploaded. This is
+        # the scp-replacement after two Windows scp corruptions in a row.
         sys.stdout.flush(); print()
-        sys.stdout.flush(); print("  Polling for GGUF artifact (training + GGUF conversion ~30-45 min)...")
-        gguf_path = (
-            "/workspace/hammerstein-model/training/24-7-variant/output/"
-            "qwen7b-v023-q5km/hammerstein-7b-v023-q5_k_m.gguf"
-        )
-        deadline = time.time() + 75 * 60
+        sys.stdout.flush(); print("  Polling for HF upload sentinel (train + GGUF convert + HF push ~40-50 min)...")
+        sentinel_path = "/workspace/v023-hf-upload-done"
+        deadline = time.time() + 90 * 60
         last_log_size = -1
         consecutive_errors = 0
-        gguf_ready = False
+        upload_done = False
+        upload_meta_text = ""
         while time.time() < deadline:
             time.sleep(60)
             try:
                 check = (
-                    f"if [ -f {gguf_path} ]; then echo READY; "
+                    f"if [ -f {sentinel_path} ]; then echo READY; cat {sentinel_path}; "
                     f"else wc -c < /workspace/v023-run.log 2>/dev/null || echo 0; fi"
                 )
                 rc, out = ssh_run(ip, port, check, timeout=60)
@@ -405,15 +439,15 @@ def main() -> int:
 
             out_s = (out or "").strip()
             if "READY" in out_s:
-                sys.stdout.flush(); print(f"  GGUF ready.")
-                gguf_ready = True
+                sys.stdout.flush(); print(f"  HF upload sentinel present.")
+                upload_meta_text = out_s
+                upload_done = True
                 break
             try:
                 log_size = int(out_s.split()[-1])
             except (ValueError, IndexError):
                 log_size = -1
             if log_size != last_log_size:
-                # Pull last lines of the log. Tolerate failures gracefully.
                 try:
                     rc2, tail = ssh_run(ip, port, "tail -8 /workspace/v023-run.log 2>/dev/null", timeout=30)
                     sys.stdout.flush(); print(f"  [log size {log_size} bytes]")
@@ -423,31 +457,76 @@ def main() -> int:
                     sys.stdout.flush(); print(f"  [log size {log_size} bytes — tail fetch failed: {e}]")
                 last_log_size = log_size
 
-        if not gguf_ready:
+        if not upload_done:
             sys.stdout.flush(); print("  TIMEOUT — fetching tail of run log...")
             try:
-                _, tail = ssh_run(ip, port, "tail -50 /workspace/v023-run.log 2>/dev/null", timeout=60)
+                _, tail = ssh_run(ip, port, "tail -80 /workspace/v023-run.log 2>/dev/null", timeout=60)
                 sys.stdout.flush(); print(tail)
             except Exception as e:
                 sys.stdout.flush(); print(f"  (tail fetch failed: {e})")
-            raise RuntimeError("Training did not finish within 75 min.")
+            raise RuntimeError("Training + HF upload did not finish within 90 min.")
 
-        # scp the GGUF back.
+        # Parse the sentinel content for the GGUF sha256 (for integrity verify).
+        expected_sha = ""
+        for ln in upload_meta_text.splitlines():
+            if ln.startswith("gguf_sha256="):
+                expected_sha = ln.split("=", 1)[1].strip()
+
+        # Pull GGUF + adapter via huggingface_hub. Token is read from the
+        # standard cache location automatically; we never inline it here.
         sys.stdout.flush(); print()
-        sys.stdout.flush(); print("  Pulling artifacts back...")
-        scp_back(ip, port, gguf_path, LOCAL_STORE / "hammerstein-7b-v023-q5_k_m.gguf")
-        # Optional: also pull the LoRA adapter tar
-        lora_tar = (
-            "/workspace/hammerstein-model/training/24-7-variant/output/"
-            "qwen7b-v023-continued/lora-adapter-v023.tar.gz"
-        )
+        sys.stdout.flush(); print(f"  Downloading artifacts from HF private repo {HF_REPO_ID}...")
         try:
-            scp_back(ip, port, lora_tar, LOCAL_STORE / "lora-adapter-v023.tar.gz")
-        except Exception as e:
-            sys.stdout.flush(); print(f"  (LoRA tar scp skipped: {e})")
+            from huggingface_hub import hf_hub_download
+        except ImportError:
+            sys.stdout.flush(); print("  huggingface_hub not installed locally; pip-installing...")
+            subprocess.run([sys.executable, "-m", "pip", "install", "-q", "huggingface_hub>=0.23"], check=True)
+            from huggingface_hub import hf_hub_download
 
+        LOCAL_STORE.mkdir(parents=True, exist_ok=True)
+        gguf_filename = "hammerstein-7b-v023-q5_k_m.gguf"
+        adapter_filename = "lora-adapter-v023.tar.gz"
+
+        sys.stdout.flush(); print(f"    pulling {gguf_filename} ...")
+        gguf_local = hf_hub_download(
+            repo_id=HF_REPO_ID,
+            filename=gguf_filename,
+            repo_type="model",
+            local_dir=str(LOCAL_STORE),
+        )
+        sys.stdout.flush(); print(f"    pulling {adapter_filename} ...")
+        try:
+            hf_hub_download(
+                repo_id=HF_REPO_ID,
+                filename=adapter_filename,
+                repo_type="model",
+                local_dir=str(LOCAL_STORE),
+            )
+        except Exception as e:
+            sys.stdout.flush(); print(f"    (adapter pull skipped: {e})")
+
+        # Verify GGUF integrity by recomputing sha256 locally.
+        sys.stdout.flush(); print(f"  Verifying GGUF integrity (sha256)...")
+        h = hashlib.sha256()
+        with open(gguf_local, "rb") as f:
+            while True:
+                chunk = f.read(8 * 1024 * 1024)
+                if not chunk: break
+                h.update(chunk)
+        local_sha = h.hexdigest()
+        if expected_sha and local_sha != expected_sha:
+            raise RuntimeError(
+                f"GGUF integrity check FAILED. Expected {expected_sha}, got {local_sha}."
+            )
+        sys.stdout.flush(); print(f"  GGUF verified ({local_sha[:16]}...).")
+        # Also verify GGUF magic bytes, the failure mode we hit twice on scp.
+        with open(gguf_local, "rb") as f:
+            magic = f.read(4)
+        if magic != b"GGUF":
+            raise RuntimeError(f"GGUF magic bytes wrong: {magic!r} (expected b'GGUF')")
+        sys.stdout.flush(); print(f"  Magic bytes OK.")
         sys.stdout.flush(); print()
-        sys.stdout.flush(); print("  Artifacts retrieved.")
+        sys.stdout.flush(); print("  Artifacts retrieved + verified.")
 
     finally:
         if not args.no_terminate:

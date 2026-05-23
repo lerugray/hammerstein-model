@@ -156,32 +156,101 @@ else
     echo "[4/5] GGUF exists — skipping."
 fi
 
-# --- 5. Package ---
+# --- 5. Push GGUF to HuggingFace (private repo) ---
+# scp from this Windows pod → home PC has corrupted the GGUF twice in a
+# row (5GB truncation then header-zero corruption on retry). HF transfer
+# is chunked + checksummed + retryable; far more reliable for 5GB. The
+# local driver downloads from HF via huggingface_hub on the other side.
 echo ""
-echo "[5/5] Packaging artifacts for scp..."
+echo "[5/5] Pushing GGUF to HuggingFace private repo..."
 
-if [ -d "$SFT_OUTPUT/lora-adapter" ] && [ ! -f "$SFT_OUTPUT/lora-adapter-v023.tar.gz" ]; then
-    tar -czf "$SFT_OUTPUT/lora-adapter-v023.tar.gz" -C "$SFT_OUTPUT" lora-adapter
+HF_REPO_ID="${HF_REPO_ID:-lerugray/hammerstein-7b-v023}"
+
+if [ -z "$HF_TOKEN" ]; then
+    echo "ERROR: HF_TOKEN env var not set on this pod."
+    echo "  The local driver is supposed to pass it via the podFindAndDeployOnDemand env."
+    exit 1
 fi
 
-if [ -f "$GGUF_OUTPUT/hammerstein-7b-v023-q5_k_m.gguf" ] && [ ! -f "$GGUF_OUTPUT/model-v023.tar.gz" ]; then
-    tar -czf "$GGUF_OUTPUT/model-v023.tar.gz" -C "$GGUF_OUTPUT" hammerstein-7b-v023-q5_k_m.gguf
+if [ ! -f "$GGUF_OUTPUT/hammerstein-7b-v023-q5_k_m.gguf" ]; then
+    echo "ERROR: GGUF not found at $GGUF_OUTPUT — train+convert step didn't complete."
+    exit 1
 fi
 
+pip install -q --upgrade "huggingface_hub>=0.23" 2>&1 | tail -2
+
+# Create + upload via the Python API for proper error handling. exist_ok=True
+# makes this idempotent across retries.
+python <<PYEOF
+import os, sys, hashlib
+from huggingface_hub import HfApi, create_repo
+
+token = os.environ["HF_TOKEN"]
+repo_id = "$HF_REPO_ID"
+gguf_path = "$GGUF_OUTPUT/hammerstein-7b-v023-q5_k_m.gguf"
+adapter_path = "$SFT_OUTPUT/lora-adapter-v023.tar.gz"
+
+api = HfApi(token=token)
+create_repo(repo_id, repo_type="model", private=True, exist_ok=True, token=token)
+print(f"Repo ready: {repo_id} (private)")
+
+# Compute sha256 for post-download verification on the local side.
+def sha256(p, bs=8 * 1024 * 1024):
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        while True:
+            chunk = f.read(bs)
+            if not chunk: break
+            h.update(chunk)
+    return h.hexdigest()
+
+# Optionally produce a small tar of the lora adapter for backup.
+import subprocess
+if not os.path.exists(adapter_path):
+    subprocess.run(["tar", "-czf", adapter_path, "-C", "$SFT_OUTPUT", "lora-adapter"], check=True)
+
+# Hash the GGUF before upload so we can compare on the receive side.
+print("Computing local sha256...")
+local_hash = sha256(gguf_path)
+print(f"  GGUF sha256: {local_hash}")
+
+# Write the hash + sentinel locally so the home-PC driver knows upload's done.
+with open("/workspace/v023-hf-upload-meta.txt", "w") as f:
+    f.write(f"repo_id={repo_id}\n")
+    f.write(f"gguf_sha256={local_hash}\n")
+    f.write(f"gguf_size={os.path.getsize(gguf_path)}\n")
+
+print(f"Uploading GGUF ({os.path.getsize(gguf_path)/1e9:.2f} GB) to {repo_id}...")
+api.upload_file(
+    path_or_fileobj=gguf_path,
+    path_in_repo="hammerstein-7b-v023-q5_k_m.gguf",
+    repo_id=repo_id,
+    repo_type="model",
+    token=token,
+)
+print("GGUF uploaded.")
+
+print(f"Uploading LoRA adapter tar ({os.path.getsize(adapter_path)/1e6:.1f} MB)...")
+api.upload_file(
+    path_or_fileobj=adapter_path,
+    path_in_repo="lora-adapter-v023.tar.gz",
+    repo_id=repo_id,
+    repo_type="model",
+    token=token,
+)
+print("Adapter tar uploaded.")
+
+# Final sentinel: the home-PC driver polls this file's existence + content
+# to know both artifacts are up and the sha is verified.
+with open("/workspace/v023-hf-upload-done", "w") as f:
+    f.write(f"DONE\nrepo_id={repo_id}\ngguf_sha256={local_hash}\n")
+print("Upload complete. Sentinel: /workspace/v023-hf-upload-done")
+PYEOF
+
 echo ""
-echo "=== v0.2.3 training complete ==="
+echo "=== v0.2.3 training + HF upload complete ==="
 date
 echo ""
-echo "Files to scp back to home PC:"
-echo "  $SFT_OUTPUT/lora-adapter-v023.tar.gz   <- continued LoRA adapter (~300 MB)"
-echo "  $GGUF_OUTPUT/model-v023.tar.gz         <- Q5_K_M GGUF (~5 GB; load into Ollama)"
+echo "Artifact (private repo): $HF_REPO_ID"
 echo ""
-echo "Deploy to homelab:"
-echo "  scp the .gguf to D:\\hammerstein-store\\models\\v0.2.3\\"
-echo "  Update deploy/Modelfile.v023 to point at the new GGUF"
-echo "  ollama create hammerstein-7b-v023 -f deploy/Modelfile.v023"
-echo "  Run: python scripts/v023_self_state_probe.py --model hammerstein-7b-v023 --tag v023-post-train"
-echo "  Run: python scripts/v2_eval_failure_modes.py --model hammerstein-7b-v023 --tag v023-post-train"
-echo "  Compare to v0.2.2 baselines."
-echo ""
-echo "STOP THE POD in the RunPod dashboard once scp is done."
+echo "Home PC pulls via huggingface_hub.hf_hub_download. Pod can be terminated now."

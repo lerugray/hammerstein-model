@@ -1,0 +1,18 @@
+# Ollama Modelfile for hammerstein-7b-v021 (q5_k_m GGUF)
+#
+# v0.2.1 is the iteration after v0.2's NOT-ship-ready verdict:
+#   - LR 2e-4 (was 1e-4): more aggressive continuation
+#   - 3 epochs (was 2): more learning on new pairs
+#   - v0.2.1 oversample 3x (was 2x): let new voice dominate
+#   - Dropped v3a synthetic retention sample entirely
+#   - Added 20 short-prompt-no-continuation pairs (fix multi-turn-fake-dialog)
+#   - Added 40 fabrication-discrimination pairs (broader v1 fabrication taxonomy)
+#
+# Total v0.2.1 training data: 313 pairs (vs 253 for v0.2).
+
+FROM ./hammerstein-7b-v021-q5_k_m.gguf
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

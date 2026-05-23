@@ -164,11 +164,22 @@ fi
 echo ""
 echo "[5/5] Pushing GGUF to HuggingFace private repo..."
 
+# RunPod's container env vars (set via podFindAndDeployOnDemand env: block)
+# only land in /etc/environment, which is sourced for PAM-driven interactive
+# logins but NOT for `ssh root@host 'cmd'` non-interactive shells (tmux
+# launch uses these). The local driver therefore writes the token to a
+# file via SSH stdin after bootstrap. Read it here as a fallback.
+if [ -z "$HF_TOKEN" ] && [ -f /workspace/.hf_token ]; then
+    export HF_TOKEN="$(cat /workspace/.hf_token)"
+fi
+if [ -z "$HF_REPO_ID" ] && [ -f /workspace/.hf_repo_id ]; then
+    export HF_REPO_ID="$(cat /workspace/.hf_repo_id)"
+fi
 HF_REPO_ID="${HF_REPO_ID:-lerugray/hammerstein-7b-v023}"
 
 if [ -z "$HF_TOKEN" ]; then
-    echo "ERROR: HF_TOKEN env var not set on this pod."
-    echo "  The local driver is supposed to pass it via the podFindAndDeployOnDemand env."
+    echo "ERROR: HF_TOKEN not set and /workspace/.hf_token not present."
+    echo "  Local driver should plant it via ssh_write_file post-bootstrap."
     exit 1
 fi
 

@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
-"""v0.2.3 pod fire — local driver for autonomous RunPod training.
+r"""v0.2.3 pod fire — local driver for autonomous RunPod training.
 
 Lifecycle:
   1. Generate ephemeral ed25519 keypair at ~/.runpod-overnight/key
   2. Find an A5000-class GPU via RunPod GraphQL gpuTypes query
   3. podFindAndDeployOnDemand with PUBLIC_KEY env + 22/tcp port
   4. Poll for SSH endpoint (runtime.ports[22/tcp].publicPort + .ip)
-  5. SSH in, clone repo (or pull), launch run_v023_pod.sh in nohup
-  6. Poll pod for GGUF artifact existence (~30-45 min training window)
-  7. scp the GGUF + LoRA tar back to D:\hammerstein-store\models\v0.2.3\
+  5. SSH in, clone repo (or pull), plant HF_TOKEN at /workspace/.hf_token
+     via SSH stdin, then launch run_v023_pod.sh in a detached tmux session
+  6. Poll for /workspace/v023-hf-upload-done sentinel (pod pushes the
+     GGUF + LoRA tar to a private HF repo as the transfer channel)
+  7. hf_hub_download GGUF + adapter to D:\hammerstein-store\models\v0.2.3\
+     (sha256 + GGUF magic-byte verify)
   8. Terminate the pod
   9. Print Ollama deploy + eval commands for the local PC
 
 Reads RUNPOD_API_KEY from hammerstein-model/.env.
 
 Per-pod SSH avoids touching the account-level pubKey field (see memory
-reference-runpod-per-pod-ssh).
+reference-runpod-per-pod-ssh). HF_TOKEN is planted by ssh_write_file
+because container env from podFindAndDeployOnDemand only hits
+/etc/environment (interactive PAM only) — invisible to ssh non-
+interactive shells.
 """
 
 from __future__ import annotations
@@ -169,10 +175,16 @@ def pick_gpu_types(api_key: str) -> list[tuple[str, str, float]]:
 
 
 def fire_pod(api_key: str, pubkey: str, gpu_type_id: str,
-             hf_token: str = "",
              template: str = DEFAULT_TEMPLATE) -> str:
-    """Create the pod. Returns podId. Passes HF_TOKEN as an env var so
-    the pod's run script can upload artifacts to the private HF repo."""
+    """Create the pod. Returns podId.
+
+    NOTE: HF_TOKEN is NOT passed via the env block here. RunPod's API env
+    vars only land in /etc/environment, which is read by PAM for
+    interactive SSH logins but NOT by `ssh root@host 'cmd'` style
+    non-interactive shells (which our tmux launch uses). The driver
+    instead writes the token to /workspace/.hf_token via SSH stdin after
+    bootstrap; the run script reads from there. See attempt 8 failure
+    log + ssh_write_file() below."""
     sys.stdout.flush(); print(f"  Firing pod (GPU {gpu_type_id})...")
     mutation = """
     mutation($input: PodFindAndDeployOnDemandInput!) {
@@ -198,8 +210,6 @@ def fire_pod(api_key: str, pubkey: str, gpu_type_id: str,
             "name": f"hammerstein-v023-{int(time.time())}",
             "env": [
                 {"key": "PUBLIC_KEY", "value": pubkey},
-                {"key": "HF_TOKEN", "value": hf_token},
-                {"key": "HF_REPO_ID", "value": HF_REPO_ID},
             ],
             "dockerArgs": "",
         },
@@ -248,6 +258,42 @@ def poll_for_ssh(api_key: str, pod_id: str, timeout_sec: int = 300) -> tuple[str
                     return ip, port
         time.sleep(8)
     raise RuntimeError(f"Pod {pod_id} did not surface SSH in {timeout_sec}s")
+
+
+def ssh_write_file(ip: str, port: int, remote_path: str, content: str,
+                   mode: str = "600") -> None:
+    """Write `content` to `remote_path` on the pod via SSH stdin. Used
+    for the HF token and any other secret that must reach the pod
+    without appearing in argv (visible to /proc on the remote)."""
+    cmd = (
+        f"umask 077 && mkdir -p \"$(dirname '{remote_path}')\" "
+        f"&& cat > '{remote_path}' && chmod {mode} '{remote_path}'"
+    )
+    full_cmd = [
+        "ssh",
+        "-i", str(KEY_PATH),
+        "-p", str(port),
+        "-o", "StrictHostKeyChecking=no",
+        "-o", "UserKnownHostsFile=/dev/null",
+        "-o", "LogLevel=ERROR",
+        "-o", "ConnectTimeout=30",
+        f"root@{ip}",
+        cmd,
+    ]
+    res = subprocess.run(
+        full_cmd,
+        input=content,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=60,
+    )
+    if res.returncode != 0:
+        raise RuntimeError(
+            f"ssh_write_file({remote_path}) failed (rc={res.returncode}): "
+            f"{(res.stderr or '')[-300:]}"
+        )
 
 
 def ssh_run(ip: str, port: int, cmd: str, timeout: int = 600, capture: bool = True) -> tuple[int, str]:
@@ -343,7 +389,7 @@ def main() -> int:
             "(login via `huggingface-cli login`) or HF_TOKEN env var. The "
             "pod needs this to push the GGUF to the private HF repo."
         )
-    sys.stdout.flush(); print(f"  HF token loaded (passing to pod as env var).")
+    sys.stdout.flush(); print(f"  HF token loaded (will plant at /workspace/.hf_token post-bootstrap).")
 
     if args.dry_run:
         sys.stdout.flush(); print("\nDry-run complete. Would fire pod next.")
@@ -355,7 +401,7 @@ def main() -> int:
     for gpu_type_id, gpu_name, gpu_price in gpu_candidates:
         try:
             sys.stdout.flush(); print(f"\n  Attempting deploy on {gpu_name} (${gpu_price:.3f}/hr)...")
-            pod_id = fire_pod(api_key, pubkey, gpu_type_id, hf_token=hf_token)
+            pod_id = fire_pod(api_key, pubkey, gpu_type_id)
             sys.stdout.flush(); print(f"  Deploy succeeded on {gpu_name}.")
             break
         except RuntimeError as e:
@@ -393,6 +439,15 @@ def main() -> int:
             raise RuntimeError(f"Bootstrap failed (rc={rc}): {out[-500:]}")
         for ln in out.strip().splitlines()[-4:]:
             sys.stdout.flush(); print(f"  {ln}")
+
+        # Plant the HF token on the pod via SSH stdin. The run script reads
+        # /workspace/.hf_token in step 5. Bypasses the broken
+        # podFindAndDeployOnDemand env path (see fire_pod docstring).
+        sys.stdout.flush(); print()
+        sys.stdout.flush(); print("  Planting HF token at /workspace/.hf_token...")
+        ssh_write_file(ip, port, "/workspace/.hf_token", hf_token)
+        # Also plant the repo id so the run script doesn't need a fallback.
+        ssh_write_file(ip, port, "/workspace/.hf_repo_id", HF_REPO_ID, mode="644")
 
         # Launch the training inside a detached tmux session. tmux is the
         # canonical "run this on a remote and disconnect" tool.

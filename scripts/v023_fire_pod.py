@@ -55,6 +55,16 @@ PREFERRED_GPU_TYPES = [
 DEFAULT_TEMPLATE = "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"
 
 
+# Force the driver's own stdout to UTF-8 with replace, so progress-bar
+# bytes from the remote log don't choke local prints (Windows defaults
+# stdout to cp1252 even when stdin is a pipe).
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, Exception):
+    pass
+
+
 def load_env() -> dict:
     env = {}
     if ENV_PATH.exists():
@@ -157,7 +167,7 @@ def fire_pod(api_key: str, pubkey: str, gpu_type_id: str,
             "cloudType": "SECURE",
             "gpuCount": 1,
             "gpuTypeId": gpu_type_id,
-            "containerDiskInGb": 40,
+            "containerDiskInGb": 80,
             "volumeInGb": 0,
             "minMemoryInGb": 16,
             "minVcpuCount": 4,

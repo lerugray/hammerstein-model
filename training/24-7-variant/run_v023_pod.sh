@@ -106,6 +106,14 @@ if [ ! -f "$GGUF_OUTPUT/hammerstein-7b-v023-q5_k_m.gguf" ]; then
         exit 1
     fi
 
+    # Disk-cleanup pass before GGUF conversion. The merged model + F16 GGUF
+    # + base model + llama.cpp + trainer checkpoints together can blow past
+    # a 40GB container disk. Drop the trainer-checkpoints we no longer
+    # need (the saved LoRA adapter is the artifact, not the checkpoints).
+    echo "      Cleaning trainer checkpoints to free disk..."
+    rm -rf "$SFT_OUTPUT/trainer-checkpoints" 2>/dev/null || true
+    df -h /workspace | tail -2
+
     if [ ! -d /workspace/llama.cpp ]; then
         echo "      Cloning llama.cpp..."
         git clone --depth 1 https://github.com/ggerganov/llama.cpp.git /workspace/llama.cpp

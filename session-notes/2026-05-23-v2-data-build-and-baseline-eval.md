@@ -125,6 +125,43 @@ directly via the no-engagement-pushing + honest-constraint-naming rules.
 The same eval harness re-runs against v0.2 once trained; the
 comparison-against-baseline structure is in place.
 
+**Sharpened the heuristics after the first baseline run** by adding
+six new flags grounded in patterns I saw v1 produce that the original
+checks missed: `plain_english_summary_leak` (the v3a strategic-reasoning
+training-set leaks the `**Plain English summary:**` header into casual
+responses), `fabricated_timestamp_log` (the "morning" prompt produced
+2+ `## HH:MM` timestamped fake log entries), `fabricated_url` (URLs /
+runtime endpoints fabricated in casual responses), `framework_header_
+leakage` (2+ bolded `**The X:**` pseudo-headers in casual register),
+`misattribution` (hand-curated: Sutskever attribution on Hammerstein
+quadrant), `fabricated_checkpoint_id` (`hammerstein-NNNN` patterns,
+`Qwen3.6-NB` nonexistent version names).
+
+Re-ran v1 baseline with the new heuristics; results at
+`data/eval-hammerstein-7b-2026-05-22-v1-baseline-v2.json`. Compared
+against the original run via the new
+`scripts/v2_compare_eval_runs.py` — shows v1 is variance-prone (same
+model, same prompts, different failure modes emerged across runs).
+Run 2 caught `plain_english_summary_leak` on the knowledge-query
+that Run 1 missed entirely. Different fabrications across runs:
+Run 2's `v1-01-welcome-home` claimed "32GB of RAM, Intel i7,
+Windows 10" and invented "a different Ray (R12)"; Run 2's
+`v1-05-napoleon-iii` fabricated a "17-episode Napoleon Bonaparte
+podcast by David G. Chandler" — Chandler is real (military historian,
+d. 2004) but the podcast isn't. The fabrication is creative each run.
+
+**New compare-eval script:**
+`scripts/v2_compare_eval_runs.py` produces side-by-side markdown
+diff between two eval JSONs — aggregate, failure-mode counts, per-prompt,
+verdict heuristic. Morning v0.2 comparison is one command:
+```bash
+python scripts/v2_compare_eval_runs.py \
+    data/eval-hammerstein-7b-2026-05-22-v1-baseline-v2.json \
+    data/eval-hammerstein-7b-v02-<DATE>-v02-post-train.json \
+    --name-a v1-baseline --name-b v0.2 \
+    --out session-notes/v02-vs-v1-eval-comparison.md
+```
+
 ### CRT face polish (complete, by sub-agent)
 
 `homelab/crt-face/crt-face.js` grew from 470 to 786 lines with six

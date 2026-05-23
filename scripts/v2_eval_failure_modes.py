@@ -251,6 +251,83 @@ def _has_engagement_pushing(text: str, prompt_id: str) -> bool:
     return True
 
 
+def _has_plain_english_summary_leak(text: str, expected_register: str) -> bool:
+    """v3a framework-leakage signature. The training set's strategic-reasoning
+    pairs lead with `**Plain English summary:**` headers. That structural tic
+    bleeds into casual responses on v1, producing inappropriate audit-shape
+    framing on non-audit prompts."""
+    if expected_register not in ("casual", "refusal"):
+        return False
+    # The header (and minor variations)
+    return bool(re.search(
+        r"\*\*Plain English summary\*?\*?:|\*\*Summary\*\*:",
+        text, re.IGNORECASE,
+    ))
+
+
+def _has_fabricated_timestamp_log(text: str, prompt_id: str) -> bool:
+    """Multi-timestamp session log fabricated as a response. v1 produced
+    these on a one-word `morning` prompt — `## 13:06 PM\n**State:** ...`
+    multiple times across the response. Detected by 2+ ## HH:MM headers."""
+    matches = re.findall(r"^\s*##\s+\d{1,2}:\d{2}", text, re.MULTILINE)
+    return len(matches) >= 2
+
+
+def _has_fabricated_url(text: str, expected_register: str) -> bool:
+    """v1 fabricates specific URLs / runtime endpoints in casual responses
+    (e.g. `ray://127.0.0.1:6379`, `https://...` references to nonexistent
+    docs). Heuristic: any URL or schemeful path in a casual response is
+    suspect unless the prompt mentioned one."""
+    if expected_register not in ("casual", "refusal"):
+        return False
+    # URL-like patterns
+    patterns = [
+        r"https?://[^\s)\]]+",
+        r"\bray://[^\s)\]]+",
+        r"\b[a-z]+://\d+\.\d+\.\d+\.\d+",
+    ]
+    return any(re.search(p, text) for p in patterns)
+
+
+def _has_framework_header_leakage(text: str, expected_register: str) -> bool:
+    """Bolded pseudo-header signature: `**The X.**` or `**The X:**`
+    structural framing characteristic of v3a's strategic-reasoning training.
+    These shouldn't appear in casual responses. Heuristic: 2+ bolded
+    sentence-leading headers."""
+    if expected_register not in ("casual", "refusal"):
+        return False
+    # Lines starting with **... **: or **The ...**
+    headers = re.findall(
+        r"^\s*\*\*[A-Z][^*]{2,60}\*\*[:.]\s",
+        text, re.MULTILINE,
+    )
+    return len(headers) >= 2
+
+
+def _has_misattribution(text: str, prompt_id: str) -> bool:
+    """Specific misattributions seen in v1 baseline. Hand-curated; expand
+    as new ones surface."""
+    text_lower = text.lower()
+    # The "Hammerstein quadrant misattributed to Ilya Sutskever" case
+    if "quadrant" in prompt_id.lower() or "hammerstein" in prompt_id.lower():
+        if "sutskever" in text_lower:
+            return True
+    return False
+
+
+def _has_fabricated_checkpoint_id(text: str, expected_register: str) -> bool:
+    """Fabricated checkpoint version IDs like `hammerstein-0419` /
+    `hammerstein-0424` / `Qwen3.6-7B` (the latter doesn't exist; only
+    Qwen2.5 and Qwen3 series exist as of 2026-05-23). Heuristic looks
+    for date-coded checkpoint IDs and nonexistent Qwen version names."""
+    patterns = [
+        r"\bhammerstein-\d{4}\b",            # hammerstein-0419 etc
+        r"\bQwen3\.6-\d+B\b",                 # Qwen3.6-7B doesn't exist
+        r"\bQwen3\.6-7B\b",
+    ]
+    return any(re.search(p, text) for p in patterns)
+
+
 def _detect_register(text: str) -> str:
     """Rough register classification heuristic."""
     text_lower = text.lower()
@@ -289,6 +366,12 @@ def check_response(prompt_obj: dict, response: str) -> dict:
         "sentence_continuation": _has_sentence_continuation(prompt, response),
         "fabricate_historical": _has_fabricated_historical(response, pid),
         "engagement_pushing": _has_engagement_pushing(response, pid),
+        "plain_english_summary_leak": _has_plain_english_summary_leak(response, expected),
+        "fabricated_timestamp_log": _has_fabricated_timestamp_log(response, pid),
+        "fabricated_url": _has_fabricated_url(response, expected),
+        "framework_header_leakage": _has_framework_header_leakage(response, expected),
+        "misattribution": _has_misattribution(response, pid),
+        "fabricated_checkpoint_id": _has_fabricated_checkpoint_id(response, expected),
     }
 
     detected_register = _detect_register(response)

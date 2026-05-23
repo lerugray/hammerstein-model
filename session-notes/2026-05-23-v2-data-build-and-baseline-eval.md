@@ -394,4 +394,96 @@ v3a-derived) is still the deployed model the Telegram bot uses.
 `hammerstein-7b-v02` is loaded but NOT wired into the bot — Ray can
 smoke it directly via `ollama run hammerstein-7b-v02` to confirm the
 eval verdict before deciding on v0.2.1 vs sticking with v1 vs other.
-GGUF at `C:\Users\rweis\Desktop\hammerstein-7b-v02-output\`.
+GGUF at `D:\hammerstein-store\models\v0.2\` (moved from Desktop into
+the new dedicated D drive store).
+
+## v0.2.1 trained (2026-05-23 afternoon) — WORSE than v0.2
+
+Ray asked to fire v0.2.1 with the v0.2 verdict's hypotheses. Built +
+trained + deployed + evaluated end-to-end.
+
+**Hyperparameters changed vs v0.2:**
+- LR 2e-4 (was 1e-4)
+- 3 epochs (was 2)
+- v0.2.1 oversample 3x (was 2x for v0.2)
+- **Dropped v3a synthetic retention sample entirely**
+- Added 20 short-prompt-no-continuation pairs targeting "morning",
+  "testing the relay", "hey" type prompts
+- Added 40 fabrication-discrimination pairs covering the broader v1
+  fabrication taxonomy
+
+**Training:** 498 steps, 16 min wall on A5000 SECURE, final
+train_loss 1.26 / eval_loss 1.003 (vs v0.2's 1.45 / 1.582 — much
+lower). Token accuracy train 88% / eval 82% (vs v0.2's 65% / 64%).
+
+**Eval results** (`data/eval-hammerstein-7b-v021-2026-05-23-v021-post-train.json`,
+comparisons at `session-notes/v021-vs-v1-eval-comparison.md` +
+`session-notes/v021-vs-v02-eval-comparison.md`):
+
+| | v1 | v0.2 | v0.2.1 |
+|---|---:|---:|---:|
+| Clean passes | 8 | 6 | 6 |
+| Register mismatches | 2 | 3 | 3 |
+| `auditify_casual` | 1 | 0 | 1 |
+| `plain_english_summary_leak` | 1 | 0 | 0 |
+| `sentence_continuation` | 0 | 2 | 0 |
+| `fabricated_url` | 0 | 0 | 1 |
+
+**Sentence-continuation fix worked** (2 → 0). But the heuristics miss
+the much bigger v0.2.1 problems that the raw responses reveal:
+
+- **Chinese-text mode collapse.** `v2-10-disagree` and
+  `v1-05-napoleon-iii` mix Chinese characters into English replies
+  ("区分清晰", "开通地铁网络是一项有远见的决定"). The base Qwen2.5-7B
+  is multilingual; v3a's English-only synthetic was apparently the
+  anchor keeping the model in English. Stripping that anchor while
+  training aggressively (higher LR + more epochs) caused the multilingual
+  base to surface unfiltered.
+- **Empty response.** `v1-03-audit-landing-page` returned 0 words in
+  0.3s. Audit register pivot broke.
+- **"morning" still produces Python code** despite the 20 short-prompt
+  training pairs. Fix didn't take.
+- **Fresh fabrication every prompt.** Napoleon III still gets the
+  Métropolitain wrong (this time without the date). Quadrant invents
+  a "2025-04-30 handoff doc". v0.1 dataset query invents a "247-pair
+  restricted Telegram familiarity set". v0.2 audit response invents
+  "304 pairs (Qwen3.6-plus teacher)".
+
+**Verdict: WORSE than v0.2.** The framework-leakage signature is gone
+but the model itself is less coherent. Net direction backward.
+
+**Root cause hypothesis (saved as memory
+`project_v3a_synthetic_is_english_anchor.md`):** the v3a synthetic was
+carrying TWO signals — the framework-leakage signature AND the
+English-voice coherence anchor. Treating them as inseparable was the
+wrong call. v3a is load-bearing for output coherence even though it
+carries the failure mode we wanted to remove.
+
+**v0.2.2 hypotheses for next pass:**
+1. **Keep v3a synthetic at 200-300 pairs** (was 500 in v0.2, 0 in
+   v0.2.1) — find the middle that anchors English without dominating
+   the framework default.
+2. **Keep LR 2e-4** — v0.2.1 showed it can move the model meaningfully.
+3. **Back to 2 epochs** — 3 was too much overshoot.
+4. **Keep v0.2.1's 3x oversample** of the additions and the new
+   short-prompt + fabrication-discrimination data.
+5. **The actual remaining failure modes need targeted data:**
+   - "morning" → Python code is structural; the model interprets
+     "morning" as a variable name. Add 5-10 more pairs that include
+     "morning" in non-coding contexts to disambiguate.
+   - Napoleon III still fabricates Métropolitain — needs the
+     bookfinder-general library lookup (Rung 1), not just more
+     refusal training. The model can't NOT fabricate when forced to
+     answer without sources; the fix is giving it access to sources.
+
+**Recommendation:** Either fire v0.2.2 with the middle-ground v3a mix
+(estimated $0.40-0.70 RunPod), OR pivot to building Rung 1 first since
+the historical-fabrication problem can only be fixed by tool access,
+not by training. v0.2.2 would address the Chinese collapse + sentence-
+continuation but won't fix the Napoleon III pattern by itself.
+
+**Cumulative session spend:** $0.73 OpenRouter + $0.60 v0.2 RunPod
++ $0.60 v0.2.1 RunPod = ~$1.93 of $25+ budget. RunPod-store now lives
+on D drive (`D:\hammerstein-store\`, mirrored to private GitHub repo
+`lerugray/hammerstein-store`). Both v0.2 and v0.2.1 GGUFs preserved
+there for future smoke + comparison.

@@ -542,3 +542,90 @@ Comparisons at `session-notes/v022-vs-v1-eval-comparison.md`,
 **Total session spend across the whole arc:** ~$2.53 ($0.73 OpenRouter
 + $0.60 v0.2 + $0.60 v0.2.1 + $0.60 v0.2.2 RunPod) of $25+ budget.
 Pod terminated.
+
+## v0.2.2 deployed + Rung 1 wired (2026-05-23)
+
+End-to-end deploy: v0.2.2 swapped into the homelab Telegram bot + Rung 1
+tool layer wired in via a Python HTTP sidecar.
+
+**Architecture:**
+
+```
+Telegram → homelab/bot/server.mjs (Node.js, port 8765)
+            → OLLAMA_URL env (now points at sidecar)
+            → scripts/rung1_server.py (Python, port 8766)
+                → Ollama /api/chat (port 11434) with tools schema
+                    → hammerstein-7b-v022
+                → tool dispatch (library_search / library_read / web_search)
+                → grounded final response
+            → bot returns reply to Telegram
+            → CRT face polls /state, shows answering/idle correctly
+```
+
+The sidecar is a drop-in replacement for Ollama's `/api/chat` from the
+bot's perspective — same endpoint shape, same response format, just
+with the tool loop running internally. The bot's only change was making
+`OLLAMA` URL env-configurable (`OLLAMA_URL=http://127.0.0.1:8766/api/chat`)
+and bumping `MODEL=hammerstein-7b-v022`.
+
+**Smoke tests (via the sidecar):**
+
+- "morning" → "Morning. Reading you." (Seed 06 verbatim, no tool call needed)
+- "What did Napoleon III actually accomplish as a leader?" → model emits
+  library_search tool call → empty result → falls back to web_search →
+  returns grounded answer citing Wikipedia (Crimean War 1853-1856,
+  economic liberalization from 1858, Second French Empire context). No
+  fabricated Paris Metro, no invented dates. **Fabrication problem
+  structurally fixed.**
+
+**Files:**
+
+- `scripts/rung1_server.py` — HTTP sidecar (stdlib http.server, no Flask
+  dependency). Tools wired to bookfinder_general's library module +
+  ddgs for web search. Injects a Rung 1 system prompt by default that
+  tells the model to use library_search first on factual questions.
+  `--port 8766 --model hammerstein-7b-v022 --max-rounds 3` defaults.
+- `homelab/bot/server.mjs` — single change: `OLLAMA` constant reads
+  from `OLLAMA_URL` env var.
+- `homelab/.env` — added `MODEL=hammerstein-7b-v022` and
+  `OLLAMA_URL=http://127.0.0.1:8766/api/chat`.
+
+**What's NOT wired into autostart yet** (deferred — Ray can pick up):
+
+The rung1_server is currently running in a one-off terminal. The bot's
+existing Startup-folder autostart (`homelab/scripts/install-autostart.ps1`)
+only manages the bot + Ollama. On next reboot, the bot will fail to
+reach the sidecar until rung1_server is manually started.
+
+To wire autostart properly, follow the bot's pattern:
+1. Create `homelab/scripts/rung1-launcher.bat` that runs
+   `python C:/Users/rweis/OneDrive/Documents/hammerstein-model/scripts/rung1_server.py --port 8766 --model hammerstein-7b-v022`
+2. Update `install-autostart.ps1` to create a second Startup shortcut
+   for the rung1 launcher
+3. Optionally update `bot-launcher.bat` to poll port 8766 before starting
+   the bot (so the bot waits for the sidecar like it currently waits
+   for Ollama)
+
+Filed as a TODO for Ray's next homelab session.
+
+**CRT face:** unchanged. Still polls bot's `/state` endpoint at
+`http://127.0.0.1:8765/state` and shows idle/thinking/answering states
+correctly. The new tool-call path goes through bot's existing
+"thinking" state during the tool loop, then "answering" when the
+final reply comes back.
+
+**Path forward** (notes for future sessions):
+
+- v0.2.2 is the production hammerstein. v0.2 and v0.2.1 stay loaded
+  in Ollama for comparison purposes; can prune if disk pressure later.
+- If v0.2.2 still produces too-confident-without-tools answers in
+  real Telegram use, the path is more tool-call training pairs in a
+  v0.2.3 (low priority — current eval looks clean).
+- Rung 1 v0.1 follow-ups: tune the library_search query strategy
+  (model sometimes uses author+topic conjunctive queries that miss),
+  add a `library_list_books` tool so the model can browse the library
+  catalog before searching, expand from 3 tools to a fuller set if
+  use cases surface.
+- v0.2 and v0.2.1 GGUFs in `D:\hammerstein-store\models\` stay
+  available for direct smoke-testing via `ollama run hammerstein-7b-v02`
+  etc.

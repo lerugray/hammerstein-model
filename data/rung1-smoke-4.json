@@ -1,0 +1,12 @@
+{
+  "final_content": "library_search {\"query\":\"Napoleon III\"}",
+  "rounds_used": 0,
+  "transcript": [
+    {
+      "round": 0,
+      "role": "assistant",
+      "content": "library_search {\"query\":\"Napoleon III\"}",
+      "tool_calls": []
+    }
+  ]
+}

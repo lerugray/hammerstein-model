@@ -1,0 +1,135 @@
+{
+  "final_content": "",
+  "rounds_used": 3,
+  "transcript": [
+    {
+      "round": 0,
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_4gtf72g2",
+          "function": {
+            "index": 0,
+            "name": "library_search",
+            "arguments": {
+              "query": "Napoleon III accomplishments",
+              "limit": 3
+            }
+          }
+        }
+      ]
+    },
+    {
+      "round": 0,
+      "role": "tool",
+      "tool_name": "library_search",
+      "tool_args": {
+        "query": "Napoleon III accomplishments",
+        "limit": 3
+      },
+      "tool_result": {
+        "query": "Napoleon III accomplishments",
+        "results": [],
+        "count": 0
+      }
+    },
+    {
+      "round": 1,
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_lhp78sas",
+          "function": {
+            "index": 0,
+            "name": "library_search",
+            "arguments": {
+              "limit": 3,
+              "query": "Napoleon III France"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "role": "tool",
+      "tool_name": "library_search",
+      "tool_args": {
+        "limit": 3,
+        "query": "Napoleon III France"
+      },
+      "tool_result": {
+        "query": "Napoleon III France",
+        "results": [],
+        "count": 0
+      }
+    },
+    {
+      "round": 2,
+      "role": "assistant",
+      "content": "",
+      "tool_calls": [
+        {
+          "id": "call_v4r8750i",
+          "function": {
+            "index": 0,
+            "name": "web_search",
+            "arguments": {
+              "limit": 5,
+              "query": "Napoleon III key accomplishments"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "role": "tool",
+      "tool_name": "web_search",
+      "tool_args": {
+        "limit": 5,
+        "query": "Napoleon III key accomplishments"
+      },
+      "tool_result": {
+        "query": "Napoleon III key accomplishments",
+        "results": [
+          {
+            "title": "Napoleon III | Biography, Significance, Death, & Facts |",
+            "url": "https://www.britannica.com/biography/Napoleon-III-emperor-of-France",
+            "snippet": "Napoleon III (born April 20, 1808, Paris—died January 9, 1873, Chislehurst, Kent , England) was the nephew of Napoleon I , president of the Second ..."
+          },
+          {
+            "title": "Napoleon III | History | Research Starters | EBSCO Research",
+            "url": "https://www.ebsco.com/research-starters/history/napoleon-iii",
+            "snippet": "Although Napoleon s diplomatic accomplishments were sometimes significant and his economic policies showed vision, the ease with which he was swept ..."
+          },
+          {
+            "title": "Napoleon III And His Scheme On International Politics - Best",
+            "url": "https://studyscanner.com/napoleon-iii-and-his-scheme-on-international-politics/",
+            "snippet": "In addition to this, he set about accomplishing the mission that Napoleon I started but was not able to finish. ... Napoleon assumed the title of ..."
+          },
+          {
+            "title": "Napoleon III Was History's Greatest Womanizer",
+            "url": "https://www.factinate.com/people/48-imperial-facts-about-napoleon-iii-the-desperate-emperor/",
+            "snippet": "First, Napoleon needed to accomplish something—and even though he was a captive, he wasn't out of the game just yet."
+          },
+          {
+            "title": "Napoleon III, First President and Last Emperor of France -",
+            "url": "https://headstuff.org/culture/history/terrible-people-from-history/napoleon-iii-first-president-and-last-emperor-of-france/",
+            "snippet": "... man who became Emperor Napoleon III ... That child was Charles-Louis Napoleon Bonaparte, the future Napoleon III, and he was born in April of 1808."
+          }
+        ],
+        "count": 5
+      }
+    },
+    {
+      "round": 3,
+      "role": "assistant",
+      "content": "",
+      "forced_final": true
+    }
+  ],
+  "hit_max_rounds": true
+}

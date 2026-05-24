@@ -43,7 +43,7 @@ if [ ! -d "$REPO_DIR" ]; then
     git clone https://github.com/lerugray/hammerstein-model.git
 fi
 cd "$REPO_DIR"
-git fetch --all && git checkout master && git pull
+git fetch --all && git checkout v0.2.6-retrain && git pull origin v0.2.6-retrain
 
 if [ ! -f /tmp/v026-deps-installed ]; then
     echo "[1/5] Installing deps (~3-5 min first time)..."

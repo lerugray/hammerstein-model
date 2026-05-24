@@ -369,7 +369,7 @@ def main() -> int:
             "if [ ! -d hammerstein-model ]; then "
             "  git clone https://github.com/lerugray/hammerstein-model.git; "
             "fi; "
-            "cd hammerstein-model && git fetch --all && git checkout master && git pull; "
+            "cd hammerstein-model && git fetch --all && git checkout v0.2.6-retrain && git pull origin v0.2.6-retrain; "
             "command -v tmux >/dev/null || (apt-get update -qq >/dev/null 2>&1 && "
             "apt-get install -y -qq tmux >/dev/null 2>&1); "
             "command -v tmux >/dev/null && echo 'tmux: ok' || echo 'tmux: MISSING'; "

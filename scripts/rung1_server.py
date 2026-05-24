@@ -354,8 +354,16 @@ def run_tool_loop(model: str, messages: list, ollama_url: str,
             return resp
 
         LOG.info("round %d: %d tool_call(s)", rounds, len(tool_calls))
-        # Append assistant message + tool results
-        messages.append({"role": "assistant", "content": content, "tool_calls": tool_calls})
+        # Append assistant message + tool results.
+        # IMPORTANT: set content="" explicitly when tool_calls are present.
+        # If the model emits some content BEFORE the <tool_call> tag in round
+        # N, that stub gets parsed into the content field. Passing it through
+        # to round N+1 causes the model to "continue" from the stub mid-word
+        # (observed 2026-05-24 with v025: "Page de" stub → round 2 generation
+        # opens with "scribed. Four publicly named departments...", which the
+        # bot then sees as a truncated reply). Stripping content here lets
+        # round N+1 start fresh after the tool result lands.
+        messages.append({"role": "assistant", "content": "", "tool_calls": tool_calls})
         for tc in tool_calls:
             fn = tc.get("function", {}) or {}
             name = fn.get("name")

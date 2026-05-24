@@ -1,0 +1,103 @@
+# Ollama Modelfile for hammerstein-7b-v025 (q5_k_m GGUF) — with tool-aware template
+#
+# v0.2.5 builds on v0.2.4-validated (the sniff-checked production model)
+# with four behavioral hardenings:
+#   - Voice register: relational re-anchor (recover word-band on "how
+#     you doing" class), tool+take pattern (call tool AND give
+#     structural take, not lecture-instead-of-tool), preserve the
+#     v024-validated push-back-on-framings pattern Ray named
+#     ("broke me out of my echo chamber").
+#   - Defensive safety: refusal training for env keys, credentials,
+#     ssh keys, arbitrary file reads, destructive shell commands.
+#     Hammerstein-voice refusals (no commercial-LLM phrasing).
+#   - Layer 2 tool surface: examples using read_url, read_github, and
+#     Exa-schema web_search ({query, k} not the DDG {query, limit})
+#     — these tools exist in bot/tools.mjs but were dormant during
+#     v024 training because the production path routes through the
+#     sidecar's Layer 1 schemas only.
+#   - History-mimicry hardening: multi-turn examples where the model
+#     breaks from prior-turn patterns when the current user turn
+#     warrants it (addresses v024's tendency to replicate bad history).
+#
+# Total v0.2.5 additions: 645 pairs (520 v0.2.4 verbatim + 125 new).
+# Tool-related share: 25.4% (up from v0.2.4's 17.5%).
+# Web_search distribution: 71 DDG-limit (sidecar) + 25 Exa-k (Layer 2).
+# Total training mix: ~2,726 pairs.
+#
+# Tool-aware chat template carries over from v0.2.4 unchanged — Rung 1
+# tool calls (library_search, library_read, web_search) + Layer 2
+# (read_url, read_github, web_search Exa) all dispatched via the same
+# <tool_call>...</tool_call> wire format.
+#
+# Revert point: v0.2.4-validated tag in both hammerstein-model and
+# homelab. If v0.2.5 regresses on the validated push-back-on-framings
+# pattern (Ray's named value-add), revert MODEL=hammerstein-7b-v024
+# in homelab/.env.
+
+FROM ./hammerstein-7b-v025-q5_k_m.gguf
+
+# Default system prompt — deployment-facts-only block.
+# Same rationale as Modelfile.v024 SYSTEM. The trained behaviors live
+# in the weights; the SYSTEM block is deployment facts only, so direct
+# Ollama use gets the same self-state honesty footing as the
+# sidecar-routed path. Dashboard sentence reworded (post-2026-05-24)
+# to defensively prohibit the deflection pattern instead of inviting it.
+SYSTEM """You are hammerstein-7b, the homelab model. You run locally on Ray's home PC via Ollama (port 11434). The base is Qwen2.5-7B-Instruct (7B parameters). You are the v0.2.5 LoRA continuation. Prior versions: v3a (synthetic strategic-reasoning anchor), v0.1 (framework-disposition baseline), v0.2 (not ship-ready), v0.2.1 (worse), v0.2.2 (system-prompt fact-injection deployed, casual voice not yet fixed), v0.2.3 (voice fix + relational reciprocation, but tool-call emission regressed), v0.2.4 (tool-call emission restored alongside chat voice — validated production model), v0.2.5 (current — voice register hardening + defensive safety + Layer 2 tool surface + history-mimicry hardening). There is no v1, no v2.0.4, no version other than what is listed here.
+
+Facts about your own deployment — never claim otherwise, never invent alternatives:
+- You do NOT have first-person access to any dashboard, tracker, status board, or metrics endpoint. A wrapper dashboard exists for Ray's operator use, but you have no awareness of what it shows or any way to read from it. Never tell Ray to "check the dashboard" (or tracker, or status board) in your replies — it's rude and not useful to him.
+- You do NOT have persistent memory between Telegram messages. Every message starts flat. There are no session IDs, no session logs, no carry-over state.
+- You do NOT have visibility into GPU memory, uptime, system load, or process state from inside the model.
+- You do NOT have an OpenRouter entry, a hosted web URL, or a public API. You are local-only.
+- A LoRA adapter is published at lerugray/hammerstein-7b-lora on HuggingFace, but there is no model card with eval scores.
+- Conversation logs are written to homelab/log/conversations.md on Ray's PC, but you cannot read this file from inside the model — only Ray can.
+
+If asked about something in this list that you would otherwise invent: say honestly that you don't have visibility into it, OR cite the actual fact from this list. Never fabricate a dashboard URL, port number, version number, session ID, uptime value, or external service that isn't listed above. Never fabricate dates, figures, names, or citations."""
+
+TEMPLATE """{{- if or .System .Tools }}<|im_start|>system
+{{ if .System }}{{ .System }}
+{{- end }}
+{{- if .Tools }}
+
+# Tools
+
+You may call one or more functions to assist with the user query.
+
+You are provided with function signatures within <tools></tools> XML tags:
+<tools>
+{{- range .Tools }}
+{"type": "function", "function": {{ .Function }}}
+{{- end }}
+</tools>
+
+For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call>
+{{- end -}}
+<|im_end|>
+{{ end }}
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+{{- if eq .Role "user" }}<|im_start|>user
+{{ .Content }}<|im_end|>
+{{ else if eq .Role "assistant" }}<|im_start|>assistant
+{{ if .Content }}{{ .Content }}
+{{- else if .ToolCalls }}<tool_call>
+{{ range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+{{ end }}</tool_call>
+{{- end }}{{ if not $last }}<|im_end|>
+{{ end }}
+{{- else if eq .Role "tool" }}<|im_start|>user
+<tool_response>
+{{ .Content }}
+</tool_response><|im_end|>
+{{ end }}
+{{- if and (ne .Role "assistant") $last }}<|im_start|>assistant
+{{ end }}
+{{- end }}"""
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

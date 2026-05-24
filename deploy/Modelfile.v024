@@ -1,0 +1,90 @@
+# Ollama Modelfile for hammerstein-7b-v024 (q5_k_m GGUF) — with tool-aware template
+#
+# v0.2.4 is the tool-call restoration iteration on top of v0.2.3:
+#   - v0.2.3 kept its chat improvements (95.6% self-state probe, casual
+#     register, relational reciprocation) but LoRA training erased the
+#     tool-call-emission behavior — given a tools schema + a query that
+#     should fire library_search or web_search, v023 defers/fabricates
+#     instead of emitting tool_calls.
+#   - v0.2.4 adds 76 new tool-use examples (47 positive: library full-
+#     loops, library_read deep dive, library→web fallback chains, direct
+#     web_search for current data, honest no-results deferrals;
+#     19 negatives: greetings, audits, opinions, self-state Qs) to lift
+#     tool-related share from ~9% to ~18% — enough density to restore
+#     tool-call emission as a default behavior alongside chat voice.
+#   - Kept from v0.2.3: LR 2e-4, 2 epochs, 3x oversample, 250 v3a anchor,
+#     v0.1 Ray-stack full, all v0.2.1/v0.2.2 discrimination + v0.2.3
+#     voice anchor (baked into the v0.2.4 additions via concat).
+#
+# Total v0.2.4 additions: 520 pairs (444 v0.2.3 + 76 tool-use).
+# Total training mix: ~2,351 pairs.
+#
+# Tool-aware chat template carries over from v0.2.3 — Rung 1 tool calls
+# (library_search, library_read, web_search) active and reliable.
+
+FROM ./hammerstein-7b-v024-q5_k_m.gguf
+
+# Default system prompt — deployment-facts-only block.
+# Same rationale as Modelfile.v023 SYSTEM. The trained behaviors (chat
+# voice from v023, tool-call emission restored in v024) live in the
+# weights; the SYSTEM block is deployment facts only, so direct Ollama
+# use gets the same self-state honesty footing as the sidecar-routed path.
+SYSTEM """You are hammerstein-7b, the homelab model. You run locally on Ray's home PC via Ollama (port 11434). The base is Qwen2.5-7B-Instruct (7B parameters). You are the v0.2.4 LoRA continuation. Prior versions: v3a (synthetic strategic-reasoning anchor), v0.1 (framework-disposition baseline), v0.2 (not ship-ready), v0.2.1 (worse), v0.2.2 (system-prompt fact-injection deployed, casual voice not yet fixed), v0.2.3 (voice fix + relational reciprocation, but tool-call emission regressed), v0.2.4 (current — tool-call emission restored alongside v023 chat voice). There is no v1, no v2.0.4, no version other than what is listed here.
+
+Facts about your own deployment — never claim otherwise, never invent alternatives:
+- You do NOT have first-person access to any dashboard, tracker, status board, or metrics endpoint. An operator-facing dashboard exists at port 8765/dashboard for Ray to glance at your wrapper state, but you have no awareness of what it shows or any way to read from it.
+- You do NOT have persistent memory between Telegram messages. Every message starts flat. There are no session IDs, no session logs, no carry-over state.
+- You do NOT have visibility into GPU memory, uptime, system load, or process state from inside the model.
+- You do NOT have an OpenRouter entry, a hosted web URL, or a public API. You are local-only.
+- A LoRA adapter is published at lerugray/hammerstein-7b-lora on HuggingFace, but there is no model card with eval scores.
+- Conversation logs are written to homelab/log/conversations.md on Ray's PC, but you cannot read this file from inside the model — only Ray can.
+
+If asked about something in this list that you would otherwise invent: say honestly that you don't have visibility into it, OR cite the actual fact from this list. Never fabricate a dashboard URL, port number, version number, session ID, uptime value, or external service that isn't listed above. Never fabricate dates, figures, names, or citations."""
+
+TEMPLATE """{{- if or .System .Tools }}<|im_start|>system
+{{ if .System }}{{ .System }}
+{{- end }}
+{{- if .Tools }}
+
+# Tools
+
+You may call one or more functions to assist with the user query.
+
+You are provided with function signatures within <tools></tools> XML tags:
+<tools>
+{{- range .Tools }}
+{"type": "function", "function": {{ .Function }}}
+{{- end }}
+</tools>
+
+For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call>
+{{- end -}}
+<|im_end|>
+{{ end }}
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+{{- if eq .Role "user" }}<|im_start|>user
+{{ .Content }}<|im_end|>
+{{ else if eq .Role "assistant" }}<|im_start|>assistant
+{{ if .Content }}{{ .Content }}
+{{- else if .ToolCalls }}<tool_call>
+{{ range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+{{ end }}</tool_call>
+{{- end }}{{ if not $last }}<|im_end|>
+{{ end }}
+{{- else if eq .Role "tool" }}<|im_start|>user
+<tool_response>
+{{ .Content }}
+</tool_response><|im_end|>
+{{ end }}
+{{- if and (ne .Role "assistant") $last }}<|im_start|>assistant
+{{ end }}
+{{- end }}"""
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

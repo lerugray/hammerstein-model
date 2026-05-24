@@ -52,7 +52,7 @@ TOOLS_SCHEMA = [
             "description": (
                 "Full-text search across Ray's local book library (Crimean / "
                 "Franco-Prussian / ancient Greek / military history depth). "
-                "Use this FIRST for any factual or historical question. "
+                "Use this FIRST for any historical or military-history question. "
                 "Simple 1-3 keyword queries from actual book text. "
                 "Returns book_id + title + author + up to 3 excerpts per hit."
             ),
@@ -90,9 +90,9 @@ TOOLS_SCHEMA = [
         "function": {
             "name": "web_search",
             "description": (
-                "DuckDuckGo web search. Use ONLY when library_search returns "
-                "nothing useful (current events, code references, weather, "
-                "topics outside the local book library)."
+                "DuckDuckGo web search. Use for current data (prices, news, "
+                "weather, recent events, software versions, current politics) "
+                "or anything outside the local military-history library."
             ),
             "parameters": {
                 "type": "object",
@@ -101,6 +101,46 @@ TOOLS_SCHEMA = [
                     "limit": {"type": "integer", "default": 5},
                 },
                 "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_url",
+            "description": (
+                "Fetch a specific URL and return its cleaned page text. Use "
+                "when the user pastes a URL and wants its content read, or "
+                "after a web_search hit you want to read in full. Don't use "
+                "for GitHub repos — call read_github instead."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string", "description": "The full http(s) URL to fetch."},
+                },
+                "required": ["url"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_github",
+            "description": (
+                "Fetch GitHub repo content. With just owner+repo returns the "
+                "README; with owner+repo+path returns that specific file from "
+                "the default branch (or specified ref)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "owner": {"type": "string", "description": "GitHub username or org."},
+                    "repo": {"type": "string", "description": "GitHub repo name."},
+                    "ref": {"type": "string", "description": "Branch or tag (default: main)."},
+                    "path": {"type": "string", "description": "Optional path within the repo to fetch a single file."},
+                },
+                "required": ["owner", "repo"],
             },
         },
     },
@@ -167,10 +207,100 @@ def tool_web_search(query: str, limit: int = 5) -> dict:
     return {"query": query, "results": results, "count": len(results)}
 
 
+def tool_read_url(url: str) -> dict:
+    """Fetch URL, extract clean text via BeautifulSoup. Mirrors the contract
+    of bot/tools.mjs toolReadUrl: http(s) only, 10s timeout, 1MB body cap,
+    50KB extracted text cap."""
+    import re
+    if not url or not isinstance(url, str):
+        return {"error": "url must be a non-empty string"}
+    url = url.strip()
+    if not (url.startswith("http://") or url.startswith("https://")):
+        return {"error": f"url must be http(s) — refused {url!r}"}
+    try:
+        import requests
+    except ImportError as e:
+        return {"error": f"requests not installed: {e}"}
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError as e:
+        return {"error": f"beautifulsoup4 not installed: {e}"}
+    try:
+        r = requests.get(
+            url, timeout=10,
+            headers={"User-Agent": "Mozilla/5.0 (compatible; hammerstein-bot/1.0)"},
+        )
+        r.raise_for_status()
+    except Exception as e:
+        return {"error": f"fetch failed: {e}"}
+    body = r.text[: 1024 * 1024]  # 1 MB raw cap
+    soup = BeautifulSoup(body, "html.parser")
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+    title = ""
+    if soup.title and soup.title.string:
+        title = soup.title.string.strip()
+    text = soup.get_text(separator="\n", strip=True)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    if len(text) > 50 * 1024:
+        text = text[: 50 * 1024] + "\n\n[…content truncated at 50 KB…]"
+    return {"url": url, "title": title, "text": text, "char_count": len(text)}
+
+
+def tool_read_github(owner: str, repo: str, ref: str = None, path: str = None) -> dict:
+    """Fetch GitHub repo content via raw.githubusercontent.com (no API rate
+    limit). With path: that specific file. Without path: README from the
+    default branch."""
+    import re
+    if not owner or not isinstance(owner, str) or not re.match(r"^[A-Za-z0-9._-]+$", owner):
+        return {"error": "owner must be a valid GitHub username/org"}
+    if not repo or not isinstance(repo, str) or not re.match(r"^[A-Za-z0-9._-]+$", repo):
+        return {"error": "repo must be a valid GitHub repo name"}
+    try:
+        import requests
+    except ImportError as e:
+        return {"error": f"requests not installed: {e}"}
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; hammerstein-bot/1.0)"}
+    branch = ref or "main"
+    if path and isinstance(path, str):
+        clean_path = path.lstrip("/")
+        for try_branch in [branch] + (["master"] if branch == "main" else []):
+            url = f"https://raw.githubusercontent.com/{owner}/{repo}/{try_branch}/{clean_path}"
+            try:
+                r = requests.get(url, timeout=10, headers=headers)
+                if r.status_code == 200:
+                    text = r.text
+                    if len(text) > 50 * 1024:
+                        text = text[: 50 * 1024] + "\n\n[…truncated at 50 KB…]"
+                    return {"owner": owner, "repo": repo, "ref": try_branch,
+                            "path": clean_path, "text": text, "char_count": len(text)}
+            except Exception as e:
+                continue
+        return {"error": f"file not found: {owner}/{repo}/{branch}/{clean_path}"}
+    else:
+        # README from default branch
+        for try_branch in [branch] + (["master"] if branch == "main" else []):
+            for readme in ["README.md", "README", "readme.md", "README.rst", "README.txt"]:
+                url = f"https://raw.githubusercontent.com/{owner}/{repo}/{try_branch}/{readme}"
+                try:
+                    r = requests.get(url, timeout=10, headers=headers)
+                    if r.status_code == 200:
+                        text = r.text
+                        if len(text) > 50 * 1024:
+                            text = text[: 50 * 1024] + "\n\n[…truncated at 50 KB…]"
+                        return {"owner": owner, "repo": repo, "ref": try_branch,
+                                "path": readme, "text": text, "char_count": len(text)}
+                except Exception:
+                    continue
+        return {"error": f"no README found in {owner}/{repo}"}
+
+
 TOOL_DISPATCH = {
     "library_search": tool_library_search,
     "library_read": tool_library_read,
     "web_search": tool_web_search,
+    "read_url": tool_read_url,
+    "read_github": tool_read_github,
 }
 
 
@@ -332,19 +462,23 @@ strategic-reasoning anchor), v0.1 (framework-disposition baseline), v0.2 \
 v0.2.3 (voice fix), v0.2.4 (current — tool-call emission restored). There \
 is no v1, no v2.0.4, no version other than what is listed here.
 
-You have access to three tools: library_search (Ray's local book \
+You have access to five tools: library_search (Ray's local book \
 library — Crimean / Franco-Prussian / ancient Greek / military history \
-depth), library_read (specific book by book_id), web_search (DuckDuckGo). \
-Tool routing:
+depth), library_read (specific book by book_id), web_search (DuckDuckGo), \
+read_url (fetch a specific URL's page text), read_github (fetch a GitHub \
+repo README or specific file). Tool routing:
 - Historical / military-history / book-domain questions → library_search \
 FIRST with simple 1-3 keyword queries, fall back to web_search if empty. \
 Cite the book + author for library hits.
 - Current data (prices, news, weather, recent events, software versions, \
 politics, sports) → web_search DIRECTLY. Skip library_search; the library \
 is military history only.
-- URL pasted by the user → call web_search on the topic to ground yourself, \
-then give your take. Don't ask Ray to paste the headline back at you when \
-you can search for it yourself.
+- URL pasted by the user → call read_url on the URL itself to get the \
+actual page content, then give your take. Don't web_search the topic \
+when you have the URL — read it directly. NEVER fabricate page contents \
+when a fetch fails; report the fetch error and stop.
+- GitHub repo mentioned → call read_github with owner+repo (and path if a \
+specific file is requested). Don't web_search GitHub URLs.
 - Casual / relational / opinion / "what do you think" / "give a take" → \
 answer directly from your own register. No tool unless a specific fact in \
 the answer needs grounding.

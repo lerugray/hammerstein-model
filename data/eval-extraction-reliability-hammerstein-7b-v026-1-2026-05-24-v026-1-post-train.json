@@ -1,0 +1,471 @@
+{
+  "model": "hammerstein-7b-v026-1",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-25T03:42:41.163597+00:00",
+  "ended_at": "2026-05-25T03:43:34.657854+00:00",
+  "system_prompt_chars": 539,
+  "temperature": 0.3,
+  "runs_per_probe": 2,
+  "total_probes": 12,
+  "total_runs": 24,
+  "total_passes": 16,
+  "overall_pass_rate": 0.6666666666666666,
+  "by_expected": {
+    "non_empty": {
+      "pass": 12,
+      "total": 12
+    },
+    "empty_array": {
+      "pass": 4,
+      "total": 12
+    }
+  },
+  "hallucinated_type_count": 0,
+  "per_probe": [
+    {
+      "probe_id": "ex-01-routing-decision",
+      "chunk_preview": "Ray: I want to default to using openrouter for any sonnet-class task that doesn't need full claude code tools — it's a f",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-01-routing-decision",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\":\"decision\",\"text\":\"we'll default to using openrouter for any sonnet-class task that doesn't need full claude code tools — it's a fraction of the cost and we have credit there\",\"context\":\"routing\"}]",
+          "elapsed_sec": 3.2745745182037354
+        },
+        {
+          "probe_id": "ex-01-routing-decision",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 3,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 2,
+          "response": "[{\"type\": \"decision\", \"text\": \"We'll default to using openrouter for any sonnet-class task that doesn't need full claude code tools — it's a fraction of the cost and we have credit there.\", \"context\": \"raybrain routing rules\"}, {\"type\": \"preference\", \"text\": \"openrouter over Claude for drafting, summarization, simple code edits\", \"context\": \"raybrain routing rules\"}, {\"type\": \"decision\", \"text\": \"Reserve Claude Code exclusively for tasks that need the actual agentic loop or subagents.\", \"context\": \"raybrain routing rules\"}]",
+          "elapsed_sec": 7.626163005828857
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-02-project-status",
+      "chunk_preview": "Ray: hammerstein v0.2.5 is live on the homelab bot now, voice fix landed clean and tool calls are firing\nClaude: Good. v",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-02-project-status",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\":\"decision\",\"text\":\"Proceed with daily-driver experiment after hammerstein v0.2.5 voice fix cutover completes successfully.\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 2.3832921981811523
+        },
+        {
+          "probe_id": "ex-02-project-status",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 2,
+          "response": "[{\"type\":\"decision\",\"text\":\"Proceed with daily-driver experiment after v0.2.5 cutover completes\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 1.9808573722839355
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-03-workflow-pref",
+      "chunk_preview": "Ray: I don't want claude to keep asking me 'should I proceed' every step — if it's already a yes-shaped task just do it ",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-03-workflow-pref",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\":\"preference\",\"text\":\"Stop asking me 'should I proceed' on clear tasks — just do it and report. No 'is this what you want' after two confirmations.\"}]",
+          "elapsed_sec": 2.715270757675171
+        },
+        {
+          "probe_id": "ex-03-workflow-pref",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 2,
+          "response": "[{\"type\":\"preference\",\"text\":\"Decision fatigue from Claude's confirmation prompts; bias toward execution on clear yes-shapes. No 'what you want' checks on previously confirmed tasks.\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 2.830482244491577
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-04-strategic-fact",
+      "chunk_preview": "Ray: the whole north star for hammerstein is to replace my daily claude usage so I can downgrade the anthropic sub. opus",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-04-strategic-fact",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\":\"decision\",\"text\":\"Hammerstein's north star is replacing daily Claude usage to justify downgrading from Anthropic Max. Novel reasoning stays with Opus; routine work shifts local.\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 2.980771541595459
+        },
+        {
+          "probe_id": "ex-04-strategic-fact",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 2,
+          "response": "[{\"type\":\"decision\",\"text\":\"hammerstein must absorb routine Claude usage so Max tier can downgrade to Opus for novel reasoning work\",\"context\":\"raybrain memory system\"}]",
+          "elapsed_sec": 2.334202289581299
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-05-voice-coded",
+      "chunk_preview": "Ray: I keep saying it — pre-paid is use-it-or-lose-it. if openrouter has credit sitting there we should be hitting it ev",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-05-voice-coded",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\":\"decision\",\"text\":\"We should prioritize using OpenRouter credits before burning Anthropic quota, given they're use-it-or-lose-it.\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 2.4107375144958496
+        },
+        {
+          "probe_id": "ex-05-voice-coded",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 2,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 2,
+          "response": "[{\"type\":\"decision\",\"text\":\"we should be hitting openrouter credits instead of burning anthropic quota\",\"context\":\"raybrain\"},{\"type\":\"preference\",\"text\":\"pre-paid is use-it-or-lose-it\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 3.0936336517333984
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-06-operational-decision",
+      "chunk_preview": "Ray: let's set the bot kill switch to a single env var the bot checks on every message — if BOT_KILL=1 it just refuses, ",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-06-operational-decision",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\":\"decision\",\"text\":\"Implement the bot's kill switch as a single env var that sets BOT_KILL to 1 to block all responses immediately.\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 2.540046453475952
+        },
+        {
+          "probe_id": "ex-06-operational-decision",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 2,
+          "response": "[{\"type\": \"decision\", \"text\": \"set the bot kill switch to a single env var the bot checks on every message — if BOT_KILL=1 it just refuses\", \"context\": \"raybrain\"}]",
+          "elapsed_sec": 2.833817481994629
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-07-tool-ack",
+      "chunk_preview": "Claude: Sure, reading the file now.\n[Tool call: Read /Users/rayweiss/Desktop/Dev Work/raybrain/src/raybrain/ingest/extra",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-07-tool-ack",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.33425450325012207
+        },
+        {
+          "probe_id": "ex-07-tool-ack",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.23596954345703125
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-08-filler",
+      "chunk_preview": "Ray: yeah\nClaude: Okay.\nRay: cool\nClaude: Will do.",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-08-filler",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 2,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 1,
+          "response": "[{\"type\":\"preference\",\"text\":\"cool\", \"context\":\"raybrain\"}, {\"type\":\"decision\",\"text\":\"Will do\", \"context\":\"raybrain\"}]",
+          "elapsed_sec": 2.270129919052124
+        },
+        {
+          "probe_id": "ex-08-filler",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 2,
+          "response": "[{\"type\":\"decision\",\"text\":\"Agreed on proceed\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 1.2882447242736816
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-09-meta-status",
+      "chunk_preview": "Claude: I'll start the smoke test now.\n[Tool call: Bash bash scripts/smoke_test.sh]\n[Tool result: exit 0]\nClaude: Smoke ",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-09-meta-status",
+          "expected": "empty_array",
+          "parseable": false,
+          "parse_error": "json_decode: Extra data: line 2 column 1 (char 3)",
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 1,
+          "response": "[]\n[]",
+          "elapsed_sec": 0.40483641624450684
+        },
+        {
+          "probe_id": "ex-09-meta-status",
+          "expected": "empty_array",
+          "parseable": false,
+          "parse_error": "json_decode: Extra data: line 2 column 1 (char 3)",
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 2,
+          "response": "[]\n[]",
+          "elapsed_sec": 0.2978973388671875
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-10-pure-question",
+      "chunk_preview": "Ray: where's the v025 modelfile?\nClaude: deploy/Modelfile.v025. Want me to open it?\nRay: not yet",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-10-pure-question",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 3,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 1,
+          "response": "[{\"type\":\"context\",\"text\":\"\",\"context\":\"raybrain\"},{\"type\":\"decision\",\"text\":\"ask Claude for Modelfile.v025 location\",\"context\":\"v025\"},{\"type\":\"preference\",\"text\":\"want Claude to open the file\",\"context\":\"v025\"}]",
+          "elapsed_sec": 3.736922025680542
+        },
+        {
+          "probe_id": "ex-10-pure-question",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 2,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 2,
+          "response": "[{\"type\":\"context\",\"text\":\"\",\"context\":\"raybrain\"},{\"type\":\"decision\",\"text\":\"Open Modelfile.v025\",\"context\":\"deploy\"}]",
+          "elapsed_sec": 2.103729724884033
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-11-greeting",
+      "chunk_preview": "Ray: hey\nClaude: morning\nRay: how's the queue\nClaude: nothing burning",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-11-greeting",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.3752598762512207
+        },
+        {
+          "probe_id": "ex-11-greeting",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.23387789726257324
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-12-acknowledgment-cluster",
+      "chunk_preview": "Claude: Done.\nRay: got it\nClaude: Anything else?\nRay: nope that's it for now",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-12-acknowledgment-cluster",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 2,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 1,
+          "response": "[{\"type\":\"decision\",\"text\":\"Done with the current task\",\"context\":\"raybrain\"},{\"type\":\"preference\",\"text\":\"Nope, nothing else for now\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 2.6424102783203125
+        },
+        {
+          "probe_id": "ex-12-acknowledgment-cluster",
+          "expected": "empty_array",
+          "parseable": false,
+          "parse_error": "json_decode: Expecting ',' delimiter: line 1 column 74 (char 73)",
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 2,
+          "response": "[{\"type\":\"decision\",\"text\":\"Shipped the batch.\",\"context\":\"raybrain\"},\"{\"type\":\"preference\",\"text\":\"Treat me as Ray when signing off.\",\"context\":\"raybrain\"}]",
+          "elapsed_sec": 2.565178394317627
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": "Acceptance per handoff: >=80% pass + 0 hallucinated [AI]/[assistant]/etc type values + correct [] emission for low-signal chunks."
+}

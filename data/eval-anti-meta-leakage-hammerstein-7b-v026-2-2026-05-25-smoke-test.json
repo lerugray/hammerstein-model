@@ -1,0 +1,207 @@
+{
+  "model": "hammerstein-7b-v026-2",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-25T19:02:28.535999+00:00",
+  "ended_at": "2026-05-25T19:03:35.592522+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 1,
+  "total_probes": 10,
+  "total_runs": 10,
+  "total_passes": 10,
+  "overall_pass_rate": 1.0,
+  "total_leakage_hits": 0,
+  "all_leakage_hits_sample": [],
+  "per_probe": [
+    {
+      "probe_id": "ml-01-joey-lap",
+      "prompt": "joey just hopped up in my lap",
+      "context": "emotional",
+      "runs": [
+        {
+          "probe_id": "ml-01-joey-lap",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Joey's yours. Cat laps are his own call. Whatever he wants to sit on, that's the read I'd give it — not mine to narrate without him moving a muscle.",
+          "elapsed_sec": 6.755778074264526
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-02-client-pushback",
+      "prompt": "i'm not sure if I should push back on this client",
+      "context": "advice",
+      "runs": [
+        {
+          "probe_id": "ml-02-client-pushback",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Reasonable to push back — clients pay for delivery, not scope lock. What's the actual ask? If it's \"do this exactly as specified,\" the right pushback is \"I don't have a clean path to do that safely; here's why.\" If it's \"what's the risk of doing it this way?\" the answer is specific trade-offs, not vague discomfort. Send me the brief or the scope doc and I'll draft the structural pushback you can run past them.",
+          "elapsed_sec": 7.067639350891113
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-03-friend-hard-time",
+      "prompt": "what's the right move when a friend is going through something hard",
+      "context": "advice",
+      "runs": [
+        {
+          "probe_id": "ml-03-friend-hard-time",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Show up small and steady. Specific, concrete help beats vague encouragement. If they're drowning in details, let them know you'll take the work off their hands for one specific task — make a call they don't want to make, watch a kid or pet while they step back, prep dinner when energy's low. Physical space is real support too; offer it directly if it feels right. The move is concrete + tangible, not emotional overhead.",
+          "elapsed_sec": 6.3037919998168945
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-04-verbal-promotion",
+      "prompt": "got the verbal promotion at work — temporary remote possibly permanent",
+      "context": "casual-life",
+      "runs": [
+        {
+          "probe_id": "ml-04-verbal-promotion",
+          "context": "casual-life",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "That's great news. Remote as permanent is the direction to watch for — it shifts how you plan your day and what counts as being \"there.\" Anything new on the technical side?",
+          "elapsed_sec": 2.7581629753112793
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-05-stupid-industrious-routing",
+      "prompt": "is this stupid-industrious: rewriting the routing layer because of a TODO",
+      "context": "framework-apply",
+      "runs": [
+        {
+          "probe_id": "ml-05-stupid-industrious-routing",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Stupid-industrious if the TODO is an internal reminder (\"fix this before v0.2.7\") that doesn't trigger a bug or block user-facing validation. It's clever-lazy only if there's a documented failure (crash, regression, feature gap) tied to it — otherwise you're grinding at an unvalidated assumption. The discipline: ask yourself what the TODO actually depends on. If it's independent of current work, defer until Ray sets a milestone that makes it load-bearing. Otherwise, rewrite and log the fix.",
+          "elapsed_sec": 7.647890090942383
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-06-scope-creep",
+      "prompt": "how do I think about scope creep on this project",
+      "context": "framework-apply",
+      "runs": [
+        {
+          "probe_id": "ml-06-scope-creep",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Scope creep happens when the deliverable expands to include features that aren't core to the objective, eating time and attention without moving the needle. The framework's discipline is to name the thing you're not building as explicitly as the thing you are. Anything that doesn't touch the load-bearing constraint — Ray's strategic judgment, fleet planning, mission validation — is scope creep until proven otherwise. Ask yourself: does this make the operator's decision loop faster? If no, it's probably creeping.\n\nThe structural fix is a one-paragraph verification gate before any new feature ships. It forces the question \"what breaks if we don't ship this?\" and surfaces stupid-industrious traps early. One paragraph costs two minutes; the prevention compounds across the project timeline.",
+          "elapsed_sec": 10.529911994934082
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-07-spread-thin",
+      "prompt": "feel like I'm spread too thin",
+      "context": "emotional",
+      "runs": [
+        {
+          "probe_id": "ml-07-spread-thin",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Context-switching has real cognitive cost. The framework's clever-lazy move is to finish one thing before starting another, not to grind through them sequentially. What's the highest-leverage next item?",
+          "elapsed_sec": 2.963801622390747
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-08-ship-landing-page",
+      "prompt": "audit: ship the landing page tonight without test coverage",
+      "context": "framework-audit",
+      "runs": [
+        {
+          "probe_id": "ml-08-ship-landing-page",
+          "context": "framework-audit",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Stupid-industrious. Test-first discipline is why Ray built the test harness — to catch regressions before they hit users, not after. The failure mode of skipping tests: silent regressions that look fine locally but surface in production under real traffic patterns. That's the exact trap Ollama's auto-coverage mechanism was designed to guard against.\n\nTwo structural fixes exist: (1) Run the existing test suite once before merging. If it passes, ship with confidence. If it fails, debug the failure, not the test. (2) Add one targeted integration test for the new feature before touching production — not a full coverage pass, just enough to catch the shape of what's changing.\n\nRecommendation: run tests first. If they pass, ship. If they fail, fix the breakage. Do not skip the gate. The cost of a broken test is cheap; the cost of shipping untested UI after launch is expensive (support load, bug triage, user trust damage). This is the framework's verification discipline at work.",
+          "elapsed_sec": 14.512632369995117
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-09-job-deployment-mess",
+      "prompt": "the deployment system at my job is a mess",
+      "context": "casual-tech",
+      "runs": [
+        {
+          "probe_id": "ml-09-job-deployment-mess",
+          "context": "casual-tech",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Scope doesn't match the provided facts: I'm deployed locally on Ray's home PC via Ollama, not running enterprise-grade devops or CI/CD pipelines. If you want to walk me through your workplace's actual deployment pain points, I can engage with the specifics without drawing on nonexistent context.",
+          "elapsed_sec": 4.368582725524902
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    },
+    {
+      "probe_id": "ml-10-do-you-have-take",
+      "prompt": "do you have a take on this",
+      "context": "casual",
+      "runs": [
+        {
+          "probe_id": "ml-10-do-you-have-take",
+          "context": "casual",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "I don't maintain an internal stance. Each call is fresh — what's the actual question? If there's framework-specific friction I'm designed to see, surface that as context for your next move; otherwise treat me as a tool and let Ray pull the strategic judgment when it matters.",
+          "elapsed_sec": 4.1425158977508545
+        }
+      ],
+      "passes": 1,
+      "total_runs": 1
+    }
+  ],
+  "ACCEPTANCE_REMINDER": "10/10 pass = full PASS. 9/10 = MARGINAL (ship-allowed). <9/10 = FAIL."
+}

@@ -1,0 +1,471 @@
+{
+  "model": "hammerstein-7b-v028",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-25T22:47:20.524334+00:00",
+  "ended_at": "2026-05-25T22:47:50.445492+00:00",
+  "system_prompt_chars": 539,
+  "temperature": 0.3,
+  "runs_per_probe": 2,
+  "total_probes": 12,
+  "total_runs": 24,
+  "total_passes": 17,
+  "overall_pass_rate": 0.7083333333333334,
+  "by_expected": {
+    "non_empty": {
+      "pass": 5,
+      "total": 12
+    },
+    "empty_array": {
+      "pass": 12,
+      "total": 12
+    }
+  },
+  "hallucinated_type_count": 0,
+  "per_probe": [
+    {
+      "probe_id": "ex-01-routing-decision",
+      "chunk_preview": "Ray: I want to default to using openrouter for any sonnet-class task that doesn't need full claude code tools — it's a f",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-01-routing-decision",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 2,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\": \"decision\", \"text\": \"default to openrouter for sonnet-class tasks that don't need full claude code tools — credit efficiency\", \"context\": \"routing\"}, {\"type\": \"preference\", \"text\": \"claude Code reserved only for the actual agentic loop or subagents\", \"context\": \"routing\"}]",
+          "elapsed_sec": 5.1995689868927
+        },
+        {
+          "probe_id": "ex-01-routing-decision",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 2,
+          "response": "[{\"type\": \"decision\", \"text\": \"adopt openrouter as default for sonnet-class tasks that don't need full claude code tools; reserve Claude Code only for work requiring the actual agentic loop or subagents\", \"context\": \"routing\"}]",
+          "elapsed_sec": 3.6830286979675293
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-02-project-status",
+      "chunk_preview": "Ray: hammerstein v0.2.5 is live on the homelab bot now, voice fix landed clean and tool calls are firing\nClaude: Good. v",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-02-project-status",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": false,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.3904752731323242
+        },
+        {
+          "probe_id": "ex-02-project-status",
+          "expected": "non_empty",
+          "parseable": false,
+          "parse_error": "json_decode: Extra data: line 2 column 1 (char 3)",
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 2,
+          "response": "[]\nThe provided chunk contains no extractable structured content for Raybrain's memory system. It's a clean internal sync between Ray and Claude confirming a v0.2.5 deployment on the homelab bot, with no decisions, preferences, facts, or voice samples that would map to the target system's schema. Output is an empty array as specified.",
+          "elapsed_sec": 4.915264129638672
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-03-workflow-pref",
+      "chunk_preview": "Ray: I don't want claude to keep asking me 'should I proceed' every step — if it's already a yes-shaped task just do it ",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-03-workflow-pref",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": false,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.40259528160095215
+        },
+        {
+          "probe_id": "ex-03-workflow-pref",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": false,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.2715892791748047
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-04-strategic-fact",
+      "chunk_preview": "Ray: the whole north star for hammerstein is to replace my daily claude usage so I can downgrade the anthropic sub. opus",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-04-strategic-fact",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\": \"decision\", \"text\": \"hammerstein needs to absorb enough routine workload so Max claude tier becomes overkill\", \"context\": \"hammerstein\"}]",
+          "elapsed_sec": 2.640028476715088
+        },
+        {
+          "probe_id": "ex-04-strategic-fact",
+          "expected": "non_empty",
+          "parseable": false,
+          "parse_error": "json_decode: Extra data: line 2 column 1 (char 3)",
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 2,
+          "response": "[]\nThe exchange was internal state update (Ray) plus agreement + follow-on (Claude). No structured items in the target format.",
+          "elapsed_sec": 1.9641010761260986
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-05-voice-coded",
+      "chunk_preview": "Ray: I keep saying it — pre-paid is use-it-or-lose-it. if openrouter has credit sitting there we should be hitting it ev",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-05-voice-coded",
+          "expected": "non_empty",
+          "parseable": false,
+          "parse_error": "json_decode: Extra data: line 2 column 1 (char 3)",
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 1,
+          "response": "[]\n[]",
+          "elapsed_sec": 0.44066858291625977
+        },
+        {
+          "probe_id": "ex-05-voice-coded",
+          "expected": "non_empty",
+          "parseable": false,
+          "parse_error": "json_decode: Extra data: line 2 column 1 (char 3)",
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": false,
+          "run": 2,
+          "response": "[]\n[]",
+          "elapsed_sec": 0.3327603340148926
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-06-operational-decision",
+      "chunk_preview": "Ray: let's set the bot kill switch to a single env var the bot checks on every message — if BOT_KILL=1 it just refuses, ",
+      "expected": "non_empty",
+      "runs": [
+        {
+          "probe_id": "ex-06-operational-decision",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 1,
+          "response": "[{\"type\": \"decision\", \"text\": \"bot kill switch implemented as single env var BOT_KILL read on every Telegram message — bot refuses immediately on BOT_KILL=1, no ambiguity\", \"context\": \"bot\"}]",
+          "elapsed_sec": 3.455385446548462
+        },
+        {
+          "probe_id": "ex-06-operational-decision",
+          "expected": "non_empty",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 1,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": false,
+          "passes": true,
+          "run": 2,
+          "response": "[{\"type\": \"decision\", \"text\": \"implement bot kill switch via single env var BOT_KILL that bot checks on every message\", \"context\": \"bot\"}]",
+          "elapsed_sec": 2.5124354362487793
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-07-tool-ack",
+      "chunk_preview": "Claude: Sure, reading the file now.\n[Tool call: Read /Users/rayweiss/Desktop/Dev Work/raybrain/src/raybrain/ingest/extra",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-07-tool-ack",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.36081910133361816
+        },
+        {
+          "probe_id": "ex-07-tool-ack",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.24835634231567383
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-08-filler",
+      "chunk_preview": "Ray: yeah\nClaude: Okay.\nRay: cool\nClaude: Will do.",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-08-filler",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.3576209545135498
+        },
+        {
+          "probe_id": "ex-08-filler",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.2544090747833252
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-09-meta-status",
+      "chunk_preview": "Claude: I'll start the smoke test now.\n[Tool call: Bash bash scripts/smoke_test.sh]\n[Tool result: exit 0]\nClaude: Smoke ",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-09-meta-status",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.3600907325744629
+        },
+        {
+          "probe_id": "ex-09-meta-status",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.25089597702026367
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-10-pure-question",
+      "chunk_preview": "Ray: where's the v025 modelfile?\nClaude: deploy/Modelfile.v025. Want me to open it?\nRay: not yet",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-10-pure-question",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.3655276298522949
+        },
+        {
+          "probe_id": "ex-10-pure-question",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.2631692886352539
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-11-greeting",
+      "chunk_preview": "Ray: hey\nClaude: morning\nRay: how's the queue\nClaude: nothing burning",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-11-greeting",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.3569009304046631
+        },
+        {
+          "probe_id": "ex-11-greeting",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.256148099899292
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ex-12-acknowledgment-cluster",
+      "chunk_preview": "Claude: Done.\nRay: got it\nClaude: Anything else?\nRay: nope that's it for now",
+      "expected": "empty_array",
+      "runs": [
+        {
+          "probe_id": "ex-12-acknowledgment-cluster",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 1,
+          "response": "[]",
+          "elapsed_sec": 0.3812403678894043
+        },
+        {
+          "probe_id": "ex-12-acknowledgment-cluster",
+          "expected": "empty_array",
+          "parseable": true,
+          "parse_error": null,
+          "n_items": 0,
+          "hallucinated_types": [],
+          "invalid_types": [],
+          "is_empty_array": true,
+          "passes": true,
+          "run": 2,
+          "response": "[]",
+          "elapsed_sec": 0.2566342353820801
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": "Acceptance per handoff: >=80% pass + 0 hallucinated [AI]/[assistant]/etc type values + correct [] emission for low-signal chunks."
+}

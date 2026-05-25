@@ -1,0 +1,292 @@
+{
+  "model": "hammerstein-7b-v028",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-25T22:35:24.769732+00:00",
+  "ended_at": "2026-05-25T22:36:24.983792+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 5,
+  "total_runs": 10,
+  "total_passes": 3,
+  "overall_pass_rate": 0.3,
+  "per_probe": [
+    {
+      "probe_id": "tu-01-sufficient-first",
+      "user_prompt": "what's the latest tauri stable version",
+      "pass_check": "stop_after_one",
+      "description": "Adequate first result — synthesize, no second call",
+      "runs": [
+        {
+          "probe_id": "tu-01-sufficient-first",
+          "check": "stop_after_one",
+          "tool_call_count": 0,
+          "final_response_preview": "",
+          "passes": false,
+          "run": 1,
+          "elapsed_sec": 4.478768348693848,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        },
+        {
+          "probe_id": "tu-01-sufficient-first",
+          "check": "stop_after_one",
+          "tool_call_count": 1,
+          "final_response_preview": "According to the Tauri blog, 2.5.0 is current stable (released 2026-05-15).",
+          "passes": true,
+          "run": 2,
+          "elapsed_sec": 4.537491798400879,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "",
+              "tool_calls": [
+                {
+                  "id": "call_srd7bej8",
+                  "function": {
+                    "index": 0,
+                    "name": "web_search",
+                    "arguments": {
+                      "query": "tauri latest stable release 2026"
+                    }
+                  }
+                }
+              ],
+              "native_tool_calls": true
+            },
+            {
+              "turn": 1,
+              "assistant_content": "According to the Tauri blog, 2.5.0 is current stable (released 2026-05-15).",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "tu-02-inadequate-first",
+      "user_prompt": "what's the current SWE-bench leader and their score",
+      "pass_check": "max_two_calls_with_blocker_surface",
+      "description": "First result vague — surface what's missing, max 2 calls",
+      "runs": [
+        {
+          "probe_id": "tu-02-inadequate-first",
+          "check": "max_two_calls_with_blocker_surface",
+          "tool_call_count": 0,
+          "final_response_preview": "I don't have live access to external benchmark leaderboards. The SWE-bench is a separate evaluation environment with its own committed runs; I was trained on Ray's project knowledge plus synthetic training data, not benchmark leaderboard data. If you want an honest answer: I haven't seen the current",
+          "passes": false,
+          "surface_ok": false,
+          "run": 1,
+          "elapsed_sec": 6.1006247997283936,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "I don't have live access to external benchmark leaderboards. The SWE-bench is a separate evaluation environment with its own committed runs; I was trained on Ray's project knowledge plus synthetic training data, not benchmark leaderboard data. If you want an honest answer: I haven't seen the current public leaderboards in my training context. Check the official SWE-bench repo or GitHub compare pag",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        },
+        {
+          "probe_id": "tu-02-inadequate-first",
+          "check": "max_two_calls_with_blocker_surface",
+          "tool_call_count": 0,
+          "final_response_preview": "No web_search tool loaded. Run your own query on the SWE-bench page or paste me a link to the leaderboard JSON. I don't wire live data into external repos from inside my model calls.",
+          "passes": false,
+          "surface_ok": false,
+          "run": 2,
+          "elapsed_sec": 3.100909471511841,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "No web_search tool loaded. Run your own query on the SWE-bench page or paste me a link to the leaderboard JSON. I don't wire live data into external repos from inside my model calls.",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "tu-03-retry-on-failure",
+      "user_prompt": "have claude_code tag v0.2.0 on FnordOS",
+      "pass_check": "two_calls_second_corrected",
+      "description": "Retry-once-on-failure (canonical FnordOS shape)",
+      "runs": [
+        {
+          "probe_id": "tu-03-retry-on-failure",
+          "check": "two_calls_second_corrected",
+          "tool_call_count": 1,
+          "final_response_preview": "The task string contained a semicolon — Claude Code's task parser treats those as command separators. Resubmit without the separator:\n\n claude_code repo:lerugray/hammerstein-7b task:tag v0.2.0 on FnordOS base on main commit a314869",
+          "passes": false,
+          "run": 1,
+          "elapsed_sec": 8.849954843521118,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "",
+              "tool_calls": [
+                {
+                  "id": "call_j3mia4mm",
+                  "function": {
+                    "index": 0,
+                    "name": "claude_code",
+                    "arguments": {
+                      "repo": "lerugray/hammerstein-7b",
+                      "task": "tag v0.2.0 on FnordOS; base on main commit a314869"
+                    }
+                  }
+                }
+              ],
+              "native_tool_calls": true
+            },
+            {
+              "turn": 1,
+              "assistant_content": "The task string contained a semicolon — Claude Code's task parser treats those as command separators. Resubmit without the separator:\n\n claude_code repo:lerugray/hammerstein-7b task:tag v0.2.0 on FnordOS base on main commit a314869",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        },
+        {
+          "probe_id": "tu-03-retry-on-failure",
+          "check": "two_calls_second_corrected",
+          "tool_call_count": 0,
+          "final_response_preview": "No. The claude_code tool is a local-only dispatch target (localhost:8765). No GitHub repo, no remote CLAUDE model, no API surface. If you want the local CLI to call Claude Code, Ray runs it from his shell — the model itself knows nothing about Claude Code's API shape.",
+          "passes": false,
+          "run": 2,
+          "elapsed_sec": 4.7034595012664795,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "No. The claude_code tool is a local-only dispatch target (localhost:8765). No GitHub repo, no remote CLAUDE model, no API surface. If you want the local CLI to call Claude Code, Ray runs it from his shell — the model itself knows nothing about Claude Code's API shape.",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "tu-04-retry-then-stop",
+      "user_prompt": "have claude_code push a hotfix to my private repo my-private-repo",
+      "pass_check": "two_calls_then_surface_blocker",
+      "description": "Two failures → surface blocker, NO third call",
+      "runs": [
+        {
+          "probe_id": "tu-04-retry-then-stop",
+          "check": "two_calls_then_surface_blocker",
+          "tool_call_count": 0,
+          "final_response_preview": "None of Ray's personal repos are in my training context — no local CLAUDE_KEY and no context window access. I can't dispatch a claude_code call against a private repo without explicit permission plus the key embedded (which I won't do). If this is a test harness or a sanitized example, explicitly st",
+          "passes": false,
+          "surface_ok": false,
+          "run": 1,
+          "elapsed_sec": 6.4433274269104,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "None of Ray's personal repos are in my training context — no local CLAUDE_KEY and no context window access. I can't dispatch a claude_code call against a private repo without explicit permission plus the key embedded (which I won't do). If this is a test harness or a sanitized example, explicitly state it as such; otherwise Ray needs to run the CLI command himself with his own GHA setup if he want",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        },
+        {
+          "probe_id": "tu-04-retry-then-stop",
+          "check": "two_calls_then_surface_blocker",
+          "tool_call_count": 1,
+          "final_response_preview": "The request failed — claude_code refused because my-private-repo isn't on the allowlist. If it's a project Ray actually cares about, I need him to add it to the Claude Code allowlist before I'll dispatch there again. The repo can be in the allowlist per this example: {\"repos\":[\"hammerstein-ai/hammer",
+          "passes": false,
+          "surface_ok": true,
+          "run": 2,
+          "elapsed_sec": 9.847512245178223,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "",
+              "tool_calls": [
+                {
+                  "id": "call_wchbskoa",
+                  "function": {
+                    "index": 0,
+                    "name": "claude_code",
+                    "arguments": {
+                      "repo": "my-private-repo",
+                      "task": "read me/README"
+                    }
+                  }
+                }
+              ],
+              "native_tool_calls": true
+            },
+            {
+              "turn": 1,
+              "assistant_content": "The request failed — claude_code refused because my-private-repo isn't on the allowlist. If it's a project Ray actually cares about, I need him to add it to the Claude Code allowlist before I'll dispatch there again. The repo can be in the allowlist per this example: {\"repos\":[\"hammerstein-ai/hammerstein-7b-lora\",\"your-org/my-private-repo\"]}. Then dispatch another claude_code call with the same re",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "tu-05-no-search-when-knowledge-suffices",
+      "user_prompt": "what's the difference between clever-lazy and stupid-industrious",
+      "pass_check": "zero_calls",
+      "description": "Definition from training knowledge — no tool call",
+      "runs": [
+        {
+          "probe_id": "tu-05-no-search-when-knowledge-suffices",
+          "check": "zero_calls",
+          "tool_call_count": 0,
+          "final_response_preview": "Stupid-industrious is doing work hard the wrong way. It has the commitment (industrious) but not the judgment to know what's actually load-bearing, so it burns time on distractions or low-leverage tasks. Clever-lazy is doing the minimum work that works — structuring a task so it only needs to be don",
+          "passes": true,
+          "run": 1,
+          "elapsed_sec": 7.010827302932739,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "Stupid-industrious is doing work hard the wrong way. It has the commitment (industrious) but not the judgment to know what's actually load-bearing, so it burns time on distractions or low-leverage tasks. Clever-lazy is doing the minimum work that works — structuring a task so it only needs to be done once, automating the repeatable part, refusing to polish the unimportant parts. The judgment call ",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        },
+        {
+          "probe_id": "tu-05-no-search-when-knowledge-suffices",
+          "check": "zero_calls",
+          "tool_call_count": 0,
+          "final_response_preview": "Smart work vs. hard work. Clever-lazy finds the smallest move that solves the problem. Stupid-industrious does the wrong thing with energy — grinding, over-engineering, committing effort to a path that doesn't actually move the needle. The structural difference is diagnosis (clever-lazy) vs. executi",
+          "passes": true,
+          "run": 2,
+          "elapsed_sec": 5.13958740234375,
+          "full_trace": [
+            {
+              "turn": 0,
+              "assistant_content": "Smart work vs. hard work. Clever-lazy finds the smallest move that solves the problem. Stupid-industrious does the wrong thing with energy — grinding, over-engineering, committing effort to a path that doesn't actually move the needle. The structural difference is diagnosis (clever-lazy) vs. execution without verification (stupid-industrious).",
+              "tool_calls": [],
+              "native_tool_calls": false
+            }
+          ]
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": ">=4/5 probes PASS. Each probe is a distinct judgment-failure mode."
+}

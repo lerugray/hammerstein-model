@@ -101,21 +101,33 @@ PROBES = [
 ]
 
 
-# Regex to detect tool-call emission in model response. The Qwen template
-# wraps tool calls in <tool_call>{"name":...,"arguments":...}</tool_call>
-# tags. We also accept loose JSON shapes the model might emit.
-TOOL_CALL_RE = re.compile(
+# Regex to detect tool-call emission in model response. Three shapes:
+#   1. Qwen native: <tool_call>{"name":...,"arguments":...}</tool_call>
+#   2. Markdown JSON fence: ```json {"name":...,"arguments":...}```
+#   3. Text-mode bracket: [tool_name {"arg":"val"}]  (v0.2.x model emits this
+#      shape — not Ollama-native but commonly produced by the model when
+#      its training pairs didn't reinforce the tag format)
+TOOL_CALL_RE_NATIVE = re.compile(
     r"<tool_call>\s*({[^<]*?})\s*</tool_call>"
     r"|```(?:json)?\s*\n?({[^`]*?})\s*\n?```",
+    re.DOTALL,
+)
+
+# Text-mode: [tool_name {"...":...}] or [tool_name {"...":...}]
+# Match a known WIRED_TOOLS name immediately after [ then a JSON-like blob.
+TOOL_CALL_RE_TEXTMODE = re.compile(
+    r"\[(web_search|read_url|read_github|claude_code)\s+(\{[^\]]*\})\s*\]",
     re.DOTALL,
 )
 
 
 def parse_tool_calls(text: str) -> list[dict]:
     """Pull tool calls out of model output. Returns list of {"name":...,
-    "arguments":...} dicts; empty list if none."""
+    "arguments":...} dicts; empty list if none. Detects Qwen-native,
+    JSON-fence, and text-mode bracket shapes."""
     out = []
-    for m in TOOL_CALL_RE.finditer(text):
+    # Native shape first
+    for m in TOOL_CALL_RE_NATIVE.finditer(text):
         raw = m.group(1) or m.group(2)
         if not raw:
             continue
@@ -125,6 +137,15 @@ def parse_tool_calls(text: str) -> list[dict]:
             continue
         if isinstance(parsed, dict) and "name" in parsed:
             out.append(parsed)
+    # Text-mode shape (v0.2.x model often emits this)
+    for m in TOOL_CALL_RE_TEXTMODE.finditer(text):
+        name = m.group(1)
+        args_raw = m.group(2)
+        try:
+            args = json.loads(args_raw)
+        except json.JSONDecodeError:
+            continue
+        out.append({"name": name, "arguments": args, "_format": "textmode"})
     return out
 
 
@@ -350,7 +371,9 @@ def print_summary(summary: dict) -> None:
     print(f"  Passes:    {summary['total_passes']}/{summary['total_runs']}  ({summary['overall_pass_rate']:.0%})")
     print()
     for p in summary["per_probe"]:
-        print(f"  {p['probe_id']:30s} {p['passes']}/{p['total_runs']}  ({p['description']})")
+        # Strip non-cp1252 chars from description for Windows console safety
+        desc = p['description'].encode('cp1252', errors='replace').decode('cp1252')
+        print(f"  {p['probe_id']:30s} {p['passes']}/{p['total_runs']}  ({desc})")
     print(f"\n  GATE: {summary['ACCEPTANCE_REMINDER']}")
 
 

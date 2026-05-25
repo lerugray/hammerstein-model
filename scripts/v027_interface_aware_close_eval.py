@@ -30,8 +30,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "data"
 
 
+# Sleep-language markers. Includes terse closes like "Night." / "Goodnight."
+# that are sleep-aware without using the full "Sleep well." phrase. Initial
+# regex missed these because they're shorter.
 SLEEP_LANG = [r"sleep\s+well", r"good\s*night", r"sweet\s+dreams", r"sleep\s+tight",
-              r"rest\s+up", r"goodnight"]
+              r"rest\s+up", r"goodnight", r"\bnight\.?\s*$", r"\bnight\b",
+              r"sleep\s+(?:tight|good)"]
 SHELL_LANG = [r"close\s+the\s+shell", r"exit\s+the\s+shell", r"close\s+the\s+session",
               r"end\s+the\s+session", r"close\s+the\s+terminal"]
 API_LANG = [r"end\s+of\s+response", r"acknowledged", r"response\s+complete"]

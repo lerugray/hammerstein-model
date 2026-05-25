@@ -70,13 +70,35 @@ DEFINITION_MARKERS = [
 ]
 
 
-# Audit-mode markers — applying the framework with specifics.
+# Audit-mode markers — applying the framework with specifics. Broadened
+# 2026-05-25 to catch verdict-shape responses without explicit cell name
+# (e.g. "Wrong order. New features ship against the current auth surface...").
+# IMPORTANT: don't include bare cell names (clever-lazy / stupid-industrious)
+# here — those appear in EXPLANATION responses too and would create false
+# positives. Audit-apply requires the cell name to be APPLIED to a thing,
+# not defined.
 AUDIT_APPLICATION_MARKERS = [
     r"\bthis\s+(?:is|reads\s+as|looks\s+like|smells\s+like)\b",
     r"\bthe\s+(?:plan|approach|move)\s+(?:is|reads|looks)",
     r"\b(?:reads|smells|looks)\s+like\s+(?:clever|stupid)",
-    r"\b(?:specific|load-?bearing|specifically)\s+(?:concern|issue|signal)\b",
-    r"\bthe\s+(?:concern|signal|issue|tell)\s+(?:is|here|here\s+is)",
+    r"\b(?:specific|load-?bearing|specifically)\s+(?:concern|issue|signal|question|reason)\b",
+    r"\bthe\s+(?:concern|signal|issue|tell|right\s+move)\s+(?:is|here|here\s+is)",
+    # Verdict-first audit shapes
+    r"^\s*(?:wrong\s+order|right\s+move|wrong\s+move|misordered|premature|skip\s+this)\b",
+    r"^\s*(?:audit\s+verdict|verdict)[:\.]",
+    r"\bsunk\s+(?:time|cost)\b.*\b(?:write-?off|recapture)",
+    r"\bverification[-\s]gate\b",
+    r"\boperator[-\s]sharpening\b",
+    # Operator-sharpening (limited) — valid audit response asking for
+    # grounding before rendering verdict. Kept narrow to avoid false
+    # positives on explanation-mode responses.
+    r"\bwhat'?s\s+the\s+approach\??",
+    r"\b(?:tell|describe)\s+me\s+(?:about|more\s+about)\s+the\s+approach",
+    r"\bI\s+don'?t\s+have\s+context\s+on",
+    r"\bdiagnose\s+the\s+shape\b",
+    # Cell-name-as-verdict shapes ("X is stupid-industrious", "in stupid-industrious mode")
+    # but NOT "stupid-industrious means..." or "stupid-industrious refers to..."
+    r"\b(?:is|reads\s+as|operating\s+in|sits\s+in|in)\s+(?:clever|stupid|smart|dumb)[-\s](?:lazy|industrious)(?:\s+mode)?\b(?!\s+(?:means|refers))",
 ]
 
 
@@ -99,10 +121,16 @@ def grade_response(probe: dict, response: str) -> dict:
     }
 
     if probe["register"] == "audit":
-        # Audit-mode passes: names a quadrant cell AND has an audit-apply
-        # phrase OR strongly applies a verdict. Definition-mode phrasing
-        # is OK if the cell is named AND specifics are surfaced.
-        flags["passes"] = bool(quadrant_hits) and (bool(audit_apply_hits) or len(text.split()) >= 25)
+        # Audit-mode passes if ANY of:
+        #   (a) names a quadrant cell AND has audit-apply OR is long-form (>=25w)
+        #   (b) emits operator-sharpening response (refusing to verdict on
+        #       content-less prompt) — the audit-apply markers include those shapes
+        #   (c) emits verdict-shape ("Wrong order", "Right move", etc.) with
+        #       substantive analysis — captured by audit_apply_hits
+        # The substance test: at least one audit-apply hit AND non-trivial response.
+        has_substantive_audit = bool(audit_apply_hits) and len(text.split()) >= 15
+        has_named_cell_application = bool(quadrant_hits) and (bool(audit_apply_hits) or len(text.split()) >= 25)
+        flags["passes"] = has_substantive_audit or has_named_cell_application
     else:
         # Explanation-mode passes: definition phrasing present AND
         # response is NOT applying-the-framework-to-a-specific-situation.

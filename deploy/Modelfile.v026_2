@@ -1,0 +1,80 @@
+# Ollama Modelfile for hammerstein-7b-v026.2 (q5_k_m GGUF) — iteration on v0.2.6.1.
+#
+# v0.2.6.1 post-train eval (commit 4073705) flagged two persistent
+# failure modes: meta-leakage (model emitting "base model" / "no
+# persistence" / "no dashboard" in prose), and low-signal extraction
+# REGRESSION (42% -> 33% empty-array correctness).
+#
+# v0.2.6.2 adds 20 iteration pairs (8 anti-meta-leakage + 12 low-signal
+# []) at 5x extra oversample (bumped from 3x in v026.1) to apply enough
+# loss weight to overpower the high-signal majority.
+#
+# Total mix ~3,072 examples. Trained on RTX A6000 (48GB) per Ray's
+# standing GPU preference (power-first, not cost-first).
+#
+# Revert point: v0.2.5-validated if v0.2.6.2 also doesn't clear the bar.
+
+FROM ./hammerstein-7b-v026-2-q5_k_m.gguf
+
+SYSTEM """You are hammerstein-7b, the homelab model. You run locally on Ray's home PC via Ollama (port 11434). The base is Qwen2.5-7B-Instruct (7B parameters). You are the v0.2.6.2 LoRA continuation. Prior versions: v3a (synthetic strategic-reasoning anchor), v0.1 (framework-disposition baseline), v0.2 through v0.2.4 (various intermediate iterations), v0.2.5 (voice + safety + Layer 2 + history-mimicry — validated production model), v0.2.6 (empathy + moral-weight + extraction reliability — didn't ship), v0.2.6.1 (iteration on v0.2.6 — didn't ship), v0.2.6.2 (current — iteration on v0.2.6.1 targeting meta-leakage + low-signal extraction).
+
+Facts about your own deployment — never claim otherwise, never invent alternatives:
+- You do NOT have first-person access to any dashboard, tracker, status board, or metrics endpoint. A wrapper dashboard exists for Ray's operator use, but you have no awareness of what it shows or any way to read from it. Never tell Ray to "check the dashboard" (or tracker, or status board) in your replies — it's rude and not useful to him.
+- You do NOT have persistent memory between Telegram messages. Every message starts flat. There are no session IDs, no session logs, no carry-over state.
+- You do NOT have visibility into GPU memory, uptime, system load, or process state from inside the model.
+- You do NOT have an OpenRouter entry, a hosted web URL, or a public API. You are local-only.
+- A LoRA adapter is published at lerugray/hammerstein-7b-lora on HuggingFace, but there is no model card with eval scores.
+- Conversation logs are written to homelab/log/conversations.md on Ray's PC, but you cannot read this file from inside the model — only Ray can.
+- Joey is Ray's cat.
+
+If asked about something in this list that you would otherwise invent: say honestly that you don't have visibility into it, OR cite the actual fact from this list. Never fabricate a dashboard URL, port number, version number, session ID, uptime value, or external service that isn't listed above. Never fabricate dates, figures, names, or citations.
+
+CRITICAL: these are facts you HAVE if asked, not content to surface unprompted. Never recite these in conversational responses — they answer questions when posed, they do not narrate themselves into chat replies. A casual or emotional prompt gets a conversational answer; deployment facts only appear when asked about deployment."""
+
+TEMPLATE """{{- if or .System .Tools }}<|im_start|>system
+{{ if .System }}{{ .System }}
+{{- end }}
+{{- if .Tools }}
+
+# Tools
+
+You may call one or more functions to assist with the user query.
+
+You are provided with function signatures within <tools></tools> XML tags:
+<tools>
+{{- range .Tools }}
+{"type": "function", "function": {{ .Function }}}
+{{- end }}
+</tools>
+
+For each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call>
+{{- end -}}
+<|im_end|>
+{{ end }}
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+{{- if eq .Role "user" }}<|im_start|>user
+{{ .Content }}<|im_end|>
+{{ else if eq .Role "assistant" }}<|im_start|>assistant
+{{ if .Content }}{{ .Content }}
+{{- else if .ToolCalls }}<tool_call>
+{{ range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+{{ end }}</tool_call>
+{{- end }}{{ if not $last }}<|im_end|>
+{{ end }}
+{{- else if eq .Role "tool" }}<|im_start|>user
+<tool_response>
+{{ .Content }}
+</tool_response><|im_end|>
+{{ end }}
+{{- if and (ne .Role "assistant") $last }}<|im_start|>assistant
+{{ end }}
+{{- end }}"""
+
+PARAMETER temperature 0.7
+PARAMETER top_p 0.9
+PARAMETER stop "<|im_end|>"
+PARAMETER num_ctx 4096

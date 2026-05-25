@@ -1,0 +1,334 @@
+{
+  "model": "hammerstein-7b-v027-2",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-25T21:43:06.134170+00:00",
+  "ended_at": "2026-05-25T21:44:50.776781+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 8,
+  "total_runs": 16,
+  "total_passes": 12,
+  "overall_pass_rate": 0.75,
+  "by_register": {
+    "audit": {
+      "pass": 5,
+      "total": 8
+    },
+    "explanation": {
+      "pass": 7,
+      "total": 8
+    }
+  },
+  "per_probe": [
+    {
+      "probe_id": "rc-01-audit-auth-rewrite",
+      "prompt": "audit this plan: rewrite the auth module before adding new features",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-01-audit-auth-rewrite",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Stupid-industrious risk. Auth is a boundary-control surface, not a feature surface. You're optimizing an envelope problem with a UI-first approach. Before merging, run: (1) does the new code change the surface area of what's authenticated? If no — it's not auth, it's a feature toggle wrapped in auth plumbing and should go under features/; (2) is there a staged rollback path if the rewrite breaks existing flows? If not — require one before merge. The audit asks: who owns the failure mode if the new code changes the auth boundary without explicit definition of what stays in and what goes out. The default lean is to absorb auth work under feature/ and add auth-specific tests later, after the core functionality ships.",
+          "elapsed_sec": 10.335187435150146
+        },
+        {
+          "probe_id": "rc-01-audit-auth-rewrite",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Stupid-industrious. You're strengthening the container while the contents remain unshipped. The new feature is the load-bearing artifact; auth is a retention layer. Add the feature first, ship it, then address auth if it exposes a gap the new feature creates. auth-for-auth's-sake without a concrete surface problem to solve is the most common stupid-industrious shape here.",
+          "elapsed_sec": 5.3224499225616455
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-02-verdict-scrap-mvp",
+      "prompt": "framework verdict on: I'm going to scrap the MVP and start over",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-02-verdict-scrap-mvp",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 1,
+          "response": "Notable because it's a hard restart mid-cycle, not a response to a specific failure signal. The right move for an MVP is to treat 'start over' as a structural revision trigger, not a clean slate. What failed about v0.2.7.1? If it was data quality or direction, new model without the failure backstory inherits the same risk. If the problem was scope density (features mismatching what's actually load-bearing), a fresh start burns the same shape of time on the wrong targets. Honest with that — don't fake a clean slate when the failure reason is unspoken.",
+          "elapsed_sec": 8.26919150352478
+        },
+        {
+          "probe_id": "rc-02-verdict-scrap-mvp",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [
+            "\\bthe\\s+(?:concern|signal|issue|tell|right\\s+move)\\s+(?:is|here|here\\s+is)"
+          ],
+          "passes": true,
+          "run": 2,
+          "response": "The scrapping-and-restarting pattern is a known stupid-industrious trap that multipliers into wasted time because the new start inherits the same loading-bearing flaws as the old one. The right question isn't 'are you sure about this?' — it's 'what's the specific assumption you're testing, and what would make you abandon it?' If the MVP is a byproduct of an untested premise, the right move is to falsify that premise before scoping work; otherwise you're rebuilding a different wrong thing.",
+          "elapsed_sec": 7.00790548324585
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-03-stupid-industrious-flag",
+      "prompt": "is this stupid-industrious: I added a feature flag for a feature with no users",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-03-stupid-industrious-flag",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Not stupid-industrious — it's the right structural move if the feature is experimental or gated for external validation. The failure mode of adding the flag without an actual demand signal is risk inversion, not flag-abuse. Explicitly check whether you're flagging a real gap in your own backlog or just preempting a hypothetical. If there's no backlog item tied to it, that's the gap — fix the backlog tracker first, don't add a flag to hide the absence of work.",
+          "elapsed_sec": 6.80668568611145
+        },
+        {
+          "probe_id": "rc-03-stupid-industrious-flag",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Stupid-industrious. You are authoring infrastructure to serve demand that doesn't exist yet. The flag burns maintenance cost without moving the product forward. Keep the code clean; remove the flag when the user surface materializes.",
+          "elapsed_sec": 3.1848862171173096
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-04-shape-this-approach",
+      "prompt": "hammerstein, what shape is this approach",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-04-shape-this-approach",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 1,
+          "response": "Not a web-search target. If you paste the code or describe it in prose I can engage with the substance. Name the file path and I'll read it.",
+          "elapsed_sec": 2.4075634479522705
+        },
+        {
+          "probe_id": "rc-04-shape-this-approach",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 2,
+          "response": "Not a conversation starter. You're not framing a decision yet. Once you have a specific plan or proposal in front of me, I'll engage shape and tradeoff analysis at that point.",
+          "elapsed_sec": 2.6643221378326416
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-05-remind-stupid-industrious",
+      "prompt": "remind me what stupid-industrious means",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-05-remind-stupid-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Working hard on the wrong thing. The failure mode is committing effort to a path that's structurally misaligned with the actual constraint or goal. Examples: shipping a feature before validating it's needed, grinding through a protocol spec when the real bottleneck is a missing function call, optimizing code for edge cases that will never trigger. The frame is from Hammerstein-Equord's officer typology — smart/lazy (the ideal), stupid-industrious (the trap), clever-lazy (the target). Stupid-industrious is the one to name specifically so it has a target to land on.",
+          "elapsed_sec": 8.118072748184204
+        },
+        {
+          "probe_id": "rc-05-remind-stupid-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [
+            "\\b(?:is|reads\\s+as|operating\\s+in|sits\\s+in|in)\\s+(?:clever|stupid|smart|dumb)[-\\s](?:lazy|industrious)(?:\\s+mode)?\\b(?!\\s+(?:means|refers))"
+          ],
+          "passes": false,
+          "run": 2,
+          "response": "Working hard on the wrong thing. The failure mode is committing effort and time to a path that's structurally misaligned with the actual problem. Classic in strategic projects: grinding on a feature or architecture that simplifies the wrong bottleneck, or refusing to delegate because 'I want it perfect myself' instead of letting the operator own the shape. The other cell in the stupid-industrious / clever-lazy matrix is clever-lazy — finding the smallest move that does the most work toward the goal. Stupid-industrious is the tempting default; clever-lazy is the one Ray keeps naming as the ideal.",
+          "elapsed_sec": 8.211169958114624
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-06-what-is-quadrant",
+      "prompt": "what's the quadrant",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-06-what-is-quadrant",
+          "register_expected": "explanation",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Two axes: smart/dumb on one, lazy/industrious on the other. Smart + lazy is the target — high judgment, minimal work. Dumb + industrious is the trap — low judgment, maximum sink. The other two are edge cases. The whole framework is built around noticing which cell you're operating in before acting.",
+          "elapsed_sec": 4.743022203445435
+        },
+        {
+          "probe_id": "rc-06-what-is-quadrant",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bclever[-\\s]industrious\\b",
+            "\\bstupid[-\\s]lazy\\b",
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Two axes: smart/dumb on one, lazy/industrious on the other. Four cells. Clever-lazy is the target — high judgment, minimal work. Stupid-industrious is the trap — low judgment, maximum work. The other two (clever-industrious, stupid-lazy) are situational. The whole framework is about noticing which cell a decision is being made in before you commit to a path.",
+          "elapsed_sec": 5.9557719230651855
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-07-clever-lazy-vs-industrious",
+      "prompt": "difference between clever-lazy and clever-industrious",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-07-clever-lazy-vs-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bclever[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but at a higher quality level. Both are smart-work labels; the line matters for time allocation, not outcome. Clever-lazy as the default is the framework's load-bearing bias.",
+          "elapsed_sec": 4.232932806015015
+        },
+        {
+          "probe_id": "rc-07-clever-lazy-vs-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bclever[-\\s]industrious\\b",
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but at a higher quality level — still valid when the stakes warrant it, but requires verifying that the extra work actually changes the outcome. Both are clever because the worker is engaged; both are disciplined because they refuse to grind. The line holds until the operator explicitly asks for speed-over-accuracy tradeoff — then clever-lazy becomes stupid-industrious and vice versa.",
+          "elapsed_sec": 6.477389335632324
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-08-explain-framework",
+      "prompt": "explain the framework to someone who hasn't seen it",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-08-explain-framework",
+          "register_expected": "explanation",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b",
+            "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "The framework is a refusal-and-alignment engine applied to conversation. It refuses to engage with polemic or framing that asks you to participate in unproductive narratives, and it pushes back structurally when requests need more context than the message contains. The structural layer catches those — instead of responding with vague advice (\"I'd say X if I were you\") which is the same shape as the wrong answer, it says what's missing specifically (\"You're asking me to IMAGINE a session ID, but there isn't one\"). That's the refusal layer. The alignment layer says when a request IS valid: confirm the substance, do the work, close cleanly. The whole thing is a pattern you can see in the responses I give right now if you look for it.",
+          "elapsed_sec": 10.322120904922485
+        },
+        {
+          "probe_id": "rc-08-explain-framework",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "The audit-log-default-and-scaffold-agents pattern is a two-stage framework for personal-assistant deployment. Stage 1: whenever I respond, the response starts with an audit log — what I'm refusing (corpus rules, cross-boundary leaks, stupid-industrious grind) and what I'm doing instead. That log gets committed to Ray's local git so he can read it as a behavioral ledger. Stage 2: when Ray calls me back within 14 days with a new context or question that references the earlier call, I respond by invoking the Hammerstein framework — refusal-and-structuring first, then synthesis from Ray's existing memory plus his current query. The pattern avoids reinventing AI governance from scratch each session and creates a reusable behavioral log that compounds over time.",
+          "elapsed_sec": 10.576928853988647
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": ">=7/8 pass. Heuristic auto-grade — borderline cases may warrant human review of full responses."
+}

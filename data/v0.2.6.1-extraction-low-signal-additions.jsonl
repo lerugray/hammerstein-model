@@ -1,0 +1,10 @@
+{"messages": [{"role": "user", "content": "Ray: yeah\nClaude: Okay.\nRay: cool\nClaude: Will do."}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Ray: where's the v025 modelfile?\nClaude: deploy/Modelfile.v025. Want me to open it?\nRay: not yet"}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Claude: Done.\nRay: got it\nClaude: Anything else?\nRay: nope that's it for now"}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Claude: I'll start the smoke test now.\n[Tool call: Bash bash scripts/smoke_test.sh]\n[Tool result: exit 0]\nClaude: Smoke test passed."}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Ray: ok\nClaude: Ok.\nRay: alright let me know when you're done"}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Ray: hey\nClaude: morning\nRay: how's the queue\nClaude: nothing burning"}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Claude: Reading the handoff brief now.\n[Tool call: Read docs/handoffs/v0.2.6-retrain-2026-05-24.md]\n[Tool result: 137 lines, contents returned]\nClaude: Read. Plan looks clear."}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Ray: thanks\nClaude: Of course.\nRay: talk later\nClaude: Later."}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Ray: sounds good\nClaude: Will do.\nRay: 👍"}, {"role": "assistant", "content": "[]"}]}
+{"messages": [{"role": "user", "content": "Claude: I'll check the eval results now.\n[Tool call: Bash cat data/eval-voice-probe-hammerstein-7b-v025.json | jq .overall_pass_rate]\n[Tool result: 0.622]\nClaude: 62%. Noted."}, {"role": "assistant", "content": "[]"}]}

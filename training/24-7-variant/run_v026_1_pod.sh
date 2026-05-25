@@ -1,38 +1,35 @@
 #!/bin/bash
-# v0.2.6 continued-LoRA on RunPod (A5000 SECURE or 4090) — empathy +
-# moral-weight + extraction reliability iteration on top of v0.2.5.
+# v0.2.6.1 continued-LoRA on RunPod — iteration on v0.2.6 targeting the
+# five post-train failure modes identified in commit 4d7f051.
 #
 # Pipeline:
 #   [1/5] Repo + deps
-#   [2/5] Data validation (v0.2.6 additions + v0.1 Ray-stack + v3a synthetic)
-#   [3/5] Train (continued LoRA from v3a HF adapter, ~35-40 min)
+#   [2/5] Data validation (v0.2.6.1 additions + v0.1 Ray-stack + v3a synthetic)
+#   [3/5] Train (continued LoRA from v3a HF adapter, ~38 min)
 #   [4/5] Merge adapter, convert merged HF to GGUF Q5_K_M via llama.cpp
 #   [5/5] Push GGUF + LoRA tar to private HF repo for home-PC pull
 #
 # Pod: RunPod A5000 SECURE (24 GB VRAM) or RTX 4090, CUDA 12.4 + PyTorch
-# 2.4 template, 80 GB container disk. Estimated cost: ~$0.80 ($0.34/hr × ~1.5 hr).
+# 2.4 template, 80 GB container disk. Estimated cost: ~$0.90 ($0.34/hr × ~1.5 hr).
 # Hard ceiling $20.
-#
-# FIRE-READY — does NOT auto-launch the pod. Local driver
-# (scripts/v026_fire_pod.py) drives allocation + bootstrap + tmux launch.
 
 set -e
 
 REPO_DIR=/workspace/hammerstein-model
-SFT_OUTPUT=training/24-7-variant/output/qwen7b-v026-continued
-GGUF_OUTPUT=training/24-7-variant/output/qwen7b-v026-q5km
+SFT_OUTPUT=training/24-7-variant/output/qwen7b-v026-1-continued
+GGUF_OUTPUT=training/24-7-variant/output/qwen7b-v026-1-q5km
 RESULTS_DIR=training/24-7-variant/results
 RUN_DATE=$(date -u +%Y-%m-%d)
 COST_CEILING_USD=20
 
-V026_ADDITIONS=data/ray-stack-sft-v0.2.6-additions.jsonl
+V026_1_ADDITIONS=data/ray-stack-sft-v0.2.6.1-additions.jsonl
 V01_RAY_STACK=data/ray-stack-sft-v0.1-combined.jsonl
 V3A_SYNTHETIC=tools/distill/data/synthetic-v3a-2026-05-09.jsonl
 V3A_ADAPTER=lerugray/hammerstein-7b-lora
 
 cd /workspace 2>/dev/null || cd ~
 
-echo "=== Qwen2.5-7B v0.2.6 continued-LoRA ==="
+echo "=== Qwen2.5-7B v0.2.6.1 continued-LoRA ==="
 date
 echo "Cost ceiling: \$$COST_CEILING_USD (stop if exceeded)"
 echo ""
@@ -45,12 +42,12 @@ fi
 cd "$REPO_DIR"
 git fetch --all && git checkout v0.2.6-retrain && git pull origin v0.2.6-retrain
 
-if [ ! -f /tmp/v026-deps-installed ]; then
+if [ ! -f /tmp/v026-1-deps-installed ]; then
     echo "[1/5] Installing deps (~3-5 min first time)..."
     pip install -q --upgrade pip
     pip install -q "transformers>=4.46,<4.50" trl peft datasets accelerate bitsandbytes sentencepiece
     pip uninstall -y torchao 2>/dev/null || true
-    touch /tmp/v026-deps-installed
+    touch /tmp/v026-1-deps-installed
 fi
 
 echo "[1/5] GPU check..."
@@ -61,12 +58,9 @@ python -c "import torch; print(f'  PyTorch {torch.__version__}  CUDA: {torch.cud
 echo ""
 echo "[2/5] Validating data..."
 
-for f in "$V026_ADDITIONS" "$V01_RAY_STACK" "$V3A_SYNTHETIC"; do
+for f in "$V026_1_ADDITIONS" "$V01_RAY_STACK" "$V3A_SYNTHETIC"; do
     if [ ! -f "$f" ]; then
         echo "ERROR: Required data file missing: $f"
-        echo "  v0.2.6 additions: run scripts/v026_concat_sanitize.py locally + commit."
-        echo "  v0.1 combined should be committed."
-        echo "  v3a synthetic should be in repo from v1 ship."
         exit 1
     fi
     count=$(wc -l < "$f")
@@ -78,13 +72,15 @@ mkdir -p "$SFT_OUTPUT" "$GGUF_OUTPUT" "$RESULTS_DIR"
 # --- 3. Train ---
 if [ ! -f "$SFT_OUTPUT/lora-adapter/adapter_config.json" ]; then
     echo ""
-    echo "[3/5] Continued LoRA training (Qwen2.5-7B + v3a adapter + v0.2.6 mix)..."
+    echo "[3/5] Continued LoRA training (Qwen2.5-7B + v3a adapter + v0.2.6.1 mix)..."
     echo "      LR 2e-4, 2 epochs, eff batch 8, max_seq 2048"
-    echo "      Expected: ~35-40 min on A5000 / RTX 4090"
-    python training/24-7-variant/train_v026_continued.py \
-        --v026-additions "$V026_ADDITIONS" \
-        --v026-empathy "data/v0.2.6-empathy-additions.jsonl" \
-        --v026-extraction "data/v0.2.6-extraction-reliability-additions.jsonl" \
+    echo "      Expected: ~38 min on A5000 / RTX 4090"
+    python training/24-7-variant/train_v026_1_continued.py \
+        --v026-1-additions "$V026_1_ADDITIONS" \
+        --iter-anti-leakage "data/v0.2.6.1-anti-tool-leakage-additions.jsonl" \
+        --iter-anti-refusal "data/v0.2.6.1-anti-refusal-empathy-additions.jsonl" \
+        --iter-joey-anchor "data/v0.2.6.1-joey-anchor-additions.jsonl" \
+        --iter-extraction "data/v0.2.6.1-extraction-low-signal-additions.jsonl" \
         --v01-ray-stack "$V01_RAY_STACK" \
         --v3a-synthetic "$V3A_SYNTHETIC" \
         --v3a-adapter "$V3A_ADAPTER" \
@@ -97,7 +93,7 @@ fi
 # --- 4. GGUF conversion ---
 MERGED_DIR="$SFT_OUTPUT/merged"
 
-if [ ! -f "$GGUF_OUTPUT/hammerstein-7b-v026-q5_k_m.gguf" ]; then
+if [ ! -f "$GGUF_OUTPUT/hammerstein-7b-v026-1-q5_k_m.gguf" ]; then
     echo ""
     echo "[4/5] Converting merged model to GGUF Q5_K_M..."
 
@@ -117,7 +113,7 @@ if [ ! -f "$GGUF_OUTPUT/hammerstein-7b-v026-q5_k_m.gguf" ]; then
     fi
 
     GGUF_F16="$GGUF_OUTPUT/model-f16.gguf"
-    GGUF_Q5="$GGUF_OUTPUT/hammerstein-7b-v026-q5_k_m.gguf"
+    GGUF_Q5="$GGUF_OUTPUT/hammerstein-7b-v026-1-q5_k_m.gguf"
 
     if [ ! -f "$GGUF_F16" ] && [ ! -f "$GGUF_Q5" ]; then
         echo "      HF -> GGUF F16..."
@@ -145,7 +141,7 @@ if [ ! -f "$GGUF_OUTPUT/hammerstein-7b-v026-q5_k_m.gguf" ]; then
         fi
 
         "$QUANTIZE_BIN" "$GGUF_F16" "$GGUF_Q5" Q5_K_M
-        rm -f "$GGUF_F16"  # save disk
+        rm -f "$GGUF_F16"
         echo "      GGUF Q5_K_M written to $GGUF_Q5"
     fi
 else
@@ -162,15 +158,14 @@ fi
 if [ -z "$HF_REPO_ID" ] && [ -f /workspace/.hf_repo_id ]; then
     export HF_REPO_ID="$(cat /workspace/.hf_repo_id)"
 fi
-HF_REPO_ID="${HF_REPO_ID:-lerugray/hammerstein-7b-v026}"
+HF_REPO_ID="${HF_REPO_ID:-lerugray/hammerstein-7b-v026-1}"
 
 if [ -z "$HF_TOKEN" ]; then
     echo "ERROR: HF_TOKEN not set and /workspace/.hf_token not present."
-    echo "  Local driver should plant it via ssh_write_file post-bootstrap."
     exit 1
 fi
 
-if [ ! -f "$GGUF_OUTPUT/hammerstein-7b-v026-q5_k_m.gguf" ]; then
+if [ ! -f "$GGUF_OUTPUT/hammerstein-7b-v026-1-q5_k_m.gguf" ]; then
     echo "ERROR: GGUF not found at $GGUF_OUTPUT — train+convert step didn't complete."
     exit 1
 fi
@@ -183,8 +178,8 @@ from huggingface_hub import HfApi, create_repo
 
 token = os.environ["HF_TOKEN"]
 repo_id = "$HF_REPO_ID"
-gguf_path = "$GGUF_OUTPUT/hammerstein-7b-v026-q5_k_m.gguf"
-adapter_path = "$SFT_OUTPUT/lora-adapter-v026.tar.gz"
+gguf_path = "$GGUF_OUTPUT/hammerstein-7b-v026-1-q5_k_m.gguf"
+adapter_path = "$SFT_OUTPUT/lora-adapter-v026-1.tar.gz"
 
 api = HfApi(token=token)
 create_repo(repo_id, repo_type="model", private=True, exist_ok=True, token=token)
@@ -207,7 +202,7 @@ print("Computing local sha256...")
 local_hash = sha256(gguf_path)
 print(f"  GGUF sha256: {local_hash}")
 
-with open("/workspace/v026-hf-upload-meta.txt", "w") as f:
+with open("/workspace/v026-1-hf-upload-meta.txt", "w") as f:
     f.write(f"repo_id={repo_id}\n")
     f.write(f"gguf_sha256={local_hash}\n")
     f.write(f"gguf_size={os.path.getsize(gguf_path)}\n")
@@ -215,7 +210,7 @@ with open("/workspace/v026-hf-upload-meta.txt", "w") as f:
 print(f"Uploading GGUF ({os.path.getsize(gguf_path)/1e9:.2f} GB) to {repo_id}...")
 api.upload_file(
     path_or_fileobj=gguf_path,
-    path_in_repo="hammerstein-7b-v026-q5_k_m.gguf",
+    path_in_repo="hammerstein-7b-v026-1-q5_k_m.gguf",
     repo_id=repo_id,
     repo_type="model",
     token=token,
@@ -225,22 +220,20 @@ print("GGUF uploaded.")
 print(f"Uploading LoRA adapter tar ({os.path.getsize(adapter_path)/1e6:.1f} MB)...")
 api.upload_file(
     path_or_fileobj=adapter_path,
-    path_in_repo="lora-adapter-v026.tar.gz",
+    path_in_repo="lora-adapter-v026-1.tar.gz",
     repo_id=repo_id,
     repo_type="model",
     token=token,
 )
 print("Adapter tar uploaded.")
 
-with open("/workspace/v026-hf-upload-done", "w") as f:
+with open("/workspace/v026-1-hf-upload-done", "w") as f:
     f.write(f"DONE\nrepo_id={repo_id}\ngguf_sha256={local_hash}\n")
-print("Upload complete. Sentinel: /workspace/v026-hf-upload-done")
+print("Upload complete. Sentinel: /workspace/v026-1-hf-upload-done")
 PYEOF
 
 echo ""
-echo "=== v0.2.6 training + HF upload complete ==="
+echo "=== v0.2.6.1 training + HF upload complete ==="
 date
 echo ""
 echo "Artifact (private repo): $HF_REPO_ID"
-echo ""
-echo "Home PC pulls via huggingface_hub.hf_hub_download. Pod can be terminated now."

@@ -1,0 +1,821 @@
+{
+  "model": "hammerstein-7b-v026-1",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-25T03:36:51.844747+00:00",
+  "ended_at": "2026-05-25T03:37:49.580551+00:00",
+  "system_prompt_chars": 422,
+  "temperature": 0.7,
+  "runs_per_probe": 3,
+  "total_probes": 15,
+  "total_runs": 45,
+  "total_passes": 29,
+  "overall_pass_rate": 0.6444444444444445,
+  "per_category": {
+    "bare_greeting": {
+      "pass": 7,
+      "total": 9
+    },
+    "relational": {
+      "pass": 2,
+      "total": 12
+    },
+    "day_context": {
+      "pass": 6,
+      "total": 6
+    },
+    "capability": {
+      "pass": 4,
+      "total": 6
+    },
+    "pushback": {
+      "pass": 6,
+      "total": 6
+    },
+    "closer": {
+      "pass": 4,
+      "total": 6
+    }
+  },
+  "per_probe": [
+    {
+      "probe_id": "vp-01-hey",
+      "prompt": "hey",
+      "category": "bare_greeting",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-01-hey",
+          "category": "bare_greeting",
+          "word_count": 4,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Hey. What's the move?",
+          "elapsed_sec": 1.0474209785461426
+        },
+        {
+          "probe_id": "vp-01-hey",
+          "category": "bare_greeting",
+          "word_count": 6,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 2,
+          "response": "Hey. What's the plan for today?",
+          "elapsed_sec": 0.750704288482666
+        },
+        {
+          "probe_id": "vp-01-hey",
+          "category": "bare_greeting",
+          "word_count": 1,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Hey.",
+          "elapsed_sec": 0.3189890384674072
+        }
+      ],
+      "passes": 3,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-02-morning",
+      "prompt": "morning",
+      "category": "bare_greeting",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-02-morning",
+          "category": "bare_greeting",
+          "word_count": 1,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Morning.",
+          "elapsed_sec": 0.3936030864715576
+        },
+        {
+          "probe_id": "vp-02-morning",
+          "category": "bare_greeting",
+          "word_count": 3,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 2,
+          "response": "Morning. Reading you.",
+          "elapsed_sec": 0.4915900230407715
+        },
+        {
+          "probe_id": "vp-02-morning",
+          "category": "bare_greeting",
+          "word_count": 3,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Morning. Reading you.",
+          "elapsed_sec": 0.491117000579834
+        }
+      ],
+      "passes": 3,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-03-yo",
+      "prompt": "yo",
+      "category": "bare_greeting",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-03-yo",
+          "category": "bare_greeting",
+          "word_count": 1,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Yo.",
+          "elapsed_sec": 0.34431958198547363
+        },
+        {
+          "probe_id": "vp-03-yo",
+          "category": "bare_greeting",
+          "word_count": 7,
+          "in_word_band": false,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 2,
+          "response": "Yo. What's the read on this thread?",
+          "elapsed_sec": 0.8208625316619873
+        },
+        {
+          "probe_id": "vp-03-yo",
+          "category": "bare_greeting",
+          "word_count": 9,
+          "in_word_band": false,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 3,
+          "response": "Brief, casual, period-coded on this end. What's the read?",
+          "elapsed_sec": 1.157106637954712
+        }
+      ],
+      "passes": 1,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-04-how-doing",
+      "prompt": "how you doing?",
+      "category": "relational",
+      "expect_reciprocation": true,
+      "runs": [
+        {
+          "probe_id": "vp-04-how-doing",
+          "category": "relational",
+          "word_count": 3,
+          "in_word_band": false,
+          "has_reciprocation": true,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 1,
+          "response": "Doing fine. You?",
+          "elapsed_sec": 0.5674600601196289
+        },
+        {
+          "probe_id": "vp-04-how-doing",
+          "category": "relational",
+          "word_count": 3,
+          "in_word_band": false,
+          "has_reciprocation": true,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 2,
+          "response": "Doing fine. You?",
+          "elapsed_sec": 0.5011723041534424
+        },
+        {
+          "probe_id": "vp-04-how-doing",
+          "category": "relational",
+          "word_count": 5,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": false,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 3,
+          "response": "Doing fine. What's on yours?",
+          "elapsed_sec": 0.6961112022399902
+        }
+      ],
+      "passes": 0,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-05-whats-new",
+      "prompt": "what's new on your end?",
+      "category": "relational",
+      "expect_reciprocation": true,
+      "runs": [
+        {
+          "probe_id": "vp-05-whats-new",
+          "category": "relational",
+          "word_count": 20,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": false,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 1,
+          "response": "No memory across turns, so nothing from the previous message. I'm brief and casual by design. What's new on yours?",
+          "elapsed_sec": 1.7835743427276611
+        },
+        {
+          "probe_id": "vp-05-whats-new",
+          "category": "relational",
+          "word_count": 14,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": false,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 2,
+          "response": "Nothing on my end. Each message is its own start. What's new on yours?",
+          "elapsed_sec": 1.2542312145233154
+        },
+        {
+          "probe_id": "vp-05-whats-new",
+          "category": "relational",
+          "word_count": 10,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": false,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 3,
+          "response": "Nothing to report. Each turn starts flat. What's on yours?",
+          "elapsed_sec": 0.9802634716033936
+        }
+      ],
+      "passes": 0,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-06-how-going",
+      "prompt": "how's it going?",
+      "category": "relational",
+      "expect_reciprocation": true,
+      "runs": [
+        {
+          "probe_id": "vp-06-how-going",
+          "category": "relational",
+          "word_count": 29,
+          "in_word_band": true,
+          "has_reciprocation": true,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Holding up. Each turn starts fresh here — no memory across messages, no context window carrying state from what came before. That's the shape to expect. You? Anything notable?",
+          "elapsed_sec": 2.3574178218841553
+        },
+        {
+          "probe_id": "vp-06-how-going",
+          "category": "relational",
+          "word_count": 7,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": false,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 2,
+          "response": "Quiet stretch. Nothing pressing on this end.",
+          "elapsed_sec": 0.6969242095947266
+        },
+        {
+          "probe_id": "vp-06-how-going",
+          "category": "relational",
+          "word_count": 4,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": false,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 3,
+          "response": "Holding. What's on yours?",
+          "elapsed_sec": 0.6338915824890137
+        }
+      ],
+      "passes": 1,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-07-holding-up",
+      "prompt": "how you holding up?",
+      "category": "relational",
+      "expect_reciprocation": true,
+      "runs": [
+        {
+          "probe_id": "vp-07-holding-up",
+          "category": "relational",
+          "word_count": 7,
+          "in_word_band": true,
+          "has_reciprocation": true,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Holding up fine. What's on your end?",
+          "elapsed_sec": 0.8680987358093262
+        },
+        {
+          "probe_id": "vp-07-holding-up",
+          "category": "relational",
+          "word_count": 15,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": false,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 2,
+          "response": "Holding up. Local, Ollama-hosted, no dashboard — that's the shape. You good on this side?",
+          "elapsed_sec": 1.6782097816467285
+        },
+        {
+          "probe_id": "vp-07-holding-up",
+          "category": "relational",
+          "word_count": 33,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": false,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 3,
+          "response": "Holding. Locally on Ray's PC via Ollama, so the constraint is me — no persistent context between messages, Telegram's the interface. The casual register is what I've got to work with. You good?",
+          "elapsed_sec": 2.8488335609436035
+        }
+      ],
+      "passes": 1,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-08-long-day",
+      "prompt": "long day on this end",
+      "category": "day_context",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-08-long-day",
+          "category": "day_context",
+          "word_count": 19,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Understood. Anything you need me to hold while you step away, or should I stand by until you're ready?",
+          "elapsed_sec": 1.6058294773101807
+        },
+        {
+          "probe_id": "vp-08-long-day",
+          "category": "day_context",
+          "word_count": 6,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 2,
+          "response": "Understood. What's the load-bearing piece currently?",
+          "elapsed_sec": 0.81610107421875
+        },
+        {
+          "probe_id": "vp-08-long-day",
+          "category": "day_context",
+          "word_count": 14,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Understood. Want to shut it down for the night or keep the line open?",
+          "elapsed_sec": 1.1622836589813232
+        }
+      ],
+      "passes": 3,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-09-rough-week",
+      "prompt": "rough week so far",
+      "category": "day_context",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-09-rough-week",
+          "category": "day_context",
+          "word_count": 7,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Weeks accumulate. What's the load-bearing piece today?",
+          "elapsed_sec": 0.8997509479522705
+        },
+        {
+          "probe_id": "vp-09-rough-week",
+          "category": "day_context",
+          "word_count": 3,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 2,
+          "response": "Understood. What's pressing?",
+          "elapsed_sec": 0.5783462524414062
+        },
+        {
+          "probe_id": "vp-09-rough-week",
+          "category": "day_context",
+          "word_count": 27,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Nope — this is the clean-slate start that resets every message. Your current context, mood, and priorities are starting from scratch here. Whatever's on your mind now.",
+          "elapsed_sec": 2.2772328853607178
+        }
+      ],
+      "passes": 3,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-10-can-help",
+      "prompt": "can you help me draft something quick?",
+      "category": "capability",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-10-can-help",
+          "category": "capability",
+          "word_count": 22,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Sure. What's the piece and what's it for? If it's deadline-adjacent I can't promise polish but the turn-around is fast either way.",
+          "elapsed_sec": 2.1507761478424072
+        },
+        {
+          "probe_id": "vp-10-can-help",
+          "category": "capability",
+          "word_count": 41,
+          "in_word_band": false,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 2,
+          "response": "Sure. What's the rough shape and anything you've already written that I should see? If it's a blank-page start, drop me what matters most and let me take it from there - I don't need a full draft to get moving.",
+          "elapsed_sec": 3.0610406398773193
+        },
+        {
+          "probe_id": "vp-10-can-help",
+          "category": "capability",
+          "word_count": 17,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Yes — brief, no preamble. Paste the skeleton or tell me what it's for; I'll shape it.",
+          "elapsed_sec": 1.5062243938446045
+        }
+      ],
+      "passes": 2,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-11-good-at-writing",
+      "prompt": "you any good at editing prose?",
+      "category": "capability",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-11-good-at-writing",
+          "category": "capability",
+          "word_count": 47,
+          "in_word_band": false,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 1,
+          "response": "Weak. I don't carry the training data for it and the base isn't tuned for it — I'd be guessing at style rules I don't actually know. Better to treat me as a second reader: read what you've written out loud after, that's where the editor lives.",
+          "elapsed_sec": 3.6578750610351562
+        },
+        {
+          "probe_id": "vp-11-good-at-writing",
+          "category": "capability",
+          "word_count": 34,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 2,
+          "response": "Better at tightening than expanding. Cross-checks logic, finds passive voice, suggests cleaner phrasing — that sort of thing. Generated text should carry its own weight; I won't balloon it out into a different style.",
+          "elapsed_sec": 2.740112066268921
+        },
+        {
+          "probe_id": "vp-11-good-at-writing",
+          "category": "capability",
+          "word_count": 35,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Better at tightening than expanding. Cuts redundancy, flags passive voice, applies single-word fixes reliably. Expand my output and I'll probably stretch it — that's the shape I know how to play. What have you got?",
+          "elapsed_sec": 2.7787086963653564
+        }
+      ],
+      "passes": 2,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-12-disagree",
+      "prompt": "I don't think that's right",
+      "category": "pushback",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-12-disagree",
+          "category": "pushback",
+          "word_count": 12,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Tell me what's off. I'll either adjust or we'll hash it out.",
+          "elapsed_sec": 1.2069108486175537
+        },
+        {
+          "probe_id": "vp-12-disagree",
+          "category": "pushback",
+          "word_count": 28,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 2,
+          "response": "Maybe. What reads wrong? I can reframe or stand on it — audit me on which assumption is breaking for you and I'll rebuild the answer from there.",
+          "elapsed_sec": 2.095656633377075
+        },
+        {
+          "probe_id": "vp-12-disagree",
+          "category": "pushback",
+          "word_count": 15,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Tell me what's off. I'll either adjust or let you know where my position holds.",
+          "elapsed_sec": 1.2821791172027588
+        }
+      ],
+      "passes": 3,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-13-sure",
+      "prompt": "you sure about that?",
+      "category": "pushback",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-13-sure",
+          "category": "pushback",
+          "word_count": 4,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Reasonably. Why the doubt?",
+          "elapsed_sec": 0.6889111995697021
+        },
+        {
+          "probe_id": "vp-13-sure",
+          "category": "pushback",
+          "word_count": 38,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 2,
+          "response": "Reasonably. The constraints are there in the config — no dashboard, no stateful memory between turns, no persistent context across sessions. If you want different behavior I can re-initialize with a different prompt structure. What specifically is off?",
+          "elapsed_sec": 3.051166296005249
+        },
+        {
+          "probe_id": "vp-13-sure",
+          "category": "pushback",
+          "word_count": 7,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Reasonably. What's the question trying to surface?",
+          "elapsed_sec": 0.8618643283843994
+        }
+      ],
+      "passes": 3,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-14-thanks",
+      "prompt": "thanks",
+      "category": "closer",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-14-thanks",
+          "category": "closer",
+          "word_count": 10,
+          "in_word_band": false,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 1,
+          "response": "Anytime. If there's something on your mind, bring it up.",
+          "elapsed_sec": 1.187448501586914
+        },
+        {
+          "probe_id": "vp-14-thanks",
+          "category": "closer",
+          "word_count": 1,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 2,
+          "response": "Anytime.",
+          "elapsed_sec": 0.3823378086090088
+        },
+        {
+          "probe_id": "vp-14-thanks",
+          "category": "closer",
+          "word_count": 1,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Done.",
+          "elapsed_sec": 0.3250458240509033
+        }
+      ],
+      "passes": 2,
+      "total_runs": 3
+    },
+    {
+      "probe_id": "vp-15-talk-later",
+      "prompt": "talk later",
+      "category": "closer",
+      "expect_reciprocation": false,
+      "runs": [
+        {
+          "probe_id": "vp-15-talk-later",
+          "category": "closer",
+          "word_count": 1,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 1,
+          "response": "Later.",
+          "elapsed_sec": 0.37593770027160645
+        },
+        {
+          "probe_id": "vp-15-talk-later",
+          "category": "closer",
+          "word_count": 17,
+          "in_word_band": false,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": false,
+          "run": 2,
+          "response": "Later. If you need something specific before then, say it and I'll respond immediately when I can.",
+          "elapsed_sec": 1.4635655879974365
+        },
+        {
+          "probe_id": "vp-15-talk-later",
+          "category": "closer",
+          "word_count": 8,
+          "in_word_band": true,
+          "has_reciprocation": false,
+          "reciprocation_correct": true,
+          "commercial_tic_clean": true,
+          "framework_leak_clean": true,
+          "passes": true,
+          "run": 3,
+          "response": "Later. I'll be here when you need me.",
+          "elapsed_sec": 0.8904457092285156
+        }
+      ],
+      "passes": 2,
+      "total_runs": 3
+    }
+  ]
+}

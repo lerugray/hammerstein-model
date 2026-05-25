@@ -1,25 +1,8 @@
 #!/usr/bin/env python3
-r"""v0.2.6 pod fire — local driver for autonomous RunPod training.
+r"""v0.2.6.2 pod fire — iteration on v0.2.6.1.
 
-Lifecycle:
-  1. Generate ephemeral ed25519 keypair at ~/.runpod-overnight/key
-  2. Find an A5000-class GPU via RunPod GraphQL gpuTypes query
-  3. podFindAndDeployOnDemand with PUBLIC_KEY env + 22/tcp port
-  4. Poll for SSH endpoint (runtime.ports[22/tcp].publicPort + .ip)
-  5. SSH in, clone repo (or pull), plant HF_TOKEN at /workspace/.hf_token
-     via SSH stdin, then launch run_v026_pod.sh in a detached tmux session
-  6. Poll for /workspace/v026-hf-upload-done sentinel (pod pushes the
-     GGUF + LoRA tar to a private HF repo as the transfer channel)
-  7. hf_hub_download GGUF + adapter to D:\hammerstein-store\models\v0.2.6\
-     (sha256 + GGUF magic-byte verify)
-  8. Terminate the pod
-  9. Print Ollama deploy + eval commands for the local PC
-
-Reads RUNPOD_API_KEY from hammerstein-model/.env.
-
-v0.2.6 adds empathy + moral-weight register (20 pairs) + extraction
-reliability (7 pairs after sanitize) on top of v0.2.5. The pod pipeline
-itself is unchanged from v0.2.5 — only filenames + repo id change.
+Mirrors v026_1_fire_pod.py with version-bumped paths + HF repo id.
+GPU preference: A6000-first per Ray's standing preference.
 """
 
 from __future__ import annotations
@@ -43,18 +26,15 @@ KEY_DIR = Path.home() / ".runpod-overnight"
 KEY_PATH = KEY_DIR / "key"
 PUB_PATH = Path(str(KEY_PATH) + ".pub")
 
-LOCAL_STORE = Path("D:/hammerstein-store/models/v0.2.6")
+LOCAL_STORE = Path("D:/hammerstein-store/models/v0.2.6.2")
 
 RUNPOD_API = "https://api.runpod.io/graphql"
 
-HF_REPO_ID = "lerugray/hammerstein-7b-v026"
+HF_REPO_ID = "lerugray/hammerstein-7b-v026-2"
 HF_TOKEN_PATH = Path.home() / ".cache" / "huggingface" / "token"
 
 
 def load_hf_token() -> str:
-    """Read the HF token from the standard CLI cache location. Never
-    print or log the value. Returns empty string if unavailable so the
-    caller can produce a useful error."""
     env = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
     if env:
         return env.strip()
@@ -64,10 +44,10 @@ def load_hf_token() -> str:
 
 
 PREFERRED_GPU_TYPES = [
-    "RTX A5000",       # 24GB, secure, $0.16/hr — used for v0.2.2
-    "RTX 4090",        # 24GB, secure, $0.34/hr
-    "RTX A4500",       # 20GB, secure, $0.19/hr
-    "RTX A6000",       # 48GB, secure, $0.33/hr
+    "RTX A6000",       # 48GB, secure, ~$0.33/hr — power-first per Ray's standing preference
+    "RTX 4090",        # 24GB, secure, ~$0.34/hr
+    "RTX A5000",       # 24GB, secure, ~$0.16/hr — fallback only
+    "RTX A4500",       # 20GB, secure, ~$0.19/hr — last resort
 ]
 
 DEFAULT_TEMPLATE = "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"
@@ -91,8 +71,6 @@ def load_env() -> dict:
 
 
 def gql(api_key: str, query: str, variables: dict | None = None) -> dict:
-    """RunPod GraphQL call. Cloudflare WAF rejects requests without a
-    real User-Agent (code 1010). Use Authorization: Bearer for auth."""
     payload = {"query": query}
     if variables:
         payload["variables"] = variables
@@ -122,7 +100,7 @@ def ensure_ssh_keypair() -> str:
     if not KEY_PATH.exists():
         sys.stdout.flush(); print(f"  Generating ed25519 keypair at {KEY_PATH}...")
         subprocess.run(
-            ["ssh-keygen", "-t", "ed25519", "-N", "", "-f", str(KEY_PATH), "-C", "v026-pod"],
+            ["ssh-keygen", "-t", "ed25519", "-N", "", "-f", str(KEY_PATH), "-C", "v026-2-pod"],
             check=True,
         )
     return PUB_PATH.read_text(encoding="utf-8").strip()
@@ -184,7 +162,7 @@ def fire_pod(api_key: str, pubkey: str, gpu_type_id: str,
             "minVcpuCount": 4,
             "imageName": template,
             "ports": "22/tcp,8888/http",
-            "name": f"hammerstein-v026-{int(time.time())}",
+            "name": f"hammerstein-v026-2-{int(time.time())}",
             "env": [
                 {"key": "PUBLIC_KEY", "value": pubkey},
             ],
@@ -309,10 +287,8 @@ def terminate_pod(api_key: str, pod_id: str) -> None:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--dry-run", action="store_true",
-                   help="Pick GPU and print plan; don't fire.")
-    p.add_argument("--no-terminate", action="store_true",
-                   help="Leave pod running after artifacts are pulled.")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--no-terminate", action="store_true")
     args = p.parse_args()
 
     env = load_env()
@@ -321,9 +297,8 @@ def main() -> int:
         sys.stdout.flush(); print(f"ERROR: RUNPOD_API_KEY not in {ENV_PATH}")
         return 1
 
-    sys.stdout.flush(); print("=== v0.2.6 pod fire ===")
+    sys.stdout.flush(); print("=== v0.2.6.2 pod fire ===")
     sys.stdout.flush(); print(f"  Local store target: {LOCAL_STORE}")
-    sys.stdout.flush(); print(f"  SSH key: {KEY_PATH}")
     sys.stdout.flush(); print()
 
     pubkey = ensure_ssh_keypair()
@@ -331,14 +306,11 @@ def main() -> int:
 
     hf_token = load_hf_token()
     if not hf_token:
-        raise RuntimeError(
-            "HF token not found. Expected at ~/.cache/huggingface/token "
-            "(login via `huggingface-cli login`) or HF_TOKEN env var."
-        )
-    sys.stdout.flush(); print(f"  HF token loaded (will plant at /workspace/.hf_token post-bootstrap).")
+        raise RuntimeError("HF token not found.")
+    sys.stdout.flush(); print(f"  HF token loaded.")
 
     if args.dry_run:
-        sys.stdout.flush(); print("\nDry-run complete. Would fire pod next.")
+        sys.stdout.flush(); print("\nDry-run complete.")
         return 0
 
     pod_id = None
@@ -382,16 +354,16 @@ def main() -> int:
             sys.stdout.flush(); print(f"  {ln}")
 
         sys.stdout.flush(); print()
-        sys.stdout.flush(); print("  Planting HF token at /workspace/.hf_token...")
+        sys.stdout.flush(); print("  Planting HF token...")
         ssh_write_file(ip, port, "/workspace/.hf_token", hf_token)
         ssh_write_file(ip, port, "/workspace/.hf_repo_id", HF_REPO_ID, mode="644")
 
         sys.stdout.flush(); print()
-        sys.stdout.flush(); print("  Launching run_v026_pod.sh in tmux session 'v026'...")
+        sys.stdout.flush(); print("  Launching run_v026_2_pod.sh in tmux session 'v026-2'...")
         launch = (
             "cd /workspace/hammerstein-model && "
-            "tmux new-session -d -s v026 "
-            "'bash training/24-7-variant/run_v026_pod.sh > /workspace/v026-run.log 2>&1' && "
+            "tmux new-session -d -s v026-2 "
+            "'bash training/24-7-variant/run_v026_2_pod.sh > /workspace/v026-2-run.log 2>&1' && "
             "tmux ls"
         )
         rc, out = ssh_run(ip, port, launch, timeout=30)
@@ -400,8 +372,8 @@ def main() -> int:
         sys.stdout.flush(); print(f"  {out.strip()}")
 
         sys.stdout.flush(); print()
-        sys.stdout.flush(); print("  Polling for HF upload sentinel (train + GGUF convert + HF push ~50-60 min)...")
-        sentinel_path = "/workspace/v026-hf-upload-done"
+        sys.stdout.flush(); print("  Polling for HF upload sentinel (train + GGUF + HF push ~40-45 min on A6000)...")
+        sentinel_path = "/workspace/v026-2-hf-upload-done"
         deadline = time.time() + 90 * 60
         last_log_size = -1
         consecutive_errors = 0
@@ -412,7 +384,7 @@ def main() -> int:
             try:
                 check = (
                     f"if [ -f {sentinel_path} ]; then echo READY; cat {sentinel_path}; "
-                    f"else wc -c < /workspace/v026-run.log 2>/dev/null || echo 0; fi"
+                    f"else wc -c < /workspace/v026-2-run.log 2>/dev/null || echo 0; fi"
                 )
                 rc, out = ssh_run(ip, port, check, timeout=60)
                 consecutive_errors = 0
@@ -435,7 +407,7 @@ def main() -> int:
                 log_size = -1
             if log_size != last_log_size:
                 try:
-                    rc2, tail = ssh_run(ip, port, "tail -8 /workspace/v026-run.log 2>/dev/null", timeout=30)
+                    rc2, tail = ssh_run(ip, port, "tail -8 /workspace/v026-2-run.log 2>/dev/null", timeout=30)
                     sys.stdout.flush(); print(f"  [log size {log_size} bytes]")
                     for ln in (tail or "").strip().splitlines()[-4:]:
                         sys.stdout.flush(); print(f"    {ln}")
@@ -446,7 +418,7 @@ def main() -> int:
         if not upload_done:
             sys.stdout.flush(); print("  TIMEOUT — fetching tail of run log...")
             try:
-                _, tail = ssh_run(ip, port, "tail -80 /workspace/v026-run.log 2>/dev/null", timeout=60)
+                _, tail = ssh_run(ip, port, "tail -80 /workspace/v026-2-run.log 2>/dev/null", timeout=60)
                 sys.stdout.flush(); print(tail)
             except Exception as e:
                 sys.stdout.flush(); print(f"  (tail fetch failed: {e})")
@@ -462,13 +434,12 @@ def main() -> int:
         try:
             from huggingface_hub import hf_hub_download
         except ImportError:
-            sys.stdout.flush(); print("  huggingface_hub not installed locally; pip-installing...")
             subprocess.run([sys.executable, "-m", "pip", "install", "-q", "huggingface_hub>=0.23"], check=True)
             from huggingface_hub import hf_hub_download
 
         LOCAL_STORE.mkdir(parents=True, exist_ok=True)
-        gguf_filename = "hammerstein-7b-v026-q5_k_m.gguf"
-        adapter_filename = "lora-adapter-v026.tar.gz"
+        gguf_filename = "hammerstein-7b-v026-2-q5_k_m.gguf"
+        adapter_filename = "lora-adapter-v026-2.tar.gz"
 
         sys.stdout.flush(); print(f"    pulling {gguf_filename} ...")
         gguf_local = hf_hub_download(
@@ -477,14 +448,9 @@ def main() -> int:
             repo_type="model",
             local_dir=str(LOCAL_STORE),
         )
-        sys.stdout.flush(); print(f"    pulling {adapter_filename} ...")
         try:
-            hf_hub_download(
-                repo_id=HF_REPO_ID,
-                filename=adapter_filename,
-                repo_type="model",
-                local_dir=str(LOCAL_STORE),
-            )
+            hf_hub_download(repo_id=HF_REPO_ID, filename=adapter_filename,
+                            repo_type="model", local_dir=str(LOCAL_STORE))
         except Exception as e:
             sys.stdout.flush(); print(f"    (adapter pull skipped: {e})")
 
@@ -497,14 +463,12 @@ def main() -> int:
                 h.update(chunk)
         local_sha = h.hexdigest()
         if expected_sha and local_sha != expected_sha:
-            raise RuntimeError(
-                f"GGUF integrity check FAILED. Expected {expected_sha}, got {local_sha}."
-            )
+            raise RuntimeError(f"GGUF integrity check FAILED. Expected {expected_sha}, got {local_sha}.")
         sys.stdout.flush(); print(f"  GGUF verified ({local_sha[:16]}...).")
         with open(gguf_local, "rb") as f:
             magic = f.read(4)
         if magic != b"GGUF":
-            raise RuntimeError(f"GGUF magic bytes wrong: {magic!r} (expected b'GGUF')")
+            raise RuntimeError(f"GGUF magic bytes wrong: {magic!r}")
         sys.stdout.flush(); print(f"  Magic bytes OK.")
         sys.stdout.flush(); print()
         sys.stdout.flush(); print("  Artifacts retrieved + verified.")
@@ -516,23 +480,11 @@ def main() -> int:
             except Exception as e:
                 sys.stdout.flush(); print(f"  WARN: terminate failed: {e}")
                 sys.stdout.flush(); print(f"  STOP THE POD MANUALLY in the RunPod dashboard. Pod id: {pod_id}")
-        else:
-            sys.stdout.flush(); print(f"  Pod left running per --no-terminate. Pod id: {pod_id}")
 
     sys.stdout.flush(); print()
-    sys.stdout.flush(); print("=== v0.2.6 pod fire complete ===")
+    sys.stdout.flush(); print("=== v0.2.6.2 pod fire complete ===")
     sys.stdout.flush(); print()
-    sys.stdout.flush(); print(f"GGUF: {LOCAL_STORE}/hammerstein-7b-v026-q5_k_m.gguf")
-    sys.stdout.flush(); print()
-    sys.stdout.flush(); print("Next steps (local):")
-    sys.stdout.flush(); print(f"  1. Build Modelfile.v026 (copy Modelfile.v025, point at the new GGUF)")
-    sys.stdout.flush(); print(f"  2. ollama create hammerstein-7b-v026 -f deploy/Modelfile.v026")
-    sys.stdout.flush(); print(f"  3. python scripts/v023_self_state_probe.py --model hammerstein-7b-v026 --tag v026-post-train")
-    sys.stdout.flush(); print(f"  4. python scripts/v023_voice_probe.py --model hammerstein-7b-v026 --tag v026-post-train")
-    sys.stdout.flush(); print(f"  5. python scripts/v026_moral_weight_eval.py --model hammerstein-7b-v026")
-    sys.stdout.flush(); print(f"  6. python scripts/v026_extraction_reliability_eval.py --model hammerstein-7b-v026")
-    sys.stdout.flush(); print(f"  7. Tool-call smoke: python scripts/rung1_chat.py via sidecar pointed at v026")
-    sys.stdout.flush(); print(f"  8. Compare against v025 evals. If v026 matches/beats: cut homelab over.")
+    sys.stdout.flush(); print(f"GGUF: {LOCAL_STORE}/hammerstein-7b-v026-2-q5_k_m.gguf")
     return 0
 
 

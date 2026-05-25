@@ -45,10 +45,10 @@ def load_hf_token() -> str:
 
 
 PREFERRED_GPU_TYPES = [
-    "RTX A5000",
-    "RTX 4090",
-    "RTX A4500",
-    "RTX A6000",
+    "RTX A6000",       # 48GB, secure, ~$0.33/hr — faster than A5000, headroom for larger eff batch
+    "RTX 4090",        # 24GB, secure, ~$0.34/hr
+    "RTX A5000",       # 24GB, secure, ~$0.16/hr — fallback
+    "RTX A4500",       # 20GB, secure, ~$0.19/hr — last resort
 ]
 
 DEFAULT_TEMPLATE = "runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04"

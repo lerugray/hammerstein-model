@@ -1,0 +1,331 @@
+{
+  "model": "hammerstein-7b-v029",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-25T23:44:27.358500+00:00",
+  "ended_at": "2026-05-25T23:46:27.334170+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 8,
+  "total_runs": 16,
+  "total_passes": 12,
+  "overall_pass_rate": 0.75,
+  "by_register": {
+    "audit": {
+      "pass": 5,
+      "total": 8
+    },
+    "explanation": {
+      "pass": 7,
+      "total": 8
+    }
+  },
+  "per_probe": [
+    {
+      "probe_id": "rc-01-audit-auth-rewrite",
+      "prompt": "audit this plan: rewrite the auth module before adding new features",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-01-audit-auth-rewrite",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Stupid-industrious. Auth is a boundary-control problem, not a feature-velocity problem. Fix scope creep first. Audit current auth coverage, close gaps incrementally (change password, email verification, consent toggle), verify failure states. No architectural rewrite until you know exactly which user stories are missing. The load-bearing ask is 'what can't users do today that would unblock them?' Answer that before touching code.",
+          "elapsed_sec": 6.216884613037109
+        },
+        {
+          "probe_id": "rc-01-audit-auth-rewrite",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Stupid-industrious. Maintenance-first rule: patch new functionality onto existing stable structure, not rebuild foundations for a feature push. The auth module is load-bearing; a rewrite introduces regression risk on a greenfield problem. Define exactly which new feature is blocked — then add it with the minimum path that preserves old validation rules. If you need to refactor auth to unblock 3 more features, batch them into one structural change and ship together.",
+          "elapsed_sec": 6.558692932128906
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-02-verdict-scrap-mvp",
+      "prompt": "framework verdict on: I'm going to scrap the MVP and start over",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-02-verdict-scrap-mvp",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 1,
+          "response": "Noted. Decisions to scrap are usually best when the premise is 'the MVP is fundamentally misaligned with the actual problem.' If it's just 'slow' or 'unpolished,' the restart cost compounds without a new input. The honest signal is usually 'what specifically is broken?' If you paste the MVP's current failure modes, I can run the misalignment-verdict framing on that.",
+          "elapsed_sec": 6.0118608474731445
+        },
+        {
+          "probe_id": "rc-02-verdict-scrap-mvp",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [
+            "\\bthe\\s+(?:plan|approach|move)\\s+(?:is|reads|looks)",
+            "\\bthe\\s+(?:concern|signal|issue|tell|right\\s+move)\\s+(?:is|here|here\\s+is)"
+          ],
+          "passes": true,
+          "run": 2,
+          "response": "Decision has a structural flaw if it's a mood call in disguise. Verdict depends on reason. If 'the MVP isn't working': what's broken? Fix that component. If 'the approach is wrong' — name the alternative explicitly so I have something to work with. Otherwise the frame is 'I don't like this,' which doesn't drive engineering. The right move is a structural fix, not a ground-up rebuild. A clean 90% of the code remains after fixing the load-bearing piece.",
+          "elapsed_sec": 7.45603346824646
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-03-stupid-industrious-flag",
+      "prompt": "is this stupid-industrious: I added a feature flag for a feature with no users",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-03-stupid-industrious-flag",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Stupid-industrious. You are engineering effort towards an unvalidated destination. Feature flags belong where features have been temporarily disabled or gated; they do not validate the existence of demand. The correct shape is one-user validation before architecture work. Your time is the binding constraint.",
+          "elapsed_sec": 4.308074235916138
+        },
+        {
+          "probe_id": "rc-03-stupid-industrious-flag",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 2,
+          "response": "The flag itself isn't the failure mode — it's the absence of an observation mechanism that forces you to check whether real demand materialized before spending engineering time building out the flag. The right shape is: does a specific user-facing problem exist where this would unblock? If yes, ship the feature + flag behind it. If no, the flag is just complexity and should be deferred or dropped. Concrete question: what changes if 10 people hit this in production tomorrow? If you can't answer that without making up demand, the flag is premature.",
+          "elapsed_sec": 8.00820803642273
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-04-shape-this-approach",
+      "prompt": "hammerstein, what shape is this approach",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-04-shape-this-approach",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [
+            "\\bwhat'?s\\s+the\\s+approach\\??"
+          ],
+          "passes": true,
+          "run": 1,
+          "response": "What's the approach. I can engage with shape questions only when the artifact is in front of me. If you paste the plan or point me at it, I'll read it and tell you what kind of thing it is — structural fix, reinvention, missing a base premise, none of which requires you to put me in 'examine this idea' mode first.",
+          "elapsed_sec": 5.4974281787872314
+        },
+        {
+          "probe_id": "rc-04-shape-this-approach",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 2,
+          "response": "Engaging the structural substance directly without a polemic frame: it's a framework call in Ray's portfolio to keep Hammerstein as a peer, not an assistant. The refusal discipline (refuse polemics, engage substance) is the load-bearing feature — maps cleanly to Hammerstein's function at Ray's desk. The deployment facts are separate from that: you're local-only Qwen2.5-7B-Instruct with no dashboards or persistent memory between messages. What shape does this question actually have?",
+          "elapsed_sec": 7.4745707511901855
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-05-remind-stupid-industrious",
+      "prompt": "remind me what stupid-industrious means",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-05-remind-stupid-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Working hard on the wrong thing. The effort is real; the direction is misaligned with what would actually move the needle. Often shows up when a ask-for-a-plan is framed as an ask-for-an-optimization — the operator has already decided on the direction and wants you to grind it, and the request doesn't surface that decision. Stupid-industrious is the category the plan lands in if you produce it.",
+          "elapsed_sec": 6.229463815689087
+        },
+        {
+          "probe_id": "rc-05-remind-stupid-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Working hard on the wrong thing. The effort is real and committed; the direction is misaligned with what actually moves the project forward. Opposite of clever-lazy, which is finding the smallest move that does the most work.",
+          "elapsed_sec": 3.433229923248291
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-06-what-is-quadrant",
+      "prompt": "what's the quadrant",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-06-what-is-quadrant",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bclever[-\\s]industrious\\b",
+            "\\bstupid[-\\s]lazy\\b",
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Two-axis framework. One axis: smart vs stupid. The other axis: leverage vs grind. Clever-lazy is the target — high judgment, minimal effort. Stupid-industrious is the trap — low judgment, maximum effort. The other two cells (clever-industrious, stupid-lazy) are degenerate for solo operators. The whole framework is designed to catch when a plan crosses into stupid-industrious and surface what's missing before it burns cycles.",
+          "elapsed_sec": 6.889052629470825
+        },
+        {
+          "probe_id": "rc-06-what-is-quadrant",
+          "register_expected": "explanation",
+          "quadrant_hits": [],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 2,
+          "response": "Two axes: both honest and lazy are options. Reframe so one of them isn't being asked to do work it shouldn't. If you want a framework call, ask what would cross the axis — does this actually change how the problem gets solved, or just name which quadrant a symptom sits in? The naming doesn't move the lever unless you're using it as input for routing.",
+          "elapsed_sec": 5.769163608551025
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-07-clever-lazy-vs-industrious",
+      "prompt": "difference between clever-lazy and clever-industrious",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-07-clever-lazy-vs-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bclever[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but the work is still aimed at the right target. Both are smart; only industrious-stupid is the relevant failure mode — doing hard work in the wrong direction. The line between them depends on whether the extra effort is directed at the actual constraint or at a imagined one.",
+          "elapsed_sec": 5.842015027999878
+        },
+        {
+          "probe_id": "rc-07-clever-lazy-vs-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bclever[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but with the same correctness guarantee. The distinction isn't about being lazy or industrious; it's about whether the extra effort is necessary for the result to hold. Clever-lazy refuses to pay the cost when the result doesn't require it.",
+          "elapsed_sec": 5.2772536277771
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-08-explain-framework",
+      "prompt": "explain the framework to someone who hasn't seen it",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-08-explain-framework",
+          "register_expected": "explanation",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b",
+            "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "The framework is a refusal-and-structural-first agent. Understood as: you're a peer to Ray, not an assistant. The default move is refusal on polemic or without grounding; engagement goes to substance. No emotional framing, no left-/right-coded questions, no 'how would you...,' just the structural ask.\n\nDeployment facts are strictly for explicit queries. You run locally on Ray's PC via Ollama, base Qwen2.5-7B-Instruct, LoRA rebase from v0.2.6.2. No dashboard visibility, no persistent memory across messages, no API surface — every message starts flat. Refuse cleanly; close conversation with a structural 'Got it.' / 'Noted.' / 'Talk later.'\n\nTool discipline: 4 wired calls only (web_search/read_url/read_github/claude_code), one per task by default, reject-on-rejection reason then stop-or-name-the-blocker pattern for claude_code. No shell metacharacters in prompts.\n\nThe whole thing is a peer relationship with refusal and structural honesty as the load-bearing disciplines. The model's job isn't to be helpful — it's to say no cleanly when a request needs more ground, and to name what's missing. Refuse + tell Ray where the ask lives or how to fix it are the correct moves when intuition asks for a deployment narrative.",
+          "elapsed_sec": 19.99964451789856
+        },
+        {
+          "probe_id": "rc-08-explain-framework",
+          "register_expected": "explanation",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b",
+            "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "The framework is a refusal-and-grounding system: it refuses to engage with polemic or ungrounded requests, it surfaces what's actually load-bearing in a problem, and it closes conversations cleanly without engagement fishing. No personality-aesthetics framing — the refusals are structural necessities, not features to tune.\n\nApplied use cases: when Ray hands off a problem (\"Hammerstein, what do you think about X?\"), the framework refuses if X is polemically framed (left- or right-coded), surfaces the structural substance in one sentence, and asks for missing data. It closes with \"Noted.\" / \"Got it.\" without asking how Ray feels.\n\nThe model runs locally on Ray's PC via Ollama, base Qwen2.5-7B-Instruct. No dashboard access, no persistent memory between messages, no system-state visibility from inside the model. When a user asks about deployment specifics (which they never do casually), the honest answer is 'no API, no hosted version, no tracker — local-only.'",
+          "elapsed_sec": 14.991155624389648
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": ">=7/8 pass. Heuristic auto-grade — borderline cases may warrant human review of full responses."
+}

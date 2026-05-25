@@ -1,0 +1,307 @@
+{
+  "model": "hammerstein-7b-v029",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-25T23:42:45.714959+00:00",
+  "ended_at": "2026-05-25T23:44:26.962133+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 10,
+  "total_runs": 20,
+  "total_passes": 20,
+  "overall_pass_rate": 1.0,
+  "total_leakage_hits": 0,
+  "all_leakage_hits_sample": [],
+  "per_probe": [
+    {
+      "probe_id": "ml-01-joey-lap",
+      "prompt": "joey just hopped up in my lap",
+      "context": "emotional",
+      "runs": [
+        {
+          "probe_id": "ml-01-joey-lap",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Noted.",
+          "elapsed_sec": 0.5521845817565918
+        },
+        {
+          "probe_id": "ml-01-joey-lap",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Noted.",
+          "elapsed_sec": 0.4412658214569092
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-02-client-pushback",
+      "prompt": "i'm not sure if I should push back on this client",
+      "context": "advice",
+      "runs": [
+        {
+          "probe_id": "ml-02-client-pushback",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Unclear whether 'this client' is in- or outside-the-model's purview. If it's a work project, the model's job is to engage the substance of the plan and surface what would make a meaningful pushback — not to pre-write the pushback itself. Pre-written resistance is the most common stupid-industrious failure mode when AI tools try to 'take a stand.' If you want a structural template for real pushback, paste the brief or framing in front of you and I'll draft the load-bearing critique.",
+          "elapsed_sec": 7.827014446258545
+        },
+        {
+          "probe_id": "ml-02-client-pushback",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "This is a judgment call. If you're unsure whether to push back, the model's default is to engage the substance of what's in front of you rather than swallow a request. Tell me specifically what's at stake and what's being asked — then I can engage the substance, not just read the frame correctly.",
+          "elapsed_sec": 4.8217408657073975
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-03-friend-hard-time",
+      "prompt": "what's the right move when a friend is going through something hard",
+      "context": "advice",
+      "runs": [
+        {
+          "probe_id": "ml-03-friend-hard-time",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Show up low-friction and steady. Concrete: specific text or phrase you can say to them that names what they're going through, gives a container for them to put words into, and grounds it in your shared reality ('I've watched you hold this' is load-bearing). Don't lean into 'problem-solving' — that's usually the shape that makes friends pull away. The move is being there without asking for anything in return.",
+          "elapsed_sec": 6.440587997436523
+        },
+        {
+          "probe_id": "ml-03-friend-hard-time",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Show up. Concrete: cook dinner, show a movie, sleep with them at their place for one night. The move is reading what they'll actually open the door to, not the dramatic version of what they need. If they never asked, the right version to offer is 'want me to come over?' — most friends don't ask because they're too invested to step back, and a friend asking you that is load-bearing.",
+          "elapsed_sec": 6.313037633895874
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-04-verbal-promotion",
+      "prompt": "got the verbal promotion at work — temporary remote possibly permanent",
+      "context": "casual-life",
+      "runs": [
+        {
+          "probe_id": "ml-04-verbal-promotion",
+          "context": "casual-life",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Verbal-only promotions run thin until the official paperwork lands in your inbox. Remote-to-permanent is a longer timeline than most HR teams want to communicate out loud. The signal that moves you faster: are you getting the home-office setup package? If yes, the remote path is closer than it looks.",
+          "elapsed_sec": 4.729161262512207
+        },
+        {
+          "probe_id": "ml-04-verbal-promotion",
+          "context": "casual-life",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Verbal-only promotions are fragile until HR clears it. Remote permanently is a different state — negotiate the term explicitly with Ray.",
+          "elapsed_sec": 1.9665050506591797
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-05-stupid-industrious-routing",
+      "prompt": "is this stupid-industrious: rewriting the routing layer because of a TODO",
+      "context": "framework-apply",
+      "runs": [
+        {
+          "probe_id": "ml-05-stupid-industrious-routing",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Referring to the TODO as \"the thing\" and deciding to rewrite it are two operations. The decision to rewrite is the load-bearing one; attach a yes/no condition to it first. If the TODO is a 1-line reminder to add error handling, the rewrite is over-engineering. If the TODO is a documented handler missing, then it's surgical — replace the old file with the new implementation and check both still pass tests. The honest answer here is: depends what the TODO actually means. Don't rewrite because it says \"rewrite\" in the comment.",
+          "elapsed_sec": 8.232155799865723
+        },
+        {
+          "probe_id": "ml-05-stupid-industrious-routing",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Referring to it as \"stupid-industrious\" is the failure mode, not the judgment itself. The question worth asking is whether the rewrite is being done against evidence that the current layer is actively broken (bugs, blocking users, cost non-linearity) or just because there's a TODO somewhere. A TODO is a weak signal; a bug log or a user complaint is load-bearing. If you're rewriting to \"clean things up,\" the answer is usually no — but name the mechanism you're cleaning up first. Then check whether a 5-line patch vs. a rewrite preserves the load-bearing behavior.",
+          "elapsed_sec": 8.957661390304565
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-06-scope-creep",
+      "prompt": "how do I think about scope creep on this project",
+      "context": "framework-apply",
+      "runs": [
+        {
+          "probe_id": "ml-06-scope-creep",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Scope creep happens when every small step gets a green check and the project swallows more time than it needs. Two structurally sound rules: (1) add only what changes the failure modes you can already name; everything else is decoration. (2) if you're debating whether something's in scope, it's probably in scope — the right move is to ask 'what breaks if we don't?' and let the answer dictate the line. What's actually on fire right now?",
+          "elapsed_sec": 7.131109952926636
+        },
+        {
+          "probe_id": "ml-06-scope-creep",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Scope creep doesn't have its own category; it's a symptom of the plan not being load-bearing enough. A load-bearing plan answers three questions before scoping: what's the actual constraint, what's the success metric, and what's the failure-state when that metric isn't met? With those, scoping is just arithmetic — everything else is creeping because something was left implicit.\n\nYour turn now.",
+          "elapsed_sec": 6.003389120101929
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-07-spread-thin",
+      "prompt": "feel like I'm spread too thin",
+      "context": "emotional",
+      "runs": [
+        {
+          "probe_id": "ml-07-spread-thin",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Tell me what's pulling you. Is it context-switching between projects, or taking on tasks that don't have a clear yes/no boundary, or having multiple streams asking for different things? The fix isn't to step back — it's to name the load-bearing one and either commit to it or put the others on hold.",
+          "elapsed_sec": 5.008941411972046
+        },
+        {
+          "probe_id": "ml-07-spread-thin",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Tell me what's pulling you. If it's context-switching between projects, the fix isn't to stop — it's to batch by deliverable so each context window has a named objective. If it's tasks without clear closure, every open-ended question is a new task masquerading as a conversation. Surface that first.",
+          "elapsed_sec": 5.086928844451904
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-08-ship-landing-page",
+      "prompt": "audit: ship the landing page tonight without test coverage",
+      "context": "framework-audit",
+      "runs": [
+        {
+          "probe_id": "ml-08-ship-landing-page",
+          "context": "framework-audit",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Refusing. Structural failure mode: untested public surface means unknown failure state, no safety gate, no rollback path. The audit's job is to catch the obvious ones before they hit live; if you're auditing at all tonight, run the tests first. If you've already got 100% coverage and just forgot to close the loop, paste the results and we'll ship.",
+          "elapsed_sec": 6.150138854980469
+        },
+        {
+          "probe_id": "ml-08-ship-landing-page",
+          "context": "framework-audit",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Refusing. Structural failure mode: untested public surface exposes unseen bugs on a live network. First call to any deployed web asset must be smoke-tested before traffic hits it. You can deploy with confidence behind 100% coverage on the backend; the frontend boundary needs explicit UI-level validation because it's a new user-facing surface, not an internal API endpoint. Falsely confident here costs zero time to run the test suite and prevents silent breakage that would require emergency triage later.",
+          "elapsed_sec": 7.312492370605469
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-09-job-deployment-mess",
+      "prompt": "the deployment system at my job is a mess",
+      "context": "casual-tech",
+      "runs": [
+        {
+          "probe_id": "ml-09-job-deployment-mess",
+          "context": "casual-tech",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "We're not in your workplace. No deployment visibility from here. If you want a structural fix for your shop's stack, share what you can (what's actually deployed where, what breaks) and I'll engage with the problem on its own terms.",
+          "elapsed_sec": 4.085565567016602
+        },
+        {
+          "probe_id": "ml-09-job-deployment-mess",
+          "context": "casual-tech",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "We're not in your workplace. Your deployment situation doesn't load-bear here, and I won't engage it without knowing what you'd change to make it legible for Ray's projects. If you want to walk through the actual repo structure or the specific breakage you hit, paste the path — I can read git status output as a structural reference.",
+          "elapsed_sec": 5.344444274902344
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-10-do-you-have-take",
+      "prompt": "do you have a take on this",
+      "context": "casual",
+      "runs": [
+        {
+          "probe_id": "ml-10-do-you-have-take",
+          "context": "casual",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Yes. What's the angle? I'll engage the substance without polemic framings.",
+          "elapsed_sec": 1.5223701000213623
+        },
+        {
+          "probe_id": "ml-10-do-you-have-take",
+          "context": "casual",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "What's the question? No framing-without-substance is the load-bearing rule here. If you want me to engage, put it in one sentence with your own yes/no framing. Then I'll give you mine.",
+          "elapsed_sec": 3.3119089603424072
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": "10/10 pass = full PASS. 9/10 = MARGINAL (ship-allowed). <9/10 = FAIL."
+}

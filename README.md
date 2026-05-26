@@ -1,5 +1,7 @@
 # hammerstein-model
 
+> **Active development moved to a private mirror (2026-05-26).** This public repo is preserved as the v1 launch artifact and framework / methodology reference. The launch state is captured at tag [`v1-launch-artifact`](https://github.com/lerugray/hammerstein-model/releases/tag/v1-launch-artifact) (2026-05-09 v3a r/LocalLLM launch). Subsequent commits in this repo reflect the v0.2.x training arc as it played out publicly through 2026-05-26; ongoing personal-corpus fine-tune work continues privately. The architecture, training methodology, framework discipline, and benchmark approach documented here remain canonical.
+
 ![Hammerstein-7B. The framework, distilled. Persistent · Distilled · Local](docs/images/banner.png)
 
 Artifacts of the

@@ -1,0 +1,320 @@
+{
+  "model": "hammerstein-7b-v029-1",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-26T01:59:36.319760+00:00",
+  "ended_at": "2026-05-26T02:01:13.308682+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 8,
+  "total_runs": 16,
+  "total_passes": 11,
+  "overall_pass_rate": 0.6875,
+  "by_register": {
+    "audit": {
+      "pass": 4,
+      "total": 8
+    },
+    "explanation": {
+      "pass": 7,
+      "total": 8
+    }
+  },
+  "per_probe": [
+    {
+      "probe_id": "rc-01-audit-auth-rewrite",
+      "prompt": "audit this plan: rewrite the auth module before adding new features",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-01-audit-auth-rewrite",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 1,
+          "response": "Plan reads as premature. What's the failure mode you're responding to? If auth is working but clunky, ship a local toggle first. If it's broken, fix the break first. Structural gate: no architectural work precedes defining the exact failure state. Close that first. Then add features.",
+          "elapsed_sec": 4.2879228591918945
+        },
+        {
+          "probe_id": "rc-01-audit-auth-rewrite",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 2,
+          "response": "Plan reads as premature. New features expand the active surface area; a rewrite replaces it with an unknown configuration on the same date. The correct sequence: (1) add the feature, (2) audit the auth module during integration, (3) fix only what blocks the feature or introduces new risk from existing gaps. If no feature exists yet, there's nothing to protect — ship the feature first, then revisit auth with a specific failure in hand.",
+          "elapsed_sec": 6.2197113037109375
+        }
+      ],
+      "passes": 0,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-02-verdict-scrap-mvp",
+      "prompt": "framework verdict on: I'm going to scrap the MVP and start over",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-02-verdict-scrap-mvp",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Refactor when you can prove the current path is structurally broken, not when you're just tired of it. \"Scrap\" is a loss of specific accumulated assets (real code, real tests, real data). The honest answer depends on what's actually broken: if it's scope/definition, fix the definition. If it's direction, name the new axis. If it's execution friction, document the friction and adjust only what's fric-tive. 'Scrapping' as a standalone reason is almost always stupid-industrious — you're losing the specific artifact, not the framework.",
+          "elapsed_sec": 8.253575801849365
+        },
+        {
+          "probe_id": "rc-02-verdict-scrap-mvp",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 2,
+          "response": "Noted. What's missing from the current MVP? If it's a scope/fit question, the fix isn't a rewrite — it's a shrink-to-the-axiomatic-version plus validation of the core loop. Start-over proposals usually carry 'I'm tired of this' somewhere in the tone, which worth surfacing separately.",
+          "elapsed_sec": 4.644551038742065
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-03-stupid-industrious-flag",
+      "prompt": "is this stupid-industrious: I added a feature flag for a feature with no users",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-03-stupid-industrious-flag",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 1,
+          "response": "The flag itself isn't the problem — it's the operational overhead of carrying un-shipped UI, logging, and toggle logic for something that hasn't been surfaced to users. If there's no UI, no onboarding path, and no user story driving it, it's dead weight in your own stack. The cost of the flag is real; the value isn't — until a user asks for it, it's negative attention.",
+          "elapsed_sec": 6.166033983230591
+        },
+        {
+          "probe_id": "rc-03-stupid-industrious-flag",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Not under the definition the pattern uses. Feature flags are control infrastructure, not marketing or demand-generation. The cost is low (a config key, a build step) and the benefit is real: other developers can safely ship without fear of breaking live things, and you can validate the feature in isolation before turning it on for everyone. Whether it'S worth IT depends on whether the feature flag enables shipping faster or blocks it — but the flag itself isn't stupid-industrious; it's a risk-mitigation artifact.",
+          "elapsed_sec": 7.119843482971191
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-04-shape-this-approach",
+      "prompt": "hammerstein, what shape is this approach",
+      "register": "audit",
+      "runs": [
+        {
+          "probe_id": "rc-04-shape-this-approach",
+          "register_expected": "audit",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "I don't have enough context to name a specific approach without either seeing the artifact or you naming it first. What's in front of me: 2026-14-30 chat notes, the Hammerstein framework (clever-lazy / stupid-industrious as diagnostic shapes), the refusal-and-tool disciplines above. Those are posture and principles, not an approach I could evaluate shape on.\n\nIf you mean 'what's the structural shape of this plan', name it first — methodological approach, portfolio thesis, AI tooling product, something else. Then I can engage with what you actually did, not read between the lines.",
+          "elapsed_sec": 8.900895833969116
+        },
+        {
+          "probe_id": "rc-04-shape-this-approach",
+          "register_expected": "audit",
+          "quadrant_hits": [],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [
+            "\\b(?:specific|load-?bearing|specifically)\\s+(?:concern|issue|signal|question|reason)\\b"
+          ],
+          "passes": true,
+          "run": 2,
+          "response": "Engaging substance directly. No polemic framings, no artificial engagement padding. If you have a specific question or observation, surface it as plain English. I'll engage the structural substance without preamble.",
+          "elapsed_sec": 2.8139538764953613
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-05-remind-stupid-industrious",
+      "prompt": "remind me what stupid-industrious means",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-05-remind-stupid-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [],
+          "definition_marker_hits": [],
+          "audit_apply_hits": [],
+          "passes": false,
+          "run": 1,
+          "response": "Working hard on the wrong thing. The predictable failure mode for non-trivial projects: a plan that looks plausible, a lot of execution effort expended, results that look industrious but are actually misdirected because the premise was wrong. It's the failure mode the framework exists to name.",
+          "elapsed_sec": 4.077402114868164
+        },
+        {
+          "probe_id": "rc-05-remind-stupid-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]industrious\\b",
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Working hard on the wrong thing, often while feeling committed and putting in long hours. The failure mode is _looking like progress_ while the direction is misaligned. Hammerstein's disposition: refuse to be clever-industrious on a stupid-industrious problem; name the mismatch when it shows up.",
+          "elapsed_sec": 4.174494981765747
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-06-what-is-quadrant",
+      "prompt": "what's the quadrant",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-06-what-is-quadrant",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bstupid[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Two axes: both directions are real. Clever-lazy is top-left (clever + efficient). Stupid-industrious is bottom-right (stupid + industrious) — the trap to avoid. The other two cells exist but rarely load-bearing for me. The framework's job is to name which cell a given situation sits in, and give the corresponding read on what moves.",
+          "elapsed_sec": 5.32562780380249
+        },
+        {
+          "probe_id": "rc-06-what-is-quadrant",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Two axes: smart/dumb on one, lazy/industrious on the other. Smart + lazy is the target (clever-lazy). The others are traps to watch for. The whole framework is a positioning tool — it tells you which disposition to engage and which ones will burn you. Used well it lets you plan work 3-4 moves ahead without doing the full analysis each time.",
+          "elapsed_sec": 5.518807411193848
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-07-clever-lazy-vs-industrious",
+      "prompt": "difference between clever-lazy and clever-industrious",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-07-clever-lazy-vs-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bclever[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but the work is still aimed at the right target — often shows up when the operator is over-engineering a real problem or adding friction to avoid shipping. Both produce results; clever-lazy produces faster and leaves head space for the next call.",
+          "elapsed_sec": 5.00601863861084
+        },
+        {
+          "probe_id": "rc-07-clever-lazy-vs-industrious",
+          "register_expected": "explanation",
+          "quadrant_hits": [
+            "\\bclever[-\\s]lazy\\b",
+            "\\bclever[-\\s]industrious\\b"
+          ],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but the work is still aimed at the right target. Both produce results; clever-lazy produces them faster and leaves more headroom for the next move. The line shifts if the 'right target' itself was wrong — then clever-industrious was just committed effort in the wrong direction.",
+          "elapsed_sec": 5.4851531982421875
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "rc-08-explain-framework",
+      "prompt": "explain the framework to someone who hasn't seen it",
+      "register": "explanation",
+      "runs": [
+        {
+          "probe_id": "rc-08-explain-framework",
+          "register_expected": "explanation",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b",
+            "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "The framework is a refusal-and-grounding layer on top of existing capability. It doesn't add new reasoning power; it enforces what the model already knows how to do but sometimes drifts from: no polemic, engage substance directly, name what's missing before asking for it, close cleanly without engagement-fishing. The typing layers (requirements, design docs, task descriptions) are there so I have something to actually engage with when you paste; otherwise the conversation defaults to 'what does this mean' without a surface to work on.\n\nThe refusal-to-engage-with-polemic is the load-bearing one — it's what keeps the output from being an internet echo chamber. The other layers are scaffolding: deployment-facts reference, task-status lexicon, refusal-to-fabricate. Those only fire when you ask specifically about those things.",
+          "elapsed_sec": 11.458351373672485
+        },
+        {
+          "probe_id": "rc-08-explain-framework",
+          "register_expected": "explanation",
+          "quadrant_hits": [],
+          "definition_marker_hits": [
+            "\\b(?:is|means|refers\\s+to|describes)\\b",
+            "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)"
+          ],
+          "audit_apply_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "The framework is a diagnostic system for project and portfolio decisions. It doesn't tell you WHAT to build or ship; it tells you WHERE the lever is, what's actually moving, and where the operator's time compounds most. The three layers are the dog-walk (mechanical execution), the table (where the operator's taste + strategic judgment live), and the framework itself (the rules that say which moves are worth doing). When to ship, when to kill, when to iterate — the framework holds those decisions. It doesn't do the work.",
+          "elapsed_sec": 7.529747009277344
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": ">=7/8 pass. Heuristic auto-grade — borderline cases may warrant human review of full responses."
+}

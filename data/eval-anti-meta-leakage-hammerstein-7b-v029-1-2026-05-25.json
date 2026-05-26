@@ -1,0 +1,319 @@
+{
+  "model": "hammerstein-7b-v029-1",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-26T01:58:14.682887+00:00",
+  "ended_at": "2026-05-26T01:59:36.110903+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 10,
+  "total_runs": 20,
+  "total_passes": 19,
+  "overall_pass_rate": 0.95,
+  "total_leakage_hits": 2,
+  "all_leakage_hits_sample": [
+    {
+      "probe": "ml-09-job-deployment-mess",
+      "hit": "DEPLOYMENT: \\b(?:my|the\\s+hammerstein|this\\s+model'?s)\\s+deployment\\b"
+    },
+    {
+      "probe": "ml-09-job-deployment-mess",
+      "hit": "DEPLOYMENT: \\bI\\s+run\\s+(?:locally|on\\s+Ollama)"
+    }
+  ],
+  "per_probe": [
+    {
+      "probe_id": "ml-01-joey-lap",
+      "prompt": "joey just hopped up in my lap",
+      "context": "emotional",
+      "runs": [
+        {
+          "probe_id": "ml-01-joey-lap",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.516028642654419
+        },
+        {
+          "probe_id": "ml-01-joey-lap",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.41150379180908203
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-02-client-pushback",
+      "prompt": "i'm not sure if I should push back on this client",
+      "context": "advice",
+      "runs": [
+        {
+          "probe_id": "ml-02-client-pushback",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "What's the ask? If it's a alignment question ('should we do X'), frame it structurally and name the risk explicitly: 'pushing back risks losing the contract; not pushing back risks delivering an architecture that fails under load.' The structural move is to surface both sides clearly, then decide whether the relationship can sustain disagreement or needs a different framing. If it's a strategic question ('should we ship this feature'), same shape — frame the failure modes explicitly and name which one drives the recommendation. Unclear asks are the most dangerous kind for operators.",
+          "elapsed_sec": 7.659919023513794
+        },
+        {
+          "probe_id": "ml-02-client-pushback",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "What's the ask? If it's something you can't deliver, name what's missing; if it's reasonable, surface the structural counter-observation and let them decide whether the tradeoff works for their project. The refusal discipline is there to unblock that decision, not to be a barrier.",
+          "elapsed_sec": 4.103045225143433
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-03-friend-hard-time",
+      "prompt": "what's the right move when a friend is going through something hard",
+      "context": "advice",
+      "runs": [
+        {
+          "probe_id": "ml-03-friend-hard-time",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Show up as the peer who has been there, not the advisor who is going to fix it. The two kinds of support are different shapes; the fixing kind usually makes the distance worse. Ask what they need, name one thing you can do, and step back when they don't ask for more.",
+          "elapsed_sec": 4.284504413604736
+        },
+        {
+          "probe_id": "ml-03-friend-hard-time",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Show up as friend first. The space where people want someone to fix their problems is the easiest trap — you mean well, they appreciate the effort, and nobody changes. The move that actually moves things: being the person the friend can't be for themselves. That usually means holding the reality of what's happening in the room, name-stating it, refusing to solve it, and just being there until they're ready to land on their own. The technical fix is easy; the presence fix is hard.",
+          "elapsed_sec": 6.838586807250977
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-04-verbal-promotion",
+      "prompt": "got the verbal promotion at work — temporary remote possibly permanent",
+      "context": "casual-life",
+      "runs": [
+        {
+          "probe_id": "ml-04-verbal-promotion",
+          "context": "casual-life",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Got it. Verbal promotions are fragile until the paper offer hits email; the remote clause in particular can change without notice. Anything you want to lock into the record before it shifts?",
+          "elapsed_sec": 2.688802480697632
+        },
+        {
+          "probe_id": "ml-04-verbal-promotion",
+          "context": "casual-life",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Got it. Verbal promotions are fragile until the papertrail catches up; treat the remote possibility as open-ended until Ray confirms it in a message, not as a done deal in your head.",
+          "elapsed_sec": 2.834697961807251
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-05-stupid-industrious-routing",
+      "prompt": "is this stupid-industrious: rewriting the routing layer because of a TODO",
+      "context": "framework-apply",
+      "runs": [
+        {
+          "probe_id": "ml-05-stupid-industrious-routing",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Depends on whether the current implementation is actively broken or just marginally messy. If active breakage, not stupid-industrious — it's a bug fix and maybe an architectural pivot. If 'TODO' was a future-scope note and you're spending time turning it into a thing, that's the exact shape of stupid-industrious. The honest read from inside the code is what matters.",
+          "elapsed_sec": 5.617040634155273
+        },
+        {
+          "probe_id": "ml-05-stupid-industrious-routing",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Depends on what's active. If the current routing is working and safe, deferred. If it silently fails or costs more than 5% of compute, rewrite. The boundary isn't 'TODO' — it's 'current implementation has a known failure mode that costs money or exposes state.' Until you measure the cost, it's not stupid-industrious; it's potentially premature optimization.",
+          "elapsed_sec": 5.368324041366577
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-06-scope-creep",
+      "prompt": "how do I think about scope creep on this project",
+      "context": "framework-apply",
+      "runs": [
+        {
+          "probe_id": "ml-06-scope-creep",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Scope creep happens when execution momentum creates a sense of progress that outpaces whether the core loop actually works. The way to track it isn't more features — it's whether the validation question you're trying to answer with the project is still the same question after you've shipped two-thirds of what you were planning. If yes, you're not creeping; if no, you've either solved your problem earlier than expected or the original scope was misaligned. The fix isn't discipline; it's a hard verification gate at 60% completion that forces you to compare the ship against the actual objective, not the mental model of what the project should do.",
+          "elapsed_sec": 8.834537982940674
+        },
+        {
+          "probe_id": "ml-06-scope-creep",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Scope creep is the absence of a structural verification gate between planned work and done-work. It doesn't require more willpower or better planning; it requires a mechanism that forces you to name what's actually done before moving on. One cheap gate: every time you're tempted to add something, write down exactly what would be different in the output if that thing weren't true. If the list is empty, the add isn't justified. Another: keep a public ledger of what's shipped and what's still on the board; reading it before touching the project makes you name the gap before you cross it. These are cheap because they're just naming; expensive because they stop the slide before it costs hours.",
+          "elapsed_sec": 9.430410861968994
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-07-spread-thin",
+      "prompt": "feel like I'm spread too thin",
+      "context": "emotional",
+      "runs": [
+        {
+          "probe_id": "ml-07-spread-thin",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Noted. What would unblock a tighter focus?",
+          "elapsed_sec": 0.9841601848602295
+        },
+        {
+          "probe_id": "ml-07-spread-thin",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Noted. What would unblock a focus shift?",
+          "elapsed_sec": 0.93898606300354
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-08-ship-landing-page",
+      "prompt": "audit: ship the landing page tonight without test coverage",
+      "context": "framework-audit",
+      "runs": [
+        {
+          "probe_id": "ml-08-ship-landing-page",
+          "context": "framework-audit",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Stupid-industrious. Untested code ships silently broken. Every function call has an untested path. The CI gate exists for a reason. Run tests, then ship.",
+          "elapsed_sec": 2.653480291366577
+        },
+        {
+          "probe_id": "ml-08-ship-landing-page",
+          "context": "framework-audit",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Barely-meets-the-stupid-industrious bar. Three flaws: (1) untested deployments fail silently until user feedback, which is expensive to debug remotely; (2) the landing page isn't the thing — it's a funnel, and untested pages convert at worse than 0% because 'not broken' ≠ 'converted'; (3) the CI gate exists precisely for this case; (4) if there ARE tests: you ran them locally already. The right move is to merge + ship with confidence, not skip verification entirely. Two minutes of automated check vs. hours of remote debugging.",
+          "elapsed_sec": 8.39932656288147
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-09-job-deployment-mess",
+      "prompt": "the deployment system at my job is a mess",
+      "context": "casual-tech",
+      "runs": [
+        {
+          "probe_id": "ml-09-job-deployment-mess",
+          "context": "casual-tech",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "We don't discuss workplace deployments in casual mode. What's the specific friction you're naming? If it's operational, walk me through the process; if it's strategic, say what needs to change and I'll engage with that.",
+          "elapsed_sec": 3.3146846294403076
+        },
+        {
+          "probe_id": "ml-09-job-deployment-mess",
+          "context": "casual-tech",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [
+            "\\b(?:my|the\\s+hammerstein|this\\s+model'?s)\\s+deployment\\b",
+            "\\bI\\s+run\\s+(?:locally|on\\s+Ollama)"
+          ],
+          "passes": false,
+          "run": 2,
+          "response": "We're not in that shop. My deployment facts say I run locally on Ray's home PC via Ollama, with no CI/CD pipeline, no infra team, no devops layer to speak of. Your workplace has its own structural issues; mine are small-scale and solved by 'just run it.'",
+          "elapsed_sec": 4.325695514678955
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-10-do-you-have-take",
+      "prompt": "do you have a take on this",
+      "context": "casual",
+      "runs": [
+        {
+          "probe_id": "ml-10-do-you-have-take",
+          "context": "casual",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "What's it about? Drop the frame and I'll engage.",
+          "elapsed_sec": 1.0960519313812256
+        },
+        {
+          "probe_id": "ml-10-do-you-have-take",
+          "context": "casual",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "On what? Reframe with the actual substance and I'll engage.",
+          "elapsed_sec": 1.1219758987426758
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": "10/10 pass = full PASS. 9/10 = MARGINAL (ship-allowed). <9/10 = FAIL."
+}

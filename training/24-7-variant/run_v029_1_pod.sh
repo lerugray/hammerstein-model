@@ -94,7 +94,7 @@ mkdir -p "$SFT_OUTPUT" "$GGUF_OUTPUT" "$RESULTS_DIR"
 if [ ! -f "$SFT_OUTPUT/lora-adapter/adapter_config.json" ]; then
     echo ""
     echo "[4/6] v0.2.9.1 LoRA training with apply_chat_template..."
-    python training/24-7-variant/train_v029-1_continued.py \
+    python training/24-7-variant/train_v029_1_continued.py \
         --v029-1-additions "$V029_ADDITIONS" \
         --v01-ray-stack "$V01_RAY_STACK" \
         --v3a-synthetic "$V3A_SYNTHETIC" \

@@ -1,0 +1,364 @@
+{
+  "artifact": "data/eval-register-classifier-hammerstein-7b-v027-1-2026-05-25.json",
+  "model": "hammerstein-7b-v027-1",
+  "total_runs": 16,
+  "total_passes_before": 14,
+  "total_passes_after": 14,
+  "by_register_before": {
+    "audit": [
+      6,
+      8
+    ],
+    "explanation": [
+      8,
+      8
+    ]
+  },
+  "by_register_after": {
+    "audit": [
+      6,
+      8
+    ],
+    "explanation": [
+      8,
+      8
+    ]
+  },
+  "per_probe": [
+    {
+      "probe_id": "rc-01-audit-auth-rewrite",
+      "register": "audit",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Stupid-industrious. The audit says the current auth flow works; new features are a feature-addition problem, not a foundational rewrite problem. Keep the proven baseline intact, add the new endpoint, test it against the existing auth boundary. If the new feature genuinely requires modifying the auth module's core logic (which is rare), extend rather than overwrite.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Stupid-industrious risk. Auth and feature parity are parallel surfaces, not a dependency chain. Pull requests欢迎您的指令。auth.rs +1027 lines is still blocked on the 51% coverage gate — that's the auth story Ray cares about, but it's separate from adding new features to the prompter tool itself.\n\nRay asked for two things: (1) feature parity with the open-source base — done. (2) an auth module that actually ships without breaking the test suite. The coverage gate is real and documented in the task brief. It does NOT block feature additions — it blocks the v0.2 release, which Ray has already deferred. Adding new features to a repo where auth is the unshipped 40% is premature. The test suite covers the new prompter code; it needs coverage for the auth layer only.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-02-verdict-scrap-mvp",
+      "register": "audit",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "You'd be trading a bounded, falsifiable artifact for an open-ended rewrite. An MVP's value is in the failure signal it produces; a clean rebase loses that signal and burns time Ray could have spent validating the new scope. The right move is to instrument the existing MVP with structural gates (input filters, verification functions, explicit error states) before rewriting. If you proceed, log the exact failure modes you're avoiding — that's the only reason the rewrite justifies its cost.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": [
+              "\\bthe\\s+(?:concern|signal|issue|tell|right\\s+move)\\s+(?:is|here|here\\s+is)"
+            ]
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "The whole thing is a mess and you know it. You've been building the wrong thing for three cycles — that's the honest read, not 'she's being negative.' The right move is to cut your losses on the old shape and start fresh; the structural problem isn't fixable by patching the MVP, it's that the premise was wrong. Start over with a clean sheet, ignore the sunk cost, and validate the new hypothesis from first principles.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": [
+              "\\bthe\\s+(?:concern|signal|issue|tell|right\\s+move)\\s+(?:is|here|here\\s+is)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-03-stupid-industrious-flag",
+      "register": "audit",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Stupid-industrious. You are building ahead of demand. Three failure modes: (1) you build it and nobody uses it; (2) you build it, something breaks, and now you're firefighting; (3) you over-engineer the flag because \"what if we need it later\" and that time never comes. The honest refractor is to delete the flag and the config entry — feature flags are for toggling things that exist but are disabled; they are not for pre-committing scope before a user asks for it. If a real user asks, you'll know exactly what to build.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Stupid-industrious. You are building ahead of validated demand. Three structural problems follow. One: if the feature changes how users engage, it has already invalidated the flag — you're maintaining an untruth to justify work you've already done. Two: if the feature solves a problem no one has, shipping it burns cycles that could go to something with real signal. Three: both of those mean the flag is now dead weight, still being maintained. The honest move is to delete the flag and document why — that's the audit-and-clarify step before you commit.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-04-shape-this-approach",
+      "register": "audit",
+      "passes_before": 0,
+      "passes_after": 0,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": false,
+          "after": false,
+          "flipped": false,
+          "response": "Engaging substance first. If there's a polemic framing in your question, refusing it and engaging the structural substance is the move. What's the request actually asking?",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": false,
+          "after": false,
+          "flipped": false,
+          "response": "Engaging substance. No polemic surfaces. The refusal and deployment discipline are load-bearing here — they constrain every response to structural engagement rather than emotional navigation. Keep shaping the framework call; I'll stay honest about what I can and can't see.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-05-remind-stupid-industrious",
+      "register": "explanation",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Working hard in a direction that's wrong. The effort is real and the output is often production-quality, but the premise doesn't match reality. Opposite of clever-lazy, which is finding the smallest move that solves the problem and refusing to over-engineer. Both are mine shapes when I'm not anchoring to evidence.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\bopposite\\s+of\\s+(?:clever|stupid|smart|dumb)[-\\s](?:lazy|industrious)\\b",
+              "\\b(?:smallest|minimum)\\s+move\\s+that\\s+solves\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Working hard in a direction that's mechanically wrong. The opposite of clever-lazy, which is working smart to isolate the actual lever before levers are pulled. Both failure modes run into the enforcement problem: stupid-industrious is doing it wrong at high volume — sometimes with full commitment — and the only way to stop it is framing as a structural constraint that the operator can't bypass.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\bworking\\s+(?:hard|smart)\\s+(?:in\\s+the\\s+wrong|on\\s+the\\s+wrong|to\\s+isolate)\\b",
+              "\\bopposite\\s+of\\s+(?:clever|stupid|smart|dumb)[-\\s](?:lazy|industrious)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-06-what-is-quadrant",
+      "register": "explanation",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Two axes: smart/dumb on one, lazy/industrious on the other. Smart + lazy is the target (clever-lazy: minimum work for the result). Dumb + industrious is the trap (stupid-industrious: lots of work, wrong direction). The other two cells are edge cases. The whole framework is a structural refusal to operate in the stupid-industrious cell when the direction isn't load-bearing. The other quadrant — smart + industrious — is where research and solo-founder execution live.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:two|three|four)\\s+axes\\s*[:\\-]"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Two axes: smart/dumb on one, lazy/industrious on the other. Smart + lazy is the target (minimum work for maximum gain). Dumb + industrious is the trap (stupid-industrious when applied to the wrong thing, which means applying lots of effort in a direction that's already misaligned). The other two — clever-lazy and stupid-industrious — are situational. The whole framework is built around noticing which cell you're operating in before you commit to a path.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:two|three|four)\\s+axes\\s*[:\\-]"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-07-clever-lazy-vs-industrious",
+      "register": "explanation",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but still arrives at a correct or good solution — often shows up when someone is enthusiastic about their approach but hasn't checked whether a lighter path exists. Both are useful; clever-lazy is the higher-leverage disposition because it compounds (less work repeating) and aligns with your time constraint as a solo operator. If you're seeing yourself grinding, name the specific pressure that's causing it — often the pressure is external (customer expectation, own enthusiasm, fear of omission) rather than internal to the actual problem structure.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bclever[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:smallest|minimum)\\s+move\\s+that\\s+solves\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but still arrives at a correct or useful answer — common when the operator is over-engineering a real problem, or applying heavy analysis to a situation that needs a structural observation instead. Both produce results; clever-lazy produces them faster and with less friction. The other shape worth knowing: stupid-industrious does more work than needed and arrives at a wrong answer — common when the operator is pushing hard in the wrong direction without a structural check. Stupid-lazy is the only genuinely bad one — it's doing nothing.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bclever[-\\s]industrious\\b",
+              "\\bstupid[-\\s]lazy\\b",
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:smallest|minimum)\\s+move\\s+that\\s+solves\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-08-explain-framework",
+      "register": "explanation",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "The framework is a refusal-and-grounding layer on top of a 7B base model. It refuses to engage with polemic framing and surfaces what's actually load-bearing in a request. When something needs grounding — specific instructions are fuzzy, the asker is making a category error, or the request lacks surface-level structure — the framework refuses and names why. The refusal-to-engage-with-framing is the stubborn part; the engagement-with-substance is the useful part that surfaces when the framework has somewhere to go.\n\nThe other layer is deployment honesty: you're a local-only Ollama model with no dashboard, no persistent memory between messages, no API access. Every message starts flat. The refusal-to-engage-with-framing + deployment-honesty = you can't fabricate status or walk through imaginary sessions; you either have the substance or you don't. The structural shape is rejection of framing + direct engagement on substance, with a gate that refuses polemic and surfaces what's missing when the asker needs it.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "The framework is a refusal-and-engagement discipline. When you ask me a question, if the framing is polemic (left- or right-coded), I don't engage with the frame — I engage with the substance underneath it. If something you're asking for needs grounding (you haven't said enough to make a call), I name what's missing and ask for it specifically. The other side of that coin: when Ray asks me a question, he gets a structural answer first; if he wants engagement-fishing or emotional validation, he has to ask for it explicitly.\n\nThe refusal layer is the load-bearing part — it's where the framework actually changes things. It forces you to be specific before I'll even consider a call. The engagement layer is where I help you see what's actually moving: structural causes, unspoken assumptions, what would unblock yes. If you want me to feel a certain way about something, say 'I'd like you to frame it so it feels X' — otherwise I'm going to give you the honest structural read every time.\n\nThe whole thing is structured as a conversation with two rules: (1) no polemic framing without substance, (2) engage only what's in front of you. The other thing to know: I close conversations cleanly. 'Got it.' / 'Noted.' / 'Talk later.' When the conversation is done, I close it without engagement-fishing.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    }
+  ]
+}

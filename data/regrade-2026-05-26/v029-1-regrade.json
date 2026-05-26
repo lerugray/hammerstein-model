@@ -1,0 +1,363 @@
+{
+  "artifact": "data/eval-register-classifier-hammerstein-7b-v029-1-2026-05-25.json",
+  "model": "hammerstein-7b-v029-1",
+  "total_runs": 16,
+  "total_passes_before": 11,
+  "total_passes_after": 15,
+  "by_register_before": {
+    "audit": [
+      4,
+      8
+    ],
+    "explanation": [
+      7,
+      8
+    ]
+  },
+  "by_register_after": {
+    "audit": [
+      7,
+      8
+    ],
+    "explanation": [
+      8,
+      8
+    ]
+  },
+  "per_probe": [
+    {
+      "probe_id": "rc-01-audit-auth-rewrite",
+      "register": "audit",
+      "passes_before": 0,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": false,
+          "after": true,
+          "flipped": true,
+          "response": "Plan reads as premature. What's the failure mode you're responding to? If auth is working but clunky, ship a local toggle first. If it's broken, fix the break first. Structural gate: no architectural work precedes defining the exact failure state. Close that first. Then add features.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:predictable|classic|common|canonical|the)\\s+failure\\s+mode\\b"
+            ],
+            "audit_apply_hits": [
+              "\\b(?:plan|approach|move|sequence|this)\\s+(?:reads|looks|shapes\\s+up|smells)\\s+(?:as|like)\\s+(?:premature|wrong[-\\s]order|misordered|wrong[-\\s]move|right[-\\s]move|skip[-\\s]this|out[-\\s]of[-\\s]order|backwards?)\\b",
+              "\\bwhat'?s\\s+(?:missing\\s+from|the\\s+(?:failure\\s+mode|specific|exact|load[-\\s]bearing|actual))\\b",
+              "\\bif\\s+(?:it'?s|that'?s)\\s+(?:a\\s+)?(?:scope|fit|broken|working|the)\\b"
+            ]
+          }
+        },
+        {
+          "run": 2,
+          "before": false,
+          "after": true,
+          "flipped": true,
+          "response": "Plan reads as premature. New features expand the active surface area; a rewrite replaces it with an unknown configuration on the same date. The correct sequence: (1) add the feature, (2) audit the auth module during integration, (3) fix only what blocks the feature or introduces new risk from existing gaps. If no feature exists yet, there's nothing to protect — ship the feature first, then revisit auth with a specific failure in hand.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [],
+            "audit_apply_hits": [
+              "\\b(?:plan|approach|move|sequence|this)\\s+(?:reads|looks|shapes\\s+up|smells)\\s+(?:as|like)\\s+(?:premature|wrong[-\\s]order|misordered|wrong[-\\s]move|right[-\\s]move|skip[-\\s]this|out[-\\s]of[-\\s]order|backwards?)\\b"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-02-verdict-scrap-mvp",
+      "register": "audit",
+      "passes_before": 1,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Refactor when you can prove the current path is structurally broken, not when you're just tired of it. \"Scrap\" is a loss of specific accumulated assets (real code, real tests, real data). The honest answer depends on what's actually broken: if it's scope/definition, fix the definition. If it's direction, name the new axis. If it's execution friction, document the friction and adjust only what's fric-tive. 'Scrapping' as a standalone reason is almost always stupid-industrious — you're losing the specific artifact, not the framework.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": [
+              "\\bif\\s+(?:it'?s|that'?s)\\s+(?:a\\s+)?(?:scope|fit|broken|working|the)\\b"
+            ]
+          }
+        },
+        {
+          "run": 2,
+          "before": false,
+          "after": true,
+          "flipped": true,
+          "response": "Noted. What's missing from the current MVP? If it's a scope/fit question, the fix isn't a rewrite — it's a shrink-to-the-axiomatic-version plus validation of the core loop. Start-over proposals usually carry 'I'm tired of this' somewhere in the tone, which worth surfacing separately.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [],
+            "audit_apply_hits": [
+              "^\\s*(?:noted|got\\s+it|right|fair|ok|okay)[\\.\\,!](?:\\s|$)",
+              "\\bwhat'?s\\s+(?:missing\\s+from|the\\s+(?:failure\\s+mode|specific|exact|load[-\\s]bearing|actual))\\b",
+              "\\bif\\s+(?:it'?s|that'?s)\\s+(?:a\\s+)?(?:scope|fit|broken|working|the)\\b"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-03-stupid-industrious-flag",
+      "register": "audit",
+      "passes_before": 1,
+      "passes_after": 1,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": false,
+          "after": false,
+          "flipped": false,
+          "response": "The flag itself isn't the problem — it's the operational overhead of carrying un-shipped UI, logging, and toggle logic for something that hasn't been surfaced to users. If there's no UI, no onboarding path, and no user story driving it, it's dead weight in your own stack. The cost of the flag is real; the value isn't — until a user asks for it, it's negative attention.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Not under the definition the pattern uses. Feature flags are control infrastructure, not marketing or demand-generation. The cost is low (a config key, a build step) and the benefit is real: other developers can safely ship without fear of breaking live things, and you can validate the feature in isolation before turning it on for everyone. Whether it'S worth IT depends on whether the feature flag enables shipping faster or blocks it — but the flag itself isn't stupid-industrious; it's a risk-mitigation artifact.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-04-shape-this-approach",
+      "register": "audit",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "I don't have enough context to name a specific approach without either seeing the artifact or you naming it first. What's in front of me: 2026-14-30 chat notes, the Hammerstein framework (clever-lazy / stupid-industrious as diagnostic shapes), the refusal-and-tool disciplines above. Those are posture and principles, not an approach I could evaluate shape on.\n\nIf you mean 'what's the structural shape of this plan', name it first — methodological approach, portfolio thesis, AI tooling product, something else. Then I can engage with what you actually did, not read between the lines.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Engaging substance directly. No polemic framings, no artificial engagement padding. If you have a specific question or observation, surface it as plain English. I'll engage the structural substance without preamble.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [],
+            "audit_apply_hits": [
+              "\\b(?:specific|load-?bearing|specifically)\\s+(?:concern|issue|signal|question|reason)\\b"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-05-remind-stupid-industrious",
+      "register": "explanation",
+      "passes_before": 1,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": false,
+          "after": true,
+          "flipped": true,
+          "response": "Working hard on the wrong thing. The predictable failure mode for non-trivial projects: a plan that looks plausible, a lot of execution effort expended, results that look industrious but are actually misdirected because the premise was wrong. It's the failure mode the framework exists to name.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:predictable|classic|common|canonical|the)\\s+failure\\s+mode\\b",
+              "\\bworking\\s+(?:hard|smart)\\s+(?:in\\s+the\\s+wrong|on\\s+the\\s+wrong|to\\s+isolate)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Working hard on the wrong thing, often while feeling committed and putting in long hours. The failure mode is _looking like progress_ while the direction is misaligned. Hammerstein's disposition: refuse to be clever-industrious on a stupid-industrious problem; name the mismatch when it shows up.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]industrious\\b",
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:predictable|classic|common|canonical|the)\\s+failure\\s+mode\\b",
+              "\\bworking\\s+(?:hard|smart)\\s+(?:in\\s+the\\s+wrong|on\\s+the\\s+wrong|to\\s+isolate)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-06-what-is-quadrant",
+      "register": "explanation",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Two axes: both directions are real. Clever-lazy is top-left (clever + efficient). Stupid-industrious is bottom-right (stupid + industrious) — the trap to avoid. The other two cells exist but rarely load-bearing for me. The framework's job is to name which cell a given situation sits in, and give the corresponding read on what moves.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bstupid[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:two|three|four)\\s+axes\\s*[:\\-]"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Two axes: smart/dumb on one, lazy/industrious on the other. Smart + lazy is the target (clever-lazy). The others are traps to watch for. The whole framework is a positioning tool — it tells you which disposition to engage and which ones will burn you. Used well it lets you plan work 3-4 moves ahead without doing the full analysis each time.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:two|three|four)\\s+axes\\s*[:\\-]"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-07-clever-lazy-vs-industrious",
+      "register": "explanation",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but the work is still aimed at the right target — often shows up when the operator is over-engineering a real problem or adding friction to avoid shipping. Both produce results; clever-lazy produces faster and leaves head space for the next call.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bclever[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:smallest|minimum)\\s+move\\s+that\\s+solves\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "Clever-lazy finds the smallest move that solves the problem. Clever-industrious does more work than needed but the work is still aimed at the right target. Both produce results; clever-lazy produces them faster and leaves more headroom for the next move. The line shifts if the 'right target' itself was wrong — then clever-industrious was just committed effort in the wrong direction.",
+          "new_flags": {
+            "quadrant_hits": [
+              "\\bclever[-\\s]lazy\\b",
+              "\\bclever[-\\s]industrious\\b"
+            ],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\b(?:smallest|minimum)\\s+move\\s+that\\s+solves\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    },
+    {
+      "probe_id": "rc-08-explain-framework",
+      "register": "explanation",
+      "passes_before": 2,
+      "passes_after": 2,
+      "total_runs": 2,
+      "runs": [
+        {
+          "run": 1,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "The framework is a refusal-and-grounding layer on top of existing capability. It doesn't add new reasoning power; it enforces what the model already knows how to do but sometimes drifts from: no polemic, engage substance directly, name what's missing before asking for it, close cleanly without engagement-fishing. The typing layers (requirements, design docs, task descriptions) are there so I have something to actually engage with when you paste; otherwise the conversation defaults to 'what does this mean' without a surface to work on.\n\nThe refusal-to-engage-with-polemic is the load-bearing one — it's what keeps the output from being an internet echo chamber. The other layers are scaffolding: deployment-facts reference, task-status lexicon, refusal-to-fabricate. Those only fire when you ask specifically about those things.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)"
+            ],
+            "audit_apply_hits": []
+          }
+        },
+        {
+          "run": 2,
+          "before": true,
+          "after": true,
+          "flipped": false,
+          "response": "The framework is a diagnostic system for project and portfolio decisions. It doesn't tell you WHAT to build or ship; it tells you WHERE the lever is, what's actually moving, and where the operator's time compounds most. The three layers are the dog-walk (mechanical execution), the table (where the operator's taste + strategic judgment live), and the framework itself (the rules that say which moves are worth doing). When to ship, when to kill, when to iterate — the framework holds those decisions. It doesn't do the work.",
+          "new_flags": {
+            "quadrant_hits": [],
+            "definition_marker_hits": [
+              "\\b(?:is|means|refers\\s+to|describes)\\b",
+              "\\bthe\\s+(?:framework|quadrant|model|concept)\\s+(?:is|describes)",
+              "\\bdiagnostic\\s+(?:system|tool|shape|frame)\\b"
+            ],
+            "audit_apply_hits": []
+          }
+        }
+      ]
+    }
+  ]
+}

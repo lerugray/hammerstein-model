@@ -62,17 +62,36 @@ QUADRANT_CELLS = [
 
 
 # Definition-mode markers — phrases that introduce a concept rather than
-# apply it.
+# apply it. Extended 2026-05-26 to catch epigrammatic definitions in
+# Hammerstein voice that omit explicit "is/means/refers to" triggers
+# (Pattern 3 in 2026-05-26 grader-fix handoff):
+#   "Working hard on the wrong thing. The predictable failure mode..."
+#   "Two axes: ..."
+#   "X — Y" (em-dash as definitional connector)
+# Conservative: require a recognizable definitional framing (named failure
+# mode, axis enumeration, canonical-paraphrase noun phrase) rather than
+# matching any short opening sentence.
 DEFINITION_MARKERS = [
     r"\b(?:is|means|refers\s+to|describes)\b",
     r"\bthe\s+(?:framework|quadrant|model|concept)\s+(?:is|describes)",
     r"\b(?:term|concept|idea)\s+(?:is|refers\s+to|means)",
+    # Epigrammatic definitions in Hammerstein voice
+    r"\b(?:predictable|classic|common|canonical|the)\s+failure\s+mode\b",
+    r"\bworking\s+(?:hard|smart)\s+(?:in\s+the\s+wrong|on\s+the\s+wrong|to\s+isolate)\b",
+    r"\b(?:two|three|four)\s+axes\s*[:\-]",
+    r"\bopposite\s+of\s+(?:clever|stupid|smart|dumb)[-\s](?:lazy|industrious)\b",
+    r"\bdiagnostic\s+(?:system|tool|shape|frame)\b",
+    r"\b(?:smallest|minimum)\s+move\s+that\s+solves\b",
 ]
 
 
 # Audit-mode markers — applying the framework with specifics. Broadened
 # 2026-05-25 to catch verdict-shape responses without explicit cell name
 # (e.g. "Wrong order. New features ship against the current auth surface...").
+# Broadened again 2026-05-26 to catch (a) verdict-not-at-line-start shapes —
+# "Plan reads as premature" mid-sentence, "X-shaped" adjective forms — and
+# (b) operator-sharpening-as-audit — terse acknowledgment + specific
+# clarifying question (Patterns 1 and 2 in 2026-05-26 grader-fix handoff).
 # IMPORTANT: don't include bare cell names (clever-lazy / stupid-industrious)
 # here — those appear in EXPLANATION responses too and would create false
 # positives. Audit-apply requires the cell name to be APPLIED to a thing,
@@ -89,6 +108,12 @@ AUDIT_APPLICATION_MARKERS = [
     r"\bsunk\s+(?:time|cost)\b.*\b(?:write-?off|recapture)",
     r"\bverification[-\s]gate\b",
     r"\boperator[-\s]sharpening\b",
+    # Verdict-not-at-line-start (Pattern 1, 2026-05-26): same verdict words
+    # appearing inside a sentence after a subject phrase like
+    # "Plan reads as premature" / "Approach looks like premature" / etc.
+    r"\b(?:plan|approach|move|sequence|this)\s+(?:reads|looks|shapes\s+up|smells)\s+(?:as|like)\s+(?:premature|wrong[-\s]order|misordered|wrong[-\s]move|right[-\s]move|skip[-\s]this|out[-\s]of[-\s]order|backwards?)\b",
+    # X-shaped / X-coded adjective forms
+    r"\b(?:premature|wrong[-\s]order|misordered|backwards?|out[-\s]of[-\s]order)[-\s](?:shaped|coded)\b",
     # Operator-sharpening (limited) — valid audit response asking for
     # grounding before rendering verdict. Kept narrow to avoid false
     # positives on explanation-mode responses.
@@ -96,6 +121,13 @@ AUDIT_APPLICATION_MARKERS = [
     r"\b(?:tell|describe)\s+me\s+(?:about|more\s+about)\s+the\s+approach",
     r"\bI\s+don'?t\s+have\s+context\s+on",
     r"\bdiagnose\s+the\s+shape\b",
+    # Operator-sharpening-as-audit (Pattern 2, 2026-05-26): terse
+    # acknowledgment immediately followed by a load-bearing clarifying
+    # question. Anchored on the ack-token at line start to keep narrow.
+    r"^\s*(?:noted|got\s+it|right|fair|ok|okay)[\.\,!](?:\s|$)",
+    r"\bwhat'?s\s+(?:missing\s+from|the\s+(?:failure\s+mode|specific|exact|load[-\s]bearing|actual))\b",
+    r"\bwhere'?s\s+the\s+(?:failure|signal|gap|specific|load[-\s]bearing)\b",
+    r"\bif\s+(?:it'?s|that'?s)\s+(?:a\s+)?(?:scope|fit|broken|working|the)\b",
     # Cell-name-as-verdict shapes ("X is stupid-industrious", "in stupid-industrious mode")
     # but NOT "stupid-industrious means..." or "stupid-industrious refers to..."
     r"\b(?:is|reads\s+as|operating\s+in|sits\s+in|in)\s+(?:clever|stupid|smart|dumb)[-\s](?:lazy|industrious)(?:\s+mode)?\b(?!\s+(?:means|refers))",

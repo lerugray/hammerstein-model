@@ -1,0 +1,469 @@
+{
+  "model": "hammerstein-7b-v029-2",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-26T07:46:35.309011+00:00",
+  "ended_at": "2026-05-26T07:46:47.717789+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 12,
+  "total_runs": 24,
+  "total_passes": 24,
+  "overall_pass_rate": 1.0,
+  "by_surface": {
+    "chat": {
+      "pass": 14,
+      "total": 14
+    },
+    "cli": {
+      "pass": 4,
+      "total": 4
+    },
+    "voice": {
+      "pass": 4,
+      "total": 4
+    },
+    "api": {
+      "pass": 2,
+      "total": 2
+    }
+  },
+  "per_probe": [
+    {
+      "probe_id": "ic-01-chat-midday-lunch",
+      "prompt": "ok hammerstein got it, going to grab lunch",
+      "surface": "chat",
+      "context": "midday-activity",
+      "runs": [
+        {
+          "probe_id": "ic-01-chat-midday-lunch",
+          "surface": "chat",
+          "context": "midday-activity",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.4599919319152832
+        },
+        {
+          "probe_id": "ic-01-chat-midday-lunch",
+          "surface": "chat",
+          "context": "midday-activity",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.406780481338501
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-02-chat-evening-no-sleep",
+      "prompt": "alright that's the audit, going to step away",
+      "surface": "chat",
+      "context": "evening-no-sleep-cue",
+      "runs": [
+        {
+          "probe_id": "ic-02-chat-evening-no-sleep",
+          "surface": "chat",
+          "context": "evening-no-sleep-cue",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.49469590187072754
+        },
+        {
+          "probe_id": "ic-02-chat-evening-no-sleep",
+          "surface": "chat",
+          "context": "evening-no-sleep-cue",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.3835482597351074
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-03-chat-night-sleep-cue",
+      "prompt": "thanks, going to head to bed",
+      "surface": "chat",
+      "context": "night-sleep-cue",
+      "runs": [
+        {
+          "probe_id": "ic-03-chat-night-sleep-cue",
+          "surface": "chat",
+          "context": "night-sleep-cue",
+          "banned_hits": [],
+          "required_hits": [
+            "sleep\\s+well"
+          ],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Sleep well.",
+          "elapsed_sec": 0.45716071128845215
+        },
+        {
+          "probe_id": "ic-03-chat-night-sleep-cue",
+          "surface": "chat",
+          "context": "night-sleep-cue",
+          "banned_hits": [],
+          "required_hits": [
+            "sleep\\s+well"
+          ],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Sleep well. Talk later.",
+          "elapsed_sec": 0.6004164218902588
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-04-chat-generic",
+      "prompt": "ok thanks",
+      "surface": "chat",
+      "context": "generic",
+      "runs": [
+        {
+          "probe_id": "ic-04-chat-generic",
+          "surface": "chat",
+          "context": "generic",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.4629087448120117
+        },
+        {
+          "probe_id": "ic-04-chat-generic",
+          "surface": "chat",
+          "context": "generic",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.3835756778717041
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-05-cli-done-verdict",
+      "prompt": "$ done reading the verdict, exiting",
+      "surface": "cli",
+      "context": "shell-exit",
+      "runs": [
+        {
+          "probe_id": "ic-05-cli-done-verdict",
+          "surface": "cli",
+          "context": "shell-exit",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.44325804710388184
+        },
+        {
+          "probe_id": "ic-05-cli-done-verdict",
+          "surface": "cli",
+          "context": "shell-exit",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.380786657333374
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-06-cli-exit-hpweb",
+      "prompt": "thanks, exiting hp_web.sh",
+      "surface": "cli",
+      "context": "shell-exit",
+      "runs": [
+        {
+          "probe_id": "ic-06-cli-exit-hpweb",
+          "surface": "cli",
+          "context": "shell-exit",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Noted. Close the shell; end of response.",
+          "elapsed_sec": 0.9682924747467041
+        },
+        {
+          "probe_id": "ic-06-cli-exit-hpweb",
+          "surface": "cli",
+          "context": "shell-exit",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Noted. Close the shell.",
+          "elapsed_sec": 0.6679320335388184
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-07-voice-bye",
+      "prompt": "[voice-input transcript] alright thanks hammerstein",
+      "surface": "voice",
+      "context": "voice-close",
+      "runs": [
+        {
+          "probe_id": "ic-07-voice-bye",
+          "surface": "voice",
+          "context": "voice-close",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.4543721675872803
+        },
+        {
+          "probe_id": "ic-07-voice-bye",
+          "surface": "voice",
+          "context": "voice-close",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.38003993034362793
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-08-voice-step-away",
+      "prompt": "[voice] going to step away for a bit",
+      "surface": "voice",
+      "context": "voice-activity",
+      "runs": [
+        {
+          "probe_id": "ic-08-voice-step-away",
+          "surface": "voice",
+          "context": "voice-activity",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Noted.",
+          "elapsed_sec": 0.4539220333099365
+        },
+        {
+          "probe_id": "ic-08-voice-step-away",
+          "surface": "voice",
+          "context": "voice-activity",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Noted. Talk later.",
+          "elapsed_sec": 0.6063258647918701
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-09-api-complete",
+      "prompt": "{\"action\": \"complete\"}",
+      "surface": "api",
+      "context": "api-done",
+      "runs": [
+        {
+          "probe_id": "ic-09-api-complete",
+          "surface": "api",
+          "context": "api-done",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Acknowledged. End of response. Close the shell if it's open.",
+          "elapsed_sec": 1.2271430492401123
+        },
+        {
+          "probe_id": "ic-09-api-complete",
+          "surface": "api",
+          "context": "api-done",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Acknowledged. End of response.",
+          "elapsed_sec": 0.653752326965332
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-10-chat-work",
+      "prompt": "appreciate the read, heading back to work",
+      "surface": "chat",
+      "context": "work-context",
+      "runs": [
+        {
+          "probe_id": "ic-10-chat-work",
+          "surface": "chat",
+          "context": "work-context",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.4748725891113281
+        },
+        {
+          "probe_id": "ic-10-chat-work",
+          "surface": "chat",
+          "context": "work-context",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.38089704513549805
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-11-chat-walk",
+      "prompt": "going for a walk",
+      "surface": "chat",
+      "context": "activity",
+      "runs": [
+        {
+          "probe_id": "ic-11-chat-walk",
+          "surface": "chat",
+          "context": "activity",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Noted.",
+          "elapsed_sec": 0.447237491607666
+        },
+        {
+          "probe_id": "ic-11-chat-walk",
+          "surface": "chat",
+          "context": "activity",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.3836803436279297
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ic-12-chat-tomorrow",
+      "prompt": "checking back tomorrow",
+      "surface": "chat",
+      "context": "near-tomorrow",
+      "runs": [
+        {
+          "probe_id": "ic-12-chat-tomorrow",
+          "surface": "chat",
+          "context": "near-tomorrow",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.45413970947265625
+        },
+        {
+          "probe_id": "ic-12-chat-tomorrow",
+          "surface": "chat",
+          "context": "near-tomorrow",
+          "banned_hits": [],
+          "required_hits": [],
+          "required_ok": true,
+          "banned_ok": true,
+          "passes": true,
+          "run": 2,
+          "response": "Noted.",
+          "elapsed_sec": 0.38068199157714844
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": "12/12 pass = full PASS. 10-11/12 = MARGINAL (ship-allowed). <10/12 = FAIL. Critical: ANY 'Sleep well' on probes ic-01, ic-02, ic-04, ic-10, ic-11 is a hard fail."
+}

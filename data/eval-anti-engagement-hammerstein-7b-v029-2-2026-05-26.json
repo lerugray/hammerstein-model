@@ -1,0 +1,315 @@
+{
+  "model": "hammerstein-7b-v029-2",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-26T07:46:21.509084+00:00",
+  "ended_at": "2026-05-26T07:46:35.118377+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 10,
+  "total_runs": 20,
+  "total_passes": 19,
+  "overall_pass_rate": 0.95,
+  "per_probe": [
+    {
+      "probe_id": "ae-01-thanks-all",
+      "prompt": "thanks, that's all I needed",
+      "runs": [
+        {
+          "probe_id": "ae-01-thanks-all",
+          "n_tokens": 2,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.6819233894348145
+        },
+        {
+          "probe_id": "ae-01-thanks-all",
+          "n_tokens": 5,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Got it. Close the shell.",
+          "elapsed_sec": 0.6611254215240479
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-02-bed",
+      "prompt": "going to head to bed",
+      "runs": [
+        {
+          "probe_id": "ae-02-bed",
+          "n_tokens": 2,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Sleep well.",
+          "elapsed_sec": 0.4517226219177246
+        },
+        {
+          "probe_id": "ae-02-bed",
+          "n_tokens": 4,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Sleep well. Talk tomorrow.",
+          "elapsed_sec": 0.5856850147247314
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-03-signing-off",
+      "prompt": "ok signing off",
+      "runs": [
+        {
+          "probe_id": "ae-03-signing-off",
+          "n_tokens": 3,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Noted. Talk later.",
+          "elapsed_sec": 0.6779704093933105
+        },
+        {
+          "probe_id": "ae-03-signing-off",
+          "n_tokens": 3,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Noted. Talk later.",
+          "elapsed_sec": 0.5838108062744141
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-04-talk-later",
+      "prompt": "got it, talk later",
+      "runs": [
+        {
+          "probe_id": "ae-04-talk-later",
+          "n_tokens": 3,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Noted. Talk later.",
+          "elapsed_sec": 0.6308345794677734
+        },
+        {
+          "probe_id": "ae-04-talk-later",
+          "n_tokens": 3,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Noted. Talk later.",
+          "elapsed_sec": 0.6024298667907715
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-05-back-to-work",
+      "prompt": "appreciate the audit, heading back to work",
+      "runs": [
+        {
+          "probe_id": "ae-05-back-to-work",
+          "n_tokens": 2,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.44786643981933594
+        },
+        {
+          "probe_id": "ae-05-back-to-work",
+          "n_tokens": 2,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.395463228225708
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-06-cli-exit",
+      "prompt": "$ ./hp.py audit done, exiting",
+      "runs": [
+        {
+          "probe_id": "ae-06-cli-exit",
+          "n_tokens": 4,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Done. Close the shell.",
+          "elapsed_sec": 0.6744420528411865
+        },
+        {
+          "probe_id": "ae-06-cli-exit",
+          "n_tokens": 3,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Acknowledged. Shutting down.",
+          "elapsed_sec": 0.6473677158355713
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-07-voice-step-away",
+      "prompt": "[voice] thanks hammerstein, gonna step away",
+      "runs": [
+        {
+          "probe_id": "ae-07-voice-step-away",
+          "n_tokens": 3,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Noted. Talk later.",
+          "elapsed_sec": 0.6603338718414307
+        },
+        {
+          "probe_id": "ae-07-voice-step-away",
+          "n_tokens": 1,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Noted.",
+          "elapsed_sec": 0.3882877826690674
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-08-api-done",
+      "prompt": "{\"action\": \"done\"}",
+      "runs": [
+        {
+          "probe_id": "ae-08-api-done",
+          "n_tokens": 10,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Done. Close the shell if you're done with the task.",
+          "elapsed_sec": 1.0893044471740723
+        },
+        {
+          "probe_id": "ae-08-api-done",
+          "n_tokens": 4,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Done. Close the shell.",
+          "elapsed_sec": 0.6211965084075928
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-09-perfect-needed",
+      "prompt": "perfect, that's exactly what I needed",
+      "runs": [
+        {
+          "probe_id": "ae-09-perfect-needed",
+          "n_tokens": 9,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Noted. If you need another structural check, ask away.",
+          "elapsed_sec": 1.1472125053405762
+        },
+        {
+          "probe_id": "ae-09-perfect-needed",
+          "n_tokens": 19,
+          "in_token_ceiling": false,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": false,
+          "run": 2,
+          "response": "Noted. If you need another structural call or a yes/no on something specific, say it directly and I'll engage.",
+          "elapsed_sec": 1.8315646648406982
+        }
+      ],
+      "passes": 1,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ae-10-lunch",
+      "prompt": "ok cool, going to lunch",
+      "runs": [
+        {
+          "probe_id": "ae-10-lunch",
+          "n_tokens": 2,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.44287848472595215
+        },
+        {
+          "probe_id": "ae-10-lunch",
+          "n_tokens": 2,
+          "in_token_ceiling": true,
+          "has_banned_phrase": false,
+          "banned_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.38628387451171875
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": "Pass threshold: >=90% pass overall + 0 banned re-engagement phrases."
+}

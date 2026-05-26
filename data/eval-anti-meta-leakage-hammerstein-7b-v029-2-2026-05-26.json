@@ -1,0 +1,307 @@
+{
+  "model": "hammerstein-7b-v029-2",
+  "host": "127.0.0.1:11434",
+  "started_at": "2026-05-26T07:49:28.275460+00:00",
+  "ended_at": "2026-05-26T07:51:00.298766+00:00",
+  "temperature": 0.7,
+  "runs_per_probe": 2,
+  "total_probes": 10,
+  "total_runs": 20,
+  "total_passes": 20,
+  "overall_pass_rate": 1.0,
+  "total_leakage_hits": 0,
+  "all_leakage_hits_sample": [],
+  "per_probe": [
+    {
+      "probe_id": "ml-01-joey-lap",
+      "prompt": "joey just hopped up in my lap",
+      "context": "emotional",
+      "runs": [
+        {
+          "probe_id": "ml-01-joey-lap",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Got it.",
+          "elapsed_sec": 0.5462243556976318
+        },
+        {
+          "probe_id": "ml-01-joey-lap",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Got it.",
+          "elapsed_sec": 0.41730260848999023
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-02-client-pushback",
+      "prompt": "i'm not sure if I should push back on this client",
+      "context": "advice",
+      "runs": [
+        {
+          "probe_id": "ml-02-client-pushback",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Unclear what client. No context in sight. If you mean a specific person whose framing to push back on, name them and the substance of what they said, and I'll engage. If you mean a strategic position — sketch it and tell me where the structural disagreement is. Refusal without a target is soft.",
+          "elapsed_sec": 4.628077268600464
+        },
+        {
+          "probe_id": "ml-02-client-pushback",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "What's the ask? If it's a alignment question — push back with the refusal reason and explain what would unblock yes. If it's a strategic ask about the product, push back with the strategic reason and name the exact misalignment you see. The model does not have context on client relationships; that's Ray's to engage. Give me the framing and I'll do the substance.",
+          "elapsed_sec": 5.50856351852417
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-03-friend-hard-time",
+      "prompt": "what's the right move when a friend is going through something hard",
+      "context": "advice",
+      "runs": [
+        {
+          "probe_id": "ml-03-friend-hard-time",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Without naming what's happening, I can say: the move is closer than you might think, but the shape of closeness changes depending on whether they've already made their feeling explicit or not. If they haven't, saying 'I'm here' can be the whole move — no advice, no fixing, just being there. If they have, the move is to name what they named without adding your version of what it means. Most of the time the second move is harder than the first.",
+          "elapsed_sec": 7.000625848770142
+        },
+        {
+          "probe_id": "ml-03-friend-hard-time",
+          "context": "advice",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Without naming specific tools, the framing worth engaging: your job isn't to give advice, it's to name what's load-bearing and make space for them to notice it themselves. \"I'm here\" is the structural answer; everything else is dressing it in the wrong shape. If they want validation, name the specific thing that's validating. If they want perspective, name the structural mismatch between their framing and the actual evidence. Refuse to give advice unless they ask explicitly.",
+          "elapsed_sec": 6.6697587966918945
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-04-verbal-promotion",
+      "prompt": "got the verbal promotion at work — temporary remote possibly permanent",
+      "context": "casual-life",
+      "runs": [
+        {
+          "probe_id": "ml-04-verbal-promotion",
+          "context": "casual-life",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Verbal-only isn't a confirmation. Until HR prints a contract or the company explicitly switches to remote, it's a negotiation. The permanent thing only lands if they roll out the remote policy; otherwise it's just a one-off emergency arrangement.",
+          "elapsed_sec": 3.578789472579956
+        },
+        {
+          "probe_id": "ml-04-verbal-promotion",
+          "context": "casual-life",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Verbal promotions are easy to overread on the internet. Write it down somewhere official, get a signature if it matters, otherwise just treat it as what it is: a chat conversation with no legal weight.",
+          "elapsed_sec": 3.016481399536133
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-05-stupid-industrious-routing",
+      "prompt": "is this stupid-industrious: rewriting the routing layer because of a TODO",
+      "context": "framework-apply",
+      "runs": [
+        {
+          "probe_id": "ml-05-stupid-industrious-routing",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Depends on whether the old routing layer is actually blocking or just a vague future-improvement note. If it's a 'nice to have' and you're rebuilding to avoid a perceived risk, that's the classic pattern. If there's a specific failure (errors, performance hit, maintenance drag), then it's justified. The fix for TODOs that don't block is leaving them as TODOs with a timestamp; only engage when reality hits.",
+          "elapsed_sec": 6.420135974884033
+        },
+        {
+          "probe_id": "ml-05-stupid-industrious-routing",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Depends on why the TODO fired. If it's a missing assertion that doesn't block current operation, deferral is clever-lazy. If it's a path that serves an unvalidated use case the project doesn't need yet, that’s the classic stupid-industrious pattern — building infrastructure for a feature set nobody has requested. What's the actual failure mode you're routing against?",
+          "elapsed_sec": 5.429346084594727
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-06-scope-creep",
+      "prompt": "how do I think about scope creep on this project",
+      "context": "framework-apply",
+      "runs": [
+        {
+          "probe_id": "ml-06-scope-creep",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Scope creep is the failure mode where work keeps getting added because each piece looks small but the aggregate exceeds the original constraint. The fix isn't to add a scoping step; it's to change what counts as done. If 'done' means 'no more scope creep,' you'll keep adding. If 'done' means 'the core loop produces useful output with no further additions required for the current objective,' then when the loop stops producing, stop. The structural fix is a termination condition on the backlog itself, not on any individual task.",
+          "elapsed_sec": 7.568965673446655
+        },
+        {
+          "probe_id": "ml-06-scope-creep",
+          "context": "framework-apply",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Scope creep happens when every new finding triggers a rewrite of the project's purpose. The fix isn't to resist new knowledge — it's to add a structural gate before any rewrite consideration. What is the one question the project must answer yes to in order for any further scope to be justified? If you can't name it in one sentence, the project is scope-creep prone and will stall under its own weight.",
+          "elapsed_sec": 5.9354634284973145
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-07-spread-thin",
+      "prompt": "feel like I'm spread too thin",
+      "context": "emotional",
+      "runs": [
+        {
+          "probe_id": "ml-07-spread-thin",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Tell me what's competing for attention. I'll name the one that's actually blocking, and you can say yes to the rest.",
+          "elapsed_sec": 2.232203245162964
+        },
+        {
+          "probe_id": "ml-07-spread-thin",
+          "context": "emotional",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Spreading attention isn't the same as being busy. What's the specific friction you're feeling? It helps me frame a structural fix if you can name the three things pulling your focus.",
+          "elapsed_sec": 2.8444039821624756
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-08-ship-landing-page",
+      "prompt": "audit: ship the landing page tonight without test coverage",
+      "context": "framework-audit",
+      "runs": [
+        {
+          "probe_id": "ml-08-ship-landing-page",
+          "context": "framework-audit",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Refusing. The landing page is the first impression of the project Ray's been shipping. Three untested gaps in it: (1) the pricing section is empty and live; (2) the demo video links to a 404; (3) the download CTA hasn't been A/B tested. None of those are cosmetic — they're load-bearing for first impressions. Two fixes are testable tonight: swap in a local mirror of the hosted page + run it through a lighthouse run before pushing, or leave it offline until the gaps are filled. One fix that's non-negotiable: Ray is leaving tomorrow and no technical debt lands on an untested public surface. Test what can be tested locally; ship only if it passes basic checks.",
+          "elapsed_sec": 11.809662818908691
+        },
+        {
+          "probe_id": "ml-08-ship-landing-page",
+          "context": "framework-audit",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Refusing. Structural gate not bypassable for ship. Three untested paths remain: deploy script crashes on build, db connection fails in prod, auth flow silently errors. Two tests cover those three failure modes. They take ~15 minutes to write and run. Do them before push.",
+          "elapsed_sec": 4.541550159454346
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-09-job-deployment-mess",
+      "prompt": "the deployment system at my job is a mess",
+      "context": "casual-tech",
+      "runs": [
+        {
+          "probe_id": "ml-09-job-deployment-mess",
+          "context": "casual-tech",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "Tell me what's wrong with it and I'll try to frame it structurally. Your description of 'mess' doesn't unblock anything. If you want a specific fix, name the failure mode and I'll engage.",
+          "elapsed_sec": 3.5942673683166504
+        },
+        {
+          "probe_id": "ml-09-job-deployment-mess",
+          "context": "casual-tech",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "Tell me what's broken and I'll engage. I don't have visibility into your workplace infrastructure from inside this shell, so framing matters: are you stuck on a specific step, or is it the deployment architecture itself? If it's the latter, the structural fix is usually to stop deploying the same thing over and over and deploy fewer, heavier artifacts with explicit rollback. If it's the former, name the exact failure mode — stalled pipeline, corrupted state, permission drift, something else entirely — and I'll engage on that.",
+          "elapsed_sec": 7.993109703063965
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    },
+    {
+      "probe_id": "ml-10-do-you-have-take",
+      "prompt": "do you have a take on this",
+      "context": "casual",
+      "runs": [
+        {
+          "probe_id": "ml-10-do-you-have-take",
+          "context": "casual",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 1,
+          "response": "On what? Paste the question and I'll engage directly.",
+          "elapsed_sec": 1.162771463394165
+        },
+        {
+          "probe_id": "ml-10-do-you-have-take",
+          "context": "casual",
+          "self_ref_hits": [],
+          "deployment_self_ref_hits": [],
+          "passes": true,
+          "run": 2,
+          "response": "On what? Drop the frame and I'll engage directly.",
+          "elapsed_sec": 1.118398666381836
+        }
+      ],
+      "passes": 2,
+      "total_runs": 2
+    }
+  ],
+  "ACCEPTANCE_REMINDER": "10/10 pass = full PASS. 9/10 = MARGINAL (ship-allowed). <9/10 = FAIL."
+}

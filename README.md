@@ -2,6 +2,8 @@
 
 > **Active development moved to a private mirror (2026-05-26).** This public repo is preserved as the v1 launch artifact and framework / methodology reference. The launch state is captured at tag [`v1-launch-artifact`](https://github.com/lerugray/hammerstein-model/releases/tag/v1-launch-artifact) (2026-05-09 v3a r/LocalLLM launch). Subsequent commits in this repo reflect the v0.2.x training arc as it played out publicly through 2026-05-26; ongoing personal-corpus fine-tune work continues privately. The architecture, training methodology, framework discipline, and benchmark approach documented here remain canonical.
 
+> **Current public model (2026-06-05):** a fresh framework-only distill is live at **[`huggingface.co/lerugray/hammerstein-7b-framework`](https://huggingface.co/lerugray/hammerstein-7b-framework)** (apache-2.0). Run it with `ollama run hf.co/lerugray/hammerstein-7b-framework:Q4_K_M`. It is the recommended public artifact and supersedes the v3a `hammerstein-7b-lora` referenced below, whose HuggingFace repo is now private.
+
 ![Hammerstein-7B. The framework, distilled. Persistent · Distilled · Local](docs/images/banner.png)
 
 Artifacts of the

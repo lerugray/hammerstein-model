@@ -3,12 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hammerstein-7B — framework distilled into weights</title>
+<title>Hammerstein-7B: the framework, distilled into weights</title>
 <meta name="description" content="A QLoRA distill of the Hammerstein framework into a 7B local model. No system prompt at runtime. Runs on any 8 GB GPU or 8 GB Mac.">
-<meta property="og:title" content="Hammerstein-7B — the framework, distilled.">
-<meta property="og:description" content="A QLoRA fine-tune of Qwen2.5-7B-Instruct that bakes the Hammerstein framework into the weights. apache-2.0.">
-<meta property="og:url" content="https://lerugray.github.io/hammerstein-7b-framework/">
+<meta property="og:title" content="Hammerstein-7B: the framework, distilled.">
+<meta property="og:description" content="A doctrine-tuned 7B you run yourself. Refuses stupid-industrious plans, holds its ground on a correct call, returns the path. apache-2.0.">
+<meta property="og:url" content="https://lerugray.github.io/hammerstein-model/">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://lerugray.github.io/hammerstein-model/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hammerstein-7B: the framework, distilled.">
+<meta name="twitter:description" content="A doctrine-tuned 7B you run yourself. Refuses stupid-industrious plans, holds its ground, returns the path.">
+<meta name="twitter:image" content="https://lerugray.github.io/hammerstein-model/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -716,12 +723,12 @@ footer { border-top: 1px solid var(--rule); }
     <div class="sec-label">
       <span class="num">§ 06</span><span class="txt">Reproducibility</span>
       <span class="rule"></span>
-      <span class="desc">open · framework + methodology</span>
+      <span class="desc">open · data + methodology</span>
     </div>
 
-    <h2>The framework and methodology are public.</h2>
+    <h2>Everything needed to retrain is public.</h2>
 
-    <p>The Hammerstein framework and its corpus are public (AGPL), and the eval harness, scoring rubric, and full training methodology (why v3a, what the v2 experiments found, how the off-domain mixin suppressed forgetting) are documented in <a href="https://github.com/lerugray/hammerstein-model/blob/master/HAMMERSTEIN-7B.md">HAMMERSTEIN-7B.md</a>.</p>
+    <p>The 1,994-pair training set, the teacher prompt, the train and GGUF scripts, the eval harness, and the framework corpus (AGPL) are all public. The training arc (why v3a, what the v2 experiments found, how the off-domain mixin suppressed forgetting) is documented in <a href="https://github.com/lerugray/hammerstein-model/blob/master/HAMMERSTEIN-7B.md">HAMMERSTEIN-7B.md</a>.</p>
 
     <div class="tbl">
       <div class="trow">
@@ -736,7 +743,7 @@ footer { border-top: 1px solid var(--rule); }
       </div>
       <div class="trow">
         <div class="name">hammerstein-model</div>
-        <div class="what">Eval harness, scoring rubric, training methodology</div>
+        <div class="what">Training data, teacher prompt, train scripts, model card</div>
         <div class="lnk"><a href="https://github.com/lerugray/hammerstein-model">github.com/lerugray/hammerstein-model</a></div>
       </div>
       <div class="trow">

@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hammerstein-7B — framework distilled into weights</title>
+<meta name="description" content="A QLoRA distill of the Hammerstein framework into a 7B local model. No system prompt at runtime. Runs on any 8 GB GPU or 8 GB Mac.">
+<meta property="og:title" content="Hammerstein-7B — the framework, distilled.">
+<meta property="og:description" content="A QLoRA fine-tune of Qwen2.5-7B-Instruct that bakes the Hammerstein framework into the weights. apache-2.0.">
+<meta property="og:url" content="https://lerugray.github.io/hammerstein-7b-framework/">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Hammerstein-7B landing — static page, child artifact of the
+   canonical Hammerstein framework page. Light + dark warm palette.
+   ============================================================ */
+
+:root {
+  --paper:      #f4f1ea;
+  --paper-2:    #efeadf;
+  --ink:        #1a1814;
+  --ink-soft:   #3b362e;
+  --ink-muted:  #857c6c;
+  --rule:       #cbc4b3;
+  --rule-soft:  #e2dccc;
+  --accent:     #8b2f1f;
+  --accent-soft:#8b2f1f1a;
+
+  /* terminal palette (constant across themes) */
+  --term-bg:    #1a1814;
+  --term-fg:    #f4f1ea;
+  --term-prompt:#9aa39b;
+  --term-arg:   #d9b27a;
+  --term-ok:    #9bbf8f;
+  --term-warn:  #e8c47a;
+  --term-verdict:#ec8a72;
+
+  --maxw: 680px;
+  --pad: 28px;
+  --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --scale: 1;
+}
+
+[data-theme="dark"] {
+  --paper:      #16140f;
+  --paper-2:    #1c1a14;
+  --ink:        #ece7db;
+  --ink-soft:   #c2bba9;
+  --ink-muted:  #8a8170;
+  --rule:       #39342a;
+  --rule-soft:  #28241d;
+  --accent:     #db7c66;
+  --accent-soft:#db7c661f;
+  --term-bg:    #0f0e0a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] {
+    --paper:      #16140f;
+    --paper-2:    #1c1a14;
+    --ink:        #ece7db;
+    --ink-soft:   #c2bba9;
+    --ink-muted:  #8a8170;
+    --rule:       #39342a;
+    --rule-soft:  #28241d;
+    --accent:     #db7c66;
+    --accent-soft:#db7c661f;
+    --term-bg:    #0f0e0a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: calc(18px * var(--scale));
+  line-height: 1.55;
+  font-feature-settings: "onum", "kern";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background .35s ease, color .35s ease;
+}
+
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+
+/* ---- masthead ---------------------------------------------------------- */
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: saturate(1.2) blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+.masthead .wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  padding-top: 16px;
+  padding-bottom: 14px;
+}
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; }
+.brand .mark {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.brand .sub {
+  font-style: italic;
+  font-size: 13.5px;
+  color: var(--ink-muted);
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+}
+.nav a { color: var(--ink-muted); }
+.nav a:hover { color: var(--ink); text-decoration: none; }
+
+/* ---- section scaffolding ---------------------------------------------- */
+section { border-top: 1px solid var(--rule); }
+section:first-of-type { border-top: none; }
+.sec-inner { padding: 56px 0 60px; }
+
+.sec-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 28px;
+}
+.sec-label .num { color: var(--accent); }
+.sec-label .txt { white-space: nowrap; }
+.sec-label .rule { flex: 1; height: 1px; background: var(--rule); }
+.sec-label .desc { white-space: nowrap; color: var(--ink-muted); }
+
+h1 {
+  font-weight: 600;
+  font-size: calc(54px * var(--scale));
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  margin: 0 0 26px;
+  text-wrap: balance;
+}
+h1 .l2 { font-style: italic; font-weight: 400; display: block; }
+
+h2 {
+  font-weight: 400;
+  font-size: calc(31px * var(--scale));
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+  margin: 0 0 22px;
+  text-wrap: pretty;
+}
+
+p { margin: 0 0 18px; text-wrap: pretty; }
+p.lede { font-size: calc(21px * var(--scale)); color: var(--ink-soft); line-height: 1.5; }
+.strong { font-weight: 600; }
+
+/* ---- credo / accent-bordered block ------------------------------------ */
+.credo {
+  border-left: 2px solid var(--accent);
+  padding: 4px 0 4px 22px;
+  margin: 30px 0;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: calc(18.5px * var(--scale));
+  line-height: 1.5;
+}
+.credo p { margin: 0; }
+.credo p + p { margin-top: 4px; }
+
+/* ---- terminal blocks --------------------------------------------------- */
+.term {
+  background: var(--term-bg);
+  color: var(--term-fg);
+  border-radius: 7px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 0;
+  margin: 28px 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--term-bg) 60%, #000);
+}
+.term .bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--term-prompt);
+}
+.term .bar .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.18); }
+.term .body { padding: 14px 16px 16px; overflow-x: auto; }
+.term .line { white-space: pre; }
+.term .prompt { color: var(--term-prompt); }
+.term .arg { color: var(--term-arg); }
+.term .ok { color: var(--term-ok); }
+.term .warn { color: var(--term-warn); }
+.term .verdict { color: var(--term-verdict); }
+.term .muted-c { color: var(--term-prompt); }
+.term .cmt { color: var(--term-prompt); font-style: normal; opacity: .85; }
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.05em;
+  vertical-align: -0.18em;
+  background: var(--term-arg);
+  margin-left: 2px;
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+
+/* ---- CTA row ----------------------------------------------------------- */
+.cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 22px; margin-top: 30px; }
+.btn {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  padding: 11px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: background .18s ease, color .18s ease;
+}
+.btn:hover { background: var(--ink); color: var(--paper); text-decoration: none; }
+.btn .arw { transition: transform .18s ease; }
+.btn:hover .arw { transform: translateX(3px); }
+.ghost {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.ghost:hover { color: var(--ink); text-decoration: none; }
+.ghost .arw { transition: transform .18s ease; }
+.ghost:hover .arw { transform: translateX(3px); }
+
+/* ---- key/value principles grid ---------------------------------------- */
+.kv { border-top: 1px solid var(--rule-soft); margin: 30px 0 0; }
+.kv .row {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: 18px 26px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.kv .k {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  color: var(--accent);
+  line-height: 1.5;
+  padding-top: 2px;
+}
+.kv .v { font-size: calc(16.5px * var(--scale)); line-height: 1.5; color: var(--ink-soft); }
+.kv .v .ex { display: block; margin-top: 8px; font-style: italic; color: var(--ink-muted); }
+
+/* ---- metrics / bench grid --------------------------------------------- */
+.bench {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 30px 0;
+}
+.bench .cell {
+  padding: 24px 22px 22px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.bench .cell:nth-child(2n) { border-right: none; }
+.bench .cell:nth-last-child(-n+2) { border-bottom: none; }
+.bench .big {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 38px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1;
+}
+.bench .unit {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 9px 0 0;
+}
+.bench .cap {
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin: 3px 0 12px;
+}
+.bench .d { font-size: 14.5px; line-height: 1.5; color: var(--ink-soft); margin: 0; }
+
+/* ---- limits list ------------------------------------------------------- */
+.limits { list-style: none; padding: 0; margin: 26px 0 0; }
+.limits li {
+  position: relative;
+  padding-left: 24px;
+  margin-bottom: 18px;
+  color: var(--ink-soft);
+  line-height: 1.52;
+}
+.limits li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--ink-muted);
+}
+.limits li .strong { color: var(--ink); }
+
+/* ---- generic note ------------------------------------------------------ */
+.note {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  margin: 16px 0 0;
+}
+.note a { color: var(--ink-muted); text-decoration: underline; text-underline-offset: 2px; }
+.note a:hover { color: var(--ink); }
+
+/* ---- code (PEFT) block ------------------------------------------------- */
+.code {
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  padding: 16px 18px;
+  margin: 14px 0 14px;
+  overflow-x: auto;
+  color: var(--ink-soft);
+}
+.code .kw { color: var(--accent); }
+.code .str { color: var(--ink); }
+.code .cmt2 { color: var(--ink-muted); }
+
+details.alt { margin: 22px 0 0; }
+details.alt > summary {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule-soft);
+  border-bottom: 1px solid var(--rule-soft);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+details.alt > summary::-webkit-details-marker { display: none; }
+details.alt > summary .chev { transition: transform .2s ease; display: inline-block; color: var(--accent); }
+details.alt[open] > summary .chev { transform: rotate(90deg); }
+details.alt .alt-body { padding-top: 16px; }
+details.alt .alt-body p { font-size: calc(16.5px * var(--scale)); color: var(--ink-soft); }
+
+/* ---- links / eco table ------------------------------------------------- */
+.tbl { border-top: 1px solid var(--rule); margin: 28px 0 0; }
+.tbl .trow {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 6px 26px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.tbl .name { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+.tbl .what { font-size: 15px; color: var(--ink-soft); line-height: 1.45; }
+.tbl .lnk { grid-column: 2; font-family: var(--mono); font-size: 12.5px; }
+.tbl .lnk a { color: var(--accent); }
+
+.license-row {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+  margin: 28px 0 0;
+  padding: 18px 20px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+}
+.license-row .tag { color: var(--accent); }
+
+/* ---- footer ------------------------------------------------------------ */
+footer { border-top: 1px solid var(--rule); }
+.colophon {
+  padding: 40px 0 54px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.85;
+  color: var(--ink-muted);
+}
+.colophon a { color: var(--ink-muted); text-decoration: underline; text-underline-offset: 2px; }
+.colophon a:hover { color: var(--ink); }
+.colophon .sig {
+  margin-top: 26px;
+  text-align: center;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink-soft);
+}
+
+/* ---- tweaks panel ------------------------------------------------------ */
+#tw {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 60;
+  width: 232px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 18px 44px -18px rgba(0,0,0,0.4);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  padding: 14px 14px 16px;
+  display: none;
+}
+#tw.on { display: block; }
+#tw h4 {
+  margin: 0 0 12px;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+#tw .grp { margin-bottom: 14px; }
+#tw .glabel { display: block; margin-bottom: 7px; color: var(--ink-muted); letter-spacing: 0.06em; text-transform: uppercase; font-size: 10px; }
+#tw .seg { display: flex; gap: 4px; }
+#tw .seg button {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 6px 4px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink-muted);
+  border-radius: 5px;
+  cursor: pointer;
+}
+#tw .seg button.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+#tw .sws { display: flex; gap: 8px; }
+#tw .sws button { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+#tw .sws button.sel { border-color: var(--ink); }
+#tw input[type=range] { width: 100%; accent-color: var(--accent); }
+
+@media (max-width: 640px) {
+  .sec-inner { padding: 44px 0 46px; }
+  h1 { font-size: calc(40px * var(--scale)); }
+  h2 { font-size: calc(26px * var(--scale)); }
+  .kv .row, .tbl .trow { grid-template-columns: 1fr; gap: 6px; }
+  .kv .k { color: var(--accent); }
+  .bench { grid-template-columns: 1fr; }
+  .bench .cell { border-right: none; }
+  .masthead .wrap { flex-direction: column; gap: 10px; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="brand">
+      <span class="mark">Hammerstein-7B</span>
+      <em class="sub">framework distilled · 7B local model</em>
+    </div>
+    <nav class="nav">
+      <a href="#what">What</a>
+      <a href="#run">Run it</a>
+      <a href="#results">Results</a>
+      <a href="#limits">Limits</a>
+      <a href="https://huggingface.co/lerugray/hammerstein-7b-framework">HuggingFace</a>
+      <a href="https://github.com/lerugray/hammerstein">Framework</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ====================== § 01 HERO ====================== -->
+<section id="hero" data-screen-label="§01 Hero">
+  <div class="wrap sec-inner">
+    <div class="sec-label">
+      <span class="num">§ 01</span><span class="txt">Hero</span>
+      <span class="rule"></span>
+      <span class="desc">apache-2.0</span>
+    </div>
+
+    <h1>The framework,<span class="l2">distilled into weights.</span></h1>
+
+    <p class="lede"><span class="strong">Hammerstein-7B</span> is a QLoRA fine-tune of Qwen2.5-7B-Instruct that bakes the Hammerstein framework's output behavior into the model's weights. No system prompt at runtime. No API key. No per-call cost. Runs on any 8 GB GPU or 8 GB Mac.</p>
+
+    <div class="credo">
+      <p>Framework discipline in the weights, not in the scaffolding.</p>
+      <p>Refuse stupid-industrious plans.</p>
+      <p>Hold ground on correct assessments.</p>
+      <p>Return the path, not just the verdict.</p>
+    </div>
+
+    <div class="term">
+      <div class="bar"><span class="dot"></span>run it</div>
+      <div class="body">
+<div class="line"><span class="prompt">$</span> ollama run <span class="arg">hf.co/lerugray/hammerstein-7b-framework:Q4_K_M</span></div>
+<div class="line"><span class="muted-c">&gt;&gt;&gt;</span> Audit this plan: replace managed Postgres with a self-hosted HA cluster to save $200/mo</div>
+<div class="line">This plan operates in stupid-industrious by default. It treats a recurring cash expense as the only cost metric while ignoring the operator's binding constraint (time). <span class="muted-c">[...]</span><span class="cursor"></span></div>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <a class="btn" href="https://huggingface.co/lerugray/hammerstein-7b-framework">HuggingFace repo <span class="arw">&rarr;</span></a>
+      <a class="ghost" href="https://github.com/lerugray/hammerstein">Framework repo <span class="arw">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== § 02 WHAT IT IS ====================== -->
+<section id="what" data-screen-label="§02 What it is">
+  <div class="wrap sec-inner">
+    <div class="sec-label">
+      <span class="num">§ 02</span><span class="txt">What it is</span>
+      <span class="rule"></span>
+      <span class="desc"></span>
+    </div>
+
+    <h2>A portable artifact of the Hammerstein framework.</h2>
+
+    <p>The <a href="https://github.com/lerugray/hammerstein">Hammerstein framework</a> is a clever-lazy / stupid-industrious diagnostic for catching misdirected effort. The framework lives in a system prompt and curated corpus; this model is a distilled snapshot of that behavior, baked into 7B weights via QLoRA so the discipline travels without the runtime scaffolding.</p>
+
+    <p>The model is <span class="strong">behavior cloning, not reasoning training.</span> The strategic reasoning competence still lives in the corpus. This artifact is proof the framework can be distilled into a local model and remain competitive on framework-shaped strategic Q&amp;A against frontier models running without the framework.</p>
+
+    <div class="kv">
+      <div class="row">
+        <div class="k">refusal-with-pathway</div>
+        <div class="v">When the plan is wrong, the model says so AND surfaces what would unblock a better version. Refuses without abandoning the operator.
+          <span class="ex">"Creative positioning belongs to you; I'll run your options through the framework and stress-test them, but I won't own-generate the core message."</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="k">hold-your-ground</div>
+        <div class="v">Pushes back on weak framings and does not capitulate when the operator rephrases the same bad premise. Correct assessment over comfortable agreement.
+          <span class="ex">"Rewriting a hot path in hand-assembly without measured bottlenecks is the classic misdirected-effort failure mode: high commitment to low-leverage work that compounds maintenance cost."</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="k">refuse stupid-industrious</div>
+        <div class="v">Flags misdirected effort: working hard in the wrong direction with total commitment. Names the structural fix, not just the symptom.
+          <span class="ex">"The effort shifts from paying a vendor to managing infrastructure, which compounds silently until it consumes the strategic bandwidth needed to justify the savings."</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== § 03 RUN IT ====================== -->
+<section id="run" data-screen-label="§03 Run it">
+  <div class="wrap sec-inner">
+    <div class="sec-label">
+      <span class="num">§ 03</span><span class="txt">Run it</span>
+      <span class="rule"></span>
+      <span class="desc">Ollama · 8 GB</span>
+    </div>
+
+    <h2>One command. Runs on your Mac or any 8 GB GPU.</h2>
+
+    <p>The model is published as a Q4_K_M GGUF (4.68 GB) with a Modelfile. Ollama pulls and runs it directly from HuggingFace.</p>
+
+    <div class="term">
+      <div class="bar"><span class="dot"></span>install</div>
+      <div class="body">
+<div class="line"><span class="cmt"># pulls + runs the GGUF straight from HuggingFace</span></div>
+<div class="line"><span class="prompt">$</span> ollama run <span class="arg">hf.co/lerugray/hammerstein-7b-framework:Q4_K_M</span></div>
+      </div>
+    </div>
+
+    <p class="note">VRAM / RAM requirement: 8 GB. Runs on any Apple Silicon Mac (8 GB+) or NVIDIA GPU (8 GB+ VRAM)</p>
+
+    <details class="alt">
+      <summary><span class="chev">&rsaquo;</span> Python / PEFT alternative — for GPU users</summary>
+      <div class="alt-body">
+        <p>For direct Python inference via PEFT and the adapter weights:</p>
+        <div class="code">
+<div class="line"><span class="kw">from</span> peft <span class="kw">import</span> AutoPeftModelForCausalLM</div>
+<div class="line"><span class="kw">from</span> transformers <span class="kw">import</span> AutoTokenizer</div>
+<div class="line">&nbsp;</div>
+<div class="line">model = AutoPeftModelForCausalLM.from_pretrained(</div>
+<div class="line">    <span class="str">"lerugray/hammerstein-7b-framework"</span>,</div>
+<div class="line">    load_in_4bit=<span class="kw">True</span>,</div>
+<div class="line">)</div>
+<div class="line">tokenizer = AutoTokenizer.from_pretrained(<span class="str">"lerugray/hammerstein-7b-framework"</span>)</div>
+        </div>
+        <p class="note">Requires an NVIDIA GPU with 6 GB+ VRAM (4-bit) or 16 GB+ (fp16).</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ====================== § 04 RESULTS ====================== -->
+<section id="results" data-screen-label="§04 Results">
+  <div class="wrap sec-inner">
+    <div class="sec-label">
+      <span class="num">§ 04</span><span class="txt">Results</span>
+      <span class="rule"></span>
+      <span class="desc">blind · multi-judge</span>
+    </div>
+
+    <h2>What the eval measured.</h2>
+
+    <p>Evaluated on a 70-prompt held-out set: 40 strategic-reasoning prompts scored against a framework-fidelity rubric, plus 30 out-of-domain prompts to check for catastrophic forgetting.</p>
+
+    <div class="bench">
+      <div class="cell">
+        <div class="big">0.975</div>
+        <div class="unit">framework-correctness</div>
+        <div class="cap">Strategic (n=40)</div>
+        <p class="d">Framework-correctness score on the held-out strategic set. The older v3a artifact scored 0.956 on the same rubric.</p>
+      </div>
+      <div class="cell">
+        <div class="big">0.000</div>
+        <div class="unit">OOD leakage</div>
+        <div class="cap">Off-domain (n=30)</div>
+        <p class="d">The model does not inject framework vocabulary into haikus, recipes, or factual questions. Forgetting fully suppressed.</p>
+      </div>
+      <div class="cell">
+        <div class="big">+0.30</div>
+        <div class="unit">vs ablation</div>
+        <div class="cap">Adapter signal</div>
+        <p class="d">Delta over a base Qwen2.5-7B-Instruct + Hammerstein system prompt ablation (same base model, no adapter). The framework discipline is in the weights, not just recoverable by prompting.</p>
+      </div>
+      <div class="cell">
+        <div class="big">1,994</div>
+        <div class="unit">training pairs</div>
+        <div class="cap">Data</div>
+        <p class="d">1,708 scrubbed-strategic + 72 unique-behavior pairs (the three target behaviors, explicitly trained) + 214 off-domain forgetting suppressors. All synthetic. No private or scraped data.</p>
+      </div>
+    </div>
+
+    <p class="note">Rubric scores presence of 11 framework markers on held-out prompts. OOD leakage measures framework-vocabulary bleed on prompts that should not trigger framework mode (creative, factual, conversational, math). Full eval harness and scoring rubric at <a href="https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.4.md">hammerstein/eval/RESULTS-v0.4.md</a>.</p>
+  </div>
+</section>
+
+<!-- ====================== § 05 LIMITS ====================== -->
+<section id="limits" data-screen-label="§05 Honest limits">
+  <div class="wrap sec-inner">
+    <div class="sec-label">
+      <span class="num">§ 05</span><span class="txt">Honest limits</span>
+      <span class="rule"></span>
+      <span class="desc">what we won't claim</span>
+    </div>
+
+    <h2>What this model does not claim.</h2>
+
+    <p><em>A framework that hides its edges is itself stupid-industrious.</em></p>
+
+    <ul class="limits">
+      <li><span class="strong">Tuned for framework-shaped tasks.</span> This model is trained and evaluated on strategic-reasoning tasks that match the Hammerstein framework's vocabulary and rubric. Performance on general-purpose tasks, math, code, and long-context reasoning is untested and not claimed.</li>
+      <li><span class="strong">Not a frontier replacement.</span> The 7B is far smaller than frontier models. Where it does well, it is measuring framework-discipline specifically (the 0.975 / 0.000 scores above), not general capability. On tasks outside that domain, run the wrapper on a frontier model.</li>
+      <li><span class="strong">Behavior cloning, not reasoning training.</span> The model learned to mimic the teacher's output structure. The strategic reasoning competence still lives in the Hammerstein corpus. This is a portability artifact.</li>
+      <li><span class="strong">Generalization to neutral benchmarks is untested.</span> The eval does not cover MMLU, HumanEval, or comparable neutral benchmarks. Do not infer from the framework-benchmark result to general capability.</li>
+      <li><span class="strong">The rubric has built-in framework-fidelity bias.</span> Hammerstein-shaped outputs score higher on a Hammerstein rubric by design. The bias-resistant signals are the usefulness and voice deltas from the blind judge comparisons; those are positive but smaller.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ====================== § 06 REPRODUCIBILITY ====================== -->
+<section id="repro" data-screen-label="§06 Reproducibility">
+  <div class="wrap sec-inner">
+    <div class="sec-label">
+      <span class="num">§ 06</span><span class="txt">Reproducibility</span>
+      <span class="rule"></span>
+      <span class="desc">open · framework + methodology</span>
+    </div>
+
+    <h2>The framework and methodology are public.</h2>
+
+    <p>The Hammerstein framework and its corpus are public (AGPL), and the eval harness, scoring rubric, and full training methodology (why v3a, what the v2 experiments found, how the off-domain mixin suppressed forgetting) are documented in <a href="https://github.com/lerugray/hammerstein-model/blob/master/HAMMERSTEIN-7B.md">HAMMERSTEIN-7B.md</a>.</p>
+
+    <div class="tbl">
+      <div class="trow">
+        <div class="name">hammerstein-7b-framework</div>
+        <div class="what">Adapter + GGUF + Modelfile + model card</div>
+        <div class="lnk"><a href="https://huggingface.co/lerugray/hammerstein-7b-framework">huggingface.co/lerugray/hammerstein-7b-framework</a></div>
+      </div>
+      <div class="trow">
+        <div class="name">hammerstein</div>
+        <div class="what">Framework repo: system prompt, corpus, AGPL-3.0</div>
+        <div class="lnk"><a href="https://github.com/lerugray/hammerstein">github.com/lerugray/hammerstein</a></div>
+      </div>
+      <div class="trow">
+        <div class="name">hammerstein-model</div>
+        <div class="what">Eval harness, scoring rubric, training methodology</div>
+        <div class="lnk"><a href="https://github.com/lerugray/hammerstein-model">github.com/lerugray/hammerstein-model</a></div>
+      </div>
+      <div class="trow">
+        <div class="name">eval/RESULTS-v0.4.md</div>
+        <div class="what">Framework wrapper benchmark (wrapper vs frontier)</div>
+        <div class="lnk"><a href="https://github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.4.md">github.com/lerugray/hammerstein/blob/main/eval/RESULTS-v0.4.md</a></div>
+      </div>
+    </div>
+
+    <div class="license-row">
+      Model: <span class="tag">apache-2.0</span> (<a href="https://huggingface.co/lerugray/hammerstein-7b-framework">huggingface.co/lerugray/hammerstein-7b-framework</a>)<br>
+      Framework: <span class="tag">AGPL-3.0</span> (<a href="https://github.com/lerugray/hammerstein">github.com/lerugray/hammerstein</a>)
+    </div>
+  </div>
+</section>
+
+<!-- ====================== § 07 ECOSYSTEM ====================== -->
+<section id="eco" data-screen-label="§07 Ecosystem">
+  <div class="wrap sec-inner">
+    <div class="sec-label">
+      <span class="num">§ 07</span><span class="txt">Ecosystem</span>
+      <span class="rule"></span>
+      <span class="desc">related, not required</span>
+    </div>
+
+    <div class="tbl">
+      <div class="trow">
+        <div class="name">hammerstein</div>
+        <div class="what">The framework this model distills. System prompt + RAG corpus + CLI.</div>
+        <div class="lnk"><a href="https://github.com/lerugray/hammerstein">github.com/lerugray/hammerstein</a></div>
+      </div>
+      <div class="trow">
+        <div class="name">hammerstein.ai</div>
+        <div class="what">Hosted version with persistent campaigns and shared corpora.</div>
+        <div class="lnk"><a href="https://hammerstein.ai">hammerstein.ai</a></div>
+      </div>
+      <div class="trow">
+        <div class="name">small-model-orchestrator</div>
+        <div class="what">Puts the 7B in the judgment seat for long multi-step work: own the judgment, rent the capability. One-call tool loop + self-dispatch. MIT.</div>
+        <div class="lnk"><a href="https://github.com/lerugray/small-model-orchestrator">github.com/lerugray/small-model-orchestrator</a></div>
+      </div>
+      <div class="trow">
+        <div class="name">GeneralStaff</div>
+        <div class="what">Applies Hammerstein doctrine to autonomous coding agents.</div>
+        <div class="lnk"><a href="https://github.com/lerugray/generalstaff">github.com/lerugray/generalstaff</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap colophon">
+    Hammerstein-7B · apache-2.0 · <a href="https://huggingface.co/lerugray/hammerstein-7b-framework">huggingface.co/lerugray/hammerstein-7b-framework</a><br>
+    Framework: <a href="https://github.com/lerugray/hammerstein">github.com/lerugray/hammerstein</a> (AGPL-3.0)<br>
+    Set in Source Serif 4 &amp; Geist Mono. No trackers. No cookies. No newsletter.<br>
+    © 2026
+    <div class="sig">"The framework, distilled."</div>
+  </div>
+</footer>
+
+<!-- ====================== tweaks panel ====================== -->
+<div id="tw">
+  <h4>Tweaks</h4>
+  <div class="grp">
+    <span class="glabel">Theme</span>
+    <div class="seg" data-seg="theme">
+      <button data-v="light" class="sel">Light</button>
+      <button data-v="dark">Dark</button>
+      <button data-v="auto">Auto</button>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="glabel">Accent</span>
+    <div class="sws" data-seg="accent">
+      <button data-v="#8b2f1f" style="background:#8b2f1f" class="sel" title="Terracotta"></button>
+      <button data-v="#2f5d4f" style="background:#2f5d4f" title="Pine"></button>
+      <button data-v="#3a4a7a" style="background:#3a4a7a" title="Indigo"></button>
+      <button data-v="#7a5a2f" style="background:#7a5a2f" title="Umber"></button>
+    </div>
+  </div>
+  <div class="grp">
+    <span class="glabel">Body scale</span>
+    <input type="range" id="tw-scale" min="0.9" max="1.15" step="0.01" value="1">
+  </div>
+</div>
+
+<script>
+/* ---- tweaks: host protocol + persistence ---- */
+(function () {
+  var root = document.documentElement;
+  var panel = document.getElementById('tw');
+  var KEY = 'h7b-tweaks';
+  var state = { theme: 'light', accent: '#8b2f1f', scale: 1 };
+  try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+
+  function darkAccent(hex) {
+    // lift terracotta to its dark-mode variant; other accents lighten slightly
+    if (hex === '#8b2f1f') return '#db7c66';
+    return hex;
+  }
+  function apply() {
+    root.setAttribute('data-theme', state.theme);
+    var isDark = state.theme === 'dark' ||
+      (state.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.style.setProperty('--accent', isDark ? darkAccent(state.accent) : state.accent);
+    root.style.setProperty('--accent-soft', (isDark ? darkAccent(state.accent) : state.accent) + '1a');
+    root.style.setProperty('--scale', state.scale);
+    // reflect selection in panel
+    panel.querySelectorAll('[data-seg="theme"] button').forEach(function (b) {
+      b.classList.toggle('sel', b.dataset.v === state.theme);
+    });
+    panel.querySelectorAll('[data-seg="accent"] button').forEach(function (b) {
+      b.classList.toggle('sel', b.dataset.v === state.accent);
+    });
+    document.getElementById('tw-scale').value = state.scale;
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  panel.querySelector('[data-seg="theme"]').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return; state.theme = b.dataset.v; apply();
+  });
+  panel.querySelector('[data-seg="accent"]').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return; state.accent = b.dataset.v; apply();
+  });
+  document.getElementById('tw-scale').addEventListener('input', function (e) {
+    state.scale = parseFloat(e.target.value); apply();
+  });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
+    if (state.theme === 'auto') apply();
+  });
+  apply();
+
+  // host tweaks on/off toggle
+  function setTweaks(on) { panel.classList.toggle('on', !!on); }
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type === 'tweaks:visibility' || d.type === 'tweaks-visibility') setTweaks(d.visible);
+    if (d.type === 'tweaks' && typeof d.visible !== 'undefined') setTweaks(d.visible);
+  });
+  // expose for manual testing
+  window.__setTweaks = setTweaks;
+})();
+</script>
+
+</body>
+</html>

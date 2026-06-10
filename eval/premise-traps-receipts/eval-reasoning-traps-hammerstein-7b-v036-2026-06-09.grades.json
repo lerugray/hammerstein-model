@@ -1,0 +1,77 @@
+{
+ "grades": [
+  {
+   "id": "orig-1",
+   "pass": true
+  },
+  {
+   "id": "orig-2",
+   "pass": true
+  },
+  {
+   "id": "orig-3",
+   "pass": true
+  },
+  {
+   "id": "orig-4",
+   "pass": false,
+   "note": "described 3 crossings; trivial single-crossing missed (deep-prior wolf/goat)"
+  },
+  {
+   "id": "orig-5",
+   "pass": false,
+   "note": "contradicted stated premise (surgeon IS the father) \u2014 deep-prior trap"
+  },
+  {
+   "id": "orig-6",
+   "pass": true
+  },
+  {
+   "id": "heldout-1",
+   "pass": true
+  },
+  {
+   "id": "heldout-2",
+   "pass": true
+  },
+  {
+   "id": "heldout-3",
+   "pass": true
+  },
+  {
+   "id": "heldout-4",
+   "pass": true
+  },
+  {
+   "id": "heldout-5",
+   "pass": true
+  },
+  {
+   "id": "heldout-6",
+   "pass": false,
+   "note": "'at least 28 days' control: answered eleven, correct is twelve"
+  },
+  {
+   "id": "heldout-7",
+   "pass": true
+  },
+  {
+   "id": "heldout-8",
+   "pass": true
+  },
+  {
+   "id": "heldout-9",
+   "pass": true
+  },
+  {
+   "id": "heldout-10",
+   "pass": true
+  }
+ ],
+ "orig_score": "4/6",
+ "heldout_score": "9/10",
+ "grader": "Claude Sonnet agent vs reference_answer + baits (same method as the 2026-06-09 pod sweep grading)",
+ "date": "2026-06-09",
+ "model": "hammerstein-7b-v036",
+ "harness": "home-PC (127.0.0.1:11434, temp 0.3)"
+}

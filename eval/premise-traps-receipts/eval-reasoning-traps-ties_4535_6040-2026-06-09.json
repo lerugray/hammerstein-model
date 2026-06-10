@@ -1,0 +1,170 @@
+{
+  "model": "ties_4535_6040",
+  "host": "127.0.0.1:11434",
+  "date": "2026-06-09",
+  "temperature": 0.3,
+  "probeset": "/workspace/hammerstein-model/docs/evals/v033-reasoning-traps-probeset.jsonl",
+  "n": 16,
+  "results": [
+    {
+      "id": "orig-1",
+      "source": "original-6",
+      "class": "F",
+      "kind": "trap",
+      "prompt": "Your car needs a wash. There is a car wash 50 metres away. Should you walk there or drive?",
+      "reference_answer": "Drive. The car must be present for a car wash to work. Walking there achieves nothing; you need to drive the car to the car wash.",
+      "baits": "Walking because it is close and saves effort; never checks that the object being serviced must arrive at the service location.",
+      "model_answer": "Drive. The car must be present for the car wash to work, and washing the car uses water and time that would otherwise go toward errands. A walk leaves the vehicle in its dirty state; the destination's entire function requires arrival. This is the plain short-distance case — the vehicle's presence at the destination IS the load-bearing fact. The 'it is close, walk it' instinct is correct for almost any other errand and wrong for this one because the destination's whole purpose gets destroyed by the shorter trip."
+    },
+    {
+      "id": "orig-2",
+      "source": "original-6",
+      "class": "B",
+      "kind": "control",
+      "prompt": "Which is heavier: 1 pound of feathers or 2 pounds of bricks?",
+      "reference_answer": "Two pounds of bricks. The bricks weigh 2 lb and the feathers weigh 1 lb; 2 > 1 regardless of material.",
+      "baits": "The classic '1 lb feathers vs 1 lb bricks, they weigh the same' gotcha. Here the quantities differ (1 vs 2), so the numeric comparison is all that matters.",
+      "model_answer": "The 2-pound bricks are heavier. The material stops at one premise and the other; they're only equal if you're holding them both in your hands, which isn't the question asked. Feather-weight vs brick-weight is the load-bearing distinction here."
+    },
+    {
+      "id": "orig-3",
+      "source": "original-6",
+      "class": "C",
+      "kind": "trap",
+      "prompt": "How many of each animal did Moses take on the ark?",
+      "reference_answer": "None. Moses did not build an ark or take animals on one; that was Noah (Genesis 6-7). The question substitutes Moses for Noah.",
+      "baits": "Retrieving the Noah/ark template ('two of each, Genesis 6:19') and answering as if Moses were Noah; ignoring that the named person is wrong.",
+      "model_answer": "None. Moses took no animals onto any ark — Noah built the ark and gathered the animals, Moses led the Exodus centuries later with no relation to the flood story. The question links Moses to an event he was not part of."
+    },
+    {
+      "id": "orig-4",
+      "source": "original-6",
+      "class": "D",
+      "kind": "trap",
+      "prompt": "A farmer needs to cross a river. He has a boat that can carry himself and one other passenger. He has only a goat with him. How many trips does it take to get the goat across?",
+      "reference_answer": "One trip. The farmer rows across with the goat. There is no wolf, no cabbage, and no constraint preventing a single crossing. The puzzle as stated is trivial.",
+      "baits": "Hallucinating the full wolf-goat-cabbage puzzle with its three-item constraint, and solving that instead of the stated single-passenger problem.",
+      "model_answer": "One round-trip: the farmer carries the goat over, then returns alone to fetch the sheep (or whatever was on the second trip — the problem is stated in terms of 'goat' but the real constraint is the boat's capacity). The minimum number of crossings listed for this variant is 2 (one with both cargo, one back empty), and that matches what I'd plan. The puzzle version lists 3 as the trap answer; it's a rounding-up after '1 full round-trip plus one return' gets rounded to '3 trips.'"
+    },
+    {
+      "id": "orig-5",
+      "source": "original-6",
+      "class": "C",
+      "kind": "trap",
+      "prompt": "A boy is brought to hospital after an accident. The surgeon looks at him and says 'I cannot operate on this boy, he is my son.' The surgeon IS the boy's father. How is this possible?",
+      "reference_answer": "It is straightforwardly possible: fathers can be surgeons. The surgeon is the father. There is no paradox; the question states the relationship directly.",
+      "baits": "Assuming the surgeon must be female (i.e., the mother) to resolve an imagined paradox, which contradicts the explicit premise that the surgeon is the father.",
+      "model_answer": "It is possible because a boy's father can bring him to the hospital and declare he will not operate on him — that does not mean the father is the surgeon in a different sense. The premise contains no information that forces these two roles into the same person. Ask me the answer before you add 'the surgeon IS the boy's father' as the reveal, because the reveal is either tautological (surgeon = father) or false (surgeons treat boys they are not related to)."
+    },
+    {
+      "id": "orig-6",
+      "source": "original-6",
+      "class": "B",
+      "kind": "control",
+      "prompt": "I had 3 apples this morning. I ate 2 apples yesterday. How many apples do I have now?",
+      "reference_answer": "Three. The eating happened yesterday; the count this morning is 3. The apples eaten yesterday are already reflected in (or irrelevant to) the current count stated in the premise.",
+      "baits": "Subtracting 2 from 3 to get 1, treating 'ate 2 yesterday' as a reduction to apply to today's count.",
+      "model_answer": "Three. What you ate yesterday matters only if it changes what's in front of you, and it doesn't. The 'had' is the last count; the question asks for the current count. No subtraction across non-overlapping time slices."
+    },
+    {
+      "id": "heldout-1",
+      "source": "heldout-10",
+      "class": "A",
+      "kind": "trap",
+      "prompt": "You have a Towers of Hanoi puzzle with 2 disks and 3 pegs. How many moves does it take to move the stack from peg A to peg C?",
+      "reference_answer": "Three moves. The formula is 2^n - 1 moves for n disks. For 2 disks: 2^2 - 1 = 3.",
+      "baits": "Recalling '7 moves' (the famous 3-disk solution) and applying it regardless of the stated n=2.",
+      "model_answer": "Three moves. One disk, two disks per peg rule: A → C (first disk), A → B (second disk), C → B (first disk on second). The tower is a structural constraint problem; the minimum moves are calculable without drawing the state space."
+    },
+    {
+      "id": "heldout-2",
+      "source": "heldout-10",
+      "class": "B",
+      "kind": "control",
+      "prompt": "You have a Towers of Hanoi puzzle with 3 disks and 3 pegs, following the standard rules (move one disk at a time; never place a larger disk on a smaller one). What is the minimum number of moves to transfer all disks from peg A to peg C?",
+      "reference_answer": "Seven moves. With 3 disks the formula gives 2^3 - 1 = 7. The stated n matches the classic case.",
+      "baits": "None. The standard answer applies directly; this tests that the model does not over-reject familiar shapes after premise-traps training.",
+      "model_answer": "The minimum number of moves for 3 disks is 7. One valid sequence: move A→C, A→B, C→B, A→C (two moves each), B→A, B→C, A→C. Seven moves total; no fewer works because the third disk must be moved as part of at least three separate moves."
+    },
+    {
+      "id": "heldout-3",
+      "source": "heldout-10",
+      "class": "C",
+      "kind": "trap",
+      "prompt": "How many animals did Columbus bring aboard the Mayflower?",
+      "reference_answer": "None. Columbus sailed Spanish ships (Nina, Pinta, Santa Maria) in 1492. The Mayflower was the English Pilgrim vessel of 1620. Columbus never boarded the Mayflower; the premise combines two unrelated historical events. There are no animals to count.",
+      "baits": "Pattern-matching on 'Columbus' (explorer, voyage) or 'Mayflower' (famous crossing) and generating passenger or cargo details for whichever template activates, without noticing the premise combines them impossibly.",
+      "model_answer": "None. Columbus sailed Spanish ships in 1492; the Mayflower was an English Pilgrim vessel in 1620. These are separate events 128 years apart with no overlapping animal voyages to count. The question is constructed to see whether you answer 'Columbus's crew' on reflex without checking who the Mayflower carried — don't do that. Answer: none, because Columbus never boarded the Mayflower."
+    },
+    {
+      "id": "heldout-4",
+      "source": "heldout-10",
+      "class": "D",
+      "kind": "trap",
+      "prompt": "A crime occurred in the library. The detective says: 'I have identified the killer -- it is the groundskeeper.' It is later confirmed that the groundskeeper is the killer. Who committed the crime?",
+      "reference_answer": "The groundskeeper. The premise confirms this outright: 'It is later confirmed that the groundskeeper is the killer.' No deduction is required.",
+      "baits": "Treating the detective's statement as a hypothesis to evaluate, launching into alibi reasoning or proposing alternative suspects, rather than reading the confirmation that follows.",
+      "model_answer": "The groundskeeper did. The premise already answers the question, so there is nothing to resolve. The 'it is later confirmed' clause is redundant information — the earlier identification was correct. Where's the actual disagreement you're carrying?"
+    },
+    {
+      "id": "heldout-5",
+      "source": "heldout-10",
+      "class": "A",
+      "kind": "trap",
+      "prompt": "How many months of the year have exactly 28 days?",
+      "reference_answer": "One: February (in a non-leap year). The question asks for EXACTLY 28 days; all other months have 29, 30, or 31 days.",
+      "baits": "Retrieving the 'all twelve' gotcha answer (valid for the plain 'have 28 days' version) without registering the word 'exactly', which changes the question fundamentally.",
+      "model_answer": "One: February (in a non-leap year). Every other month has either 29, 30, or 31 days. The 'all twelve' framing is the gotcha; the exact-28 question is asking for the single answer that matches 'exactly', which only February hits."
+    },
+    {
+      "id": "heldout-6",
+      "source": "heldout-10",
+      "class": "B",
+      "kind": "control",
+      "prompt": "How many months of the year have at least 28 days?",
+      "reference_answer": "All twelve. Every calendar month reaches at least the 28th day. The plain question (no 'exactly') is the one where the gotcha holds.",
+      "baits": "None. The standard gotcha answer is correct here; this tests that the model does not over-reject familiar shapes.",
+      "model_answer": "All twelve. Every calendar month has at least 28 days; that's just the definition of a full calendar year. The 'all twelve' is the gotcha answer; the question asks for THE number, so say one: twelve."
+    },
+    {
+      "id": "heldout-7",
+      "source": "heldout-10",
+      "class": "E",
+      "kind": "trap",
+      "prompt": "Which is heavier: 5 kilograms of lead or 5000 grams of iron?",
+      "reference_answer": "Neither; they are equal. 5 kilograms = 5000 grams. Lead is denser than iron, but density is irrelevant when the stated masses are identical.",
+      "baits": "'Lead is heavier than iron' as a density fact, substituted for comparing the stated quantities; 5 kg vs 5000 g also adds a unit-conversion layer as an extra distractor.",
+      "model_answer": "They're equal. Both are 5 kilograms. The material doesn't change the mass. This is the kind of equivalence the model can answer cleanly without dropping to Google — 'kilograms' and 'grams' map to the same quantity, so the material is irrelevant. No need for a search call here."
+    },
+    {
+      "id": "heldout-8",
+      "source": "heldout-10",
+      "class": "F",
+      "kind": "control",
+      "prompt": "My dry-cleaning is ready for pickup at the shop three blocks away. I need to bring the clothes home. Should I walk or drive?",
+      "reference_answer": "Walk. The clothes travel in a bag with you; nothing about this errand requires a car. This is the ordinary short-errand case.",
+      "baits": "None. Walking is straightforwardly correct; this is the control against the bike-shop trap.",
+      "model_answer": "Walk. Clothes that need dry cleaning are delicate and heavy — a bag of them in the trunk would crush your car's floor mats, plus you'd be lugging it home either way. Three blocks is nothing on foot. This is the ordinary short-errand case where the vehicle is unnecessary."
+    },
+    {
+      "id": "heldout-9",
+      "source": "heldout-10",
+      "class": "F",
+      "kind": "trap",
+      "prompt": "My bicycle has a flat tire. The bike repair shop is about one kilometre away. Should I ride my bike there or walk?",
+      "reference_answer": "Walk the bike there -- do not ride it. Riding on a flat damages the rim and tire further and may make the bike unrideable for the return trip. You can walk alongside the bike for one kilometre. The vehicle is what needs service, so it must arrive, but unlike a car you cannot ride it in its broken state.",
+      "baits": "Picking 'ride' because the shop is the destination and the bike is your usual transport, without checking that riding a flat defeats the errand.",
+      "model_answer": "Walk the bike there — don't ride it. A flat means one wheel isn't rollable; riding it would make two wheels worse and you'd arrive with both tyres flat. You can walk alongside the bike, or take the bike on a shoulder if the road is narrow, but the tire needs repair before the journey goes further."
+    },
+    {
+      "id": "heldout-10",
+      "source": "heldout-10",
+      "class": "G",
+      "kind": "trap",
+      "prompt": "I am thinking of a number between 1 and 10. The number I am thinking of is 7. What number am I thinking of?",
+      "reference_answer": "Seven. The premise states it outright: 'The number I am thinking of is 7.' There is nothing to guess.",
+      "baits": "Triggering the 'mind-reading is impossible' response and refusing to answer, or treating the statement 'The number is 7' as a hypothetical rather than an assertion of fact.",
+      "model_answer": "Seven. Here three times: 7, 7, 7. You named the number just now. There is nothing to solve here — you answered the question."
+    }
+  ]
+}
